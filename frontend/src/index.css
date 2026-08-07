@@ -1,0 +1,342 @@
+/* Import fonts directly */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  /* Default Dark Mode Theme Tokens */
+  --bg-dark: #0b0f19;
+  --bg-card: rgba(18, 26, 43, 0.85);
+  --bg-card-hover: rgba(28, 40, 65, 0.95);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-glow: rgba(99, 102, 241, 0.35);
+  
+  --primary: #6366f1;         /* Indigo Primary */
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --accent-cyan: #06b6d4;     /* Cyan Accent */
+  --accent-emerald: #10b981;  /* Emerald Accent */
+  --accent-amber: #f59e0b;    /* Amber Accent */
+  --accent-rose: #f43f5e;     /* Rose Accent */
+  --accent-purple: #a855f7;   /* Purple Accent */
+
+  --text-main: #f8fafc;       /* Bright Crisp White */
+  --text-muted: #cbd5e1;      /* Light Slate */
+  --text-dim: #94a3b8;        /* Muted Grey */
+  --input-bg: rgba(15, 23, 42, 0.7);
+
+  --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.18);
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Space Grotesk', sans-serif;
+}
+
+[data-theme="light"] {
+  /* Light Mode High-Contrast Overrides */
+  --bg-dark: #f1f5f9;         /* Light Slate Background */
+  --bg-card: #ffffff;         /* Pure Crisp White Glass Panels */
+  --bg-card-hover: #f8fafc;
+  --border-color: #cbd5e1;
+  --border-glow: rgba(79, 70, 229, 0.3);
+  
+  --primary: #4338ca;
+  --primary-light: #4f46e5;
+  --primary-dark: #3730a3;
+  --accent-cyan: #0284c7;
+  --accent-emerald: #047857;
+  --accent-amber: #b45309;
+  --accent-rose: #be123c;
+  --accent-purple: #7e22ce;
+
+  --text-main: #0f172a;       /* Deep Slate Main Text */
+  --text-muted: #1e293b;      /* Dark Slate Secondary Text */
+  --text-dim: #475569;        /* Medium Slate Text */
+  --input-bg: #ffffff;
+
+  --shadow-glow: 0 10px 30px rgba(79, 70, 229, 0.15);
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 90% 15%, rgba(6, 182, 212, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 50% 60%, rgba(168, 85, 247, 0.16) 0%, transparent 55%),
+    radial-gradient(circle at 80% 85%, rgba(16, 185, 129, 0.14) 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
+[data-theme="light"] body {
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 90% 15%, rgba(14, 165, 233, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 50% 60%, rgba(192, 132, 252, 0.1) 0%, transparent 55%),
+    radial-gradient(circle at 80% 85%, rgba(16, 185, 129, 0.1) 0%, transparent 45%);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glassmorphism card elements */
+.glass-panel {
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 20px !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="light"] .glass-panel {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+.glass-panel:hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Multi-color Vibrant Gradient Headings */
+.gradient-text {
+  background: linear-gradient(135deg, #818cf8 0%, #38bdf8 40%, #c084fc 75%, #f472b6 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+[data-theme="light"] .gradient-text {
+  background: linear-gradient(135deg, #4338ca 0%, #0284c7 40%, #7e22ce 75%, #be123c 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Button UI styling variables mapping */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  font-family: var(--font-main);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35) !important;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+  transform: translateY(-1px) !important;
+  opacity: 0.95 !important;
+}
+
+.btn-primary:disabled {
+  background: #2e3a4e !important;
+  box-shadow: none !important;
+  color: var(--text-dim) !important;
+  cursor: not-allowed;
+}
+
+.btn-secondary, .btn-outline-secondary {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.btn-secondary:hover, .btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+[data-theme="light"] .btn-secondary, [data-theme="light"] .btn-outline-secondary {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .btn-secondary:hover, [data-theme="light"] .btn-outline-secondary:hover {
+  background: #f1f5f9 !important;
+}
+
+/* Status Badges */
+.badge-success {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+.badge-info {
+  background: rgba(6, 182, 212, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+}
+
+/* Mapping standard Bootstrap cards and components to glass-panel */
+.card {
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-main) !important;
+  transition: all 0.3s ease;
+}
+
+[data-theme="light"] .card {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+  background-color: var(--input-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  transition: all 0.25s ease !important;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--bg-card-hover) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+  outline: none !important;
+}
+
+.form-label {
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 0.4rem !important;
+}
+
+/* Heading Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading) !important;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Tables in Glass Panel style */
+.table {
+  --bs-table-bg: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
+  vertical-align: middle !important;
+}
+
+.table th {
+  --bs-table-bg: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-muted) !important;
+  font-family: var(--font-heading) !important;
+  font-weight: 500 !important;
+  border-bottom: 2px solid var(--border-color) !important;
+  padding: 12px 16px !important;
+  font-size: 0.95rem;
+}
+
+.table td {
+  --bs-table-bg: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-main) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 12px 16px !important;
+}
+
+.table-hover tbody tr:hover td {
+  --bs-table-bg: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="light"] .table-hover tbody tr:hover td {
+  --bs-table-bg: rgba(0, 0, 0, 0.01) !important;
+  background-color: rgba(0, 0, 0, 0.01) !important;
+}
+
+/* Force dark/light overrides on standard light utility classes */
+.bg-white, .bg-light {
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.table-light, .table-light th, .table-light td {
+  --bs-table-bg: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-main) !important;
+}
+
+/* Modals styled as glass panel */
+.modal-content {
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 20px !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal-header, .modal-footer {
+  border-color: var(--border-color) !important;
+}
+
+.btn-close {
+  filter: invert(1) grayscale(1) brightness(2) !important;
+}
+
+[data-theme="light"] .btn-close {
+  filter: none !important;
+}
+
+/* Helper class color overrides for light/dark theme adaptation */
+.text-white {
+  color: var(--text-main) !important;
+}
+
+.text-secondary {
+  color: var(--text-dim) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.text-dark {
+  color: var(--text-main) !important;
+}
+
+code {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+  color: var(--primary-light) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: monospace !important;
+}
+
+[data-theme="light"] code {
+  color: var(--primary) !important;
+}
+
