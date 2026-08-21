@@ -1,0 +1,6 @@
+# vercel.json for static frontend deployment
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
+}
