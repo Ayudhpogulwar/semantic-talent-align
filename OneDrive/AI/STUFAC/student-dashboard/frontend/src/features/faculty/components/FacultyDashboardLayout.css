@@ -1,0 +1,77 @@
+.faculty-shell {
+  min-height: 100vh;
+  background-color: transparent; /* allow atmospheric body background to show through */
+}
+
+.faculty-sidebar {
+  width: 240px;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--text-main);
+  border-right: 1px solid var(--border-color);
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.faculty-sidebar--collapsed {
+  width: 72px;
+}
+
+.faculty-sidebar--collapsed .faculty-nav-link span:last-child,
+.faculty-sidebar--collapsed .faculty-sidebar__brand span {
+  display: none;
+}
+
+.faculty-sidebar__brand {
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-heading);
+}
+
+.faculty-nav-link {
+  color: var(--text-muted) !important;
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
+  font-family: var(--font-main);
+}
+
+.faculty-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-main) !important;
+}
+
+[data-theme="light"] .faculty-nav-link:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.faculty-nav-link--active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.02) 100%) !important;
+  color: var(--primary-light) !important;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 8px 8px 0;
+  padding-left: calc(0.8rem - 3px);
+}
+
+[data-theme="light"] .faculty-nav-link--active {
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0.01) 100%) !important;
+  color: var(--primary) !important;
+}
+
+.faculty-topbar {
+  background: var(--bg-card);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.faculty-content {
+  overflow-y: auto;
+  background-color: transparent;
+}
