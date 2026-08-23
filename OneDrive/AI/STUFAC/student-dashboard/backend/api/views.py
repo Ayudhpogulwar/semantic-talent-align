@@ -199,6 +199,15 @@ def profile(request):
         filled = sum(1 for f in required if f)
         completion_pct = int((filled / len(required)) * 100) if filled > 0 else 25
 
+        is_verified = (sp.get("verification_status") == "Approved")
+        try:
+            from faculty_app.models import StudentVerificationRequest
+            ver = StudentVerificationRequest.objects.filter(email=sp["email"]).first()
+            if ver and ver.status == "APPROVED":
+                is_verified = True
+        except Exception:
+            pass
+
         return Response({
             "student_id": f"STU{sp['student_id']}",
             "name": full_name,
@@ -212,7 +221,8 @@ def profile(request):
             "github": "",
             "bio": "",
             "profile_completion_pct": completion_pct,
-            "verified_by_faculty": sp["verification_status"] == "Approved",
+            "verified_by_faculty": is_verified,
+            "verification_status": "Approved" if is_verified else "Pending",
             "consent_resume_sharing": True
         })
 

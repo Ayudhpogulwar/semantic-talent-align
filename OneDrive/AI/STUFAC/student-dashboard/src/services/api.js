@@ -332,13 +332,10 @@ class RealApiService {
     try {
       const res = await fetch(`${API_BASE_URL}/v1/faculty/student-verifications/`, { headers: this.getHeaders() });
       if (res.ok) return await res.json();
-    } catch (e) {}
-    return [
-      { id: 'ver-101', student_name: 'Aditi Sharma', roll_no: 'CS21B045', department: 'Computer Science', request_date: '2026-08-14', status: 'PENDING', cgpa: 8.9, email: 'aditi.s@college.edu' },
-      { id: 'ver-102', student_name: 'Rohan Verma', roll_no: 'CS21B088', department: 'Computer Science', request_date: '2026-08-15', status: 'PENDING', cgpa: 9.2, email: 'rohan.v@college.edu' },
-      { id: 'ver-103', student_name: 'Priya Nair', roll_no: 'EC21B012', department: 'Electronics', request_date: '2026-08-12', status: 'APPROVED', cgpa: 8.5, email: 'priya.n@college.edu' },
-      { id: 'ver-104', student_name: 'Karan Patel', roll_no: 'ME21B033', department: 'Mechanical', request_date: '2026-08-11', status: 'PENDING', cgpa: 7.8, email: 'karan.p@college.edu' }
-    ];
+    } catch (e) {
+      console.error("Failed fetching faculty verifications:", e);
+    }
+    return [];
   }
 
   async reviewVerification(id, action, comments = '') {

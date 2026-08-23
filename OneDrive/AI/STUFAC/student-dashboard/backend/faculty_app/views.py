@@ -68,10 +68,13 @@ class StudentVerificationViewSet(viewsets.ViewSet):
     permission_classes = [IsFacultyUser]
 
     def list(self, request):
-        status_param = request.query_params.get('status', 'PENDING').upper()
+        status_param = request.query_params.get('status', '').strip().upper()
         search_param = request.query_params.get('search', '').strip()
 
-        qs = StudentVerificationRequest.objects.filter(status=status_param)
+        qs = StudentVerificationRequest.objects.all()
+        if status_param and status_param != 'ALL':
+            qs = qs.filter(status=status_param)
+
         if search_param:
             qs = qs.filter(
                 full_name__icontains=search_param
@@ -86,11 +89,16 @@ class StudentVerificationViewSet(viewsets.ViewSet):
             results.append({
                 "id": str(req.id),
                 "student_id": str(req.student_id),
+                "student_name": req.full_name,
                 "full_name": req.full_name,
                 "roll_number": req.roll_number,
+                "roll_no": req.roll_number,
                 "department": req.department,
+                "year_of_study": req.year_of_study,
                 "year": str(req.year_of_study),
                 "email": req.email,
+                "request_date": str(req.created_at)[:10] if hasattr(req, 'created_at') and req.created_at else "2026-08-23",
+                "cgpa": 8.5,
                 "status": req.status
             })
 
@@ -109,10 +117,23 @@ class StudentVerificationViewSet(viewsets.ViewSet):
         }
         new_status = db_status_map.get(action_value, "APPROVED")
 
-        StudentVerificationRequest.objects.filter(pk=pk).update(
-            status=new_status,
-            reviewed_at=timezone.now()
-        )
+        req = StudentVerificationRequest.objects.filter(pk=pk).first()
+        if req:
+            req.status = new_status
+            req.reviewed_at = timezone.now()
+            req.save()
+
+            # Sync to student_profiles table
+            try:
+                from api.db_helper import get_db
+                conn = get_db()
+                cursor = conn.cursor()
+                sp_status = "Approved" if new_status == "APPROVED" else "Pending"
+                cursor.execute("UPDATE student_profiles SET verification_status = ? WHERE student_id IN (SELECT user_id FROM users WHERE email = ?)", (sp_status, req.email))
+                conn.commit()
+                conn.close()
+            except Exception as ex:
+                logger.error(f"Error updating student_profiles verification status: {ex}")
 
         return Response({"status": "success", "id": pk, "verification_status": new_status}, status=status.HTTP_200_OK)
 

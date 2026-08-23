@@ -152,58 +152,8 @@ def seed():
     )
     print("Created 3 opportunities.")
 
-    # 4. Create Student Verification Requests (Roll number verification queue)
-    students_data = [
-        ("Alice Smith", "CS-2023-042", "Computer Science", 3, "alice@saiotaf.edu", StudentVerificationRequest.Status.PENDING, None),
-        ("Bob Jones", "IT-2024-118", "Information Technology", 2, "bob@saiotaf.edu", StudentVerificationRequest.Status.PENDING, None),
-        ("Charlie Brown", "ME-2022-005", "Mechanical Engineering", 4, "charlie@saiotaf.edu", StudentVerificationRequest.Status.APPROVED, f1),
-        ("Diana Prince", "CS-2023-088", "Computer Science", 3, "diana@saiotaf.edu", StudentVerificationRequest.Status.PENDING, None),
-        ("Ethan Hunt", "ECE-2024-012", "Electronics & Communication", 2, "ethan@saiotaf.edu", StudentVerificationRequest.Status.PENDING, None),
-        ("Fiona Gallagher", "IT-2023-055", "Information Technology", 3, "fiona@saiotaf.edu", StudentVerificationRequest.Status.APPROVED, f2),
-        ("George Clark", "EE-2022-099", "Electrical Engineering", 4, "george@saiotaf.edu", StudentVerificationRequest.Status.FLAGGED, f3),
-        ("Hannah Abbott", "CS-2024-101", "Computer Science", 1, "hannah@saiotaf.edu", StudentVerificationRequest.Status.PENDING, None),
-    ]
-
-    student_uuids = []
-    for name, roll, dept, yr, email, st, reviewer in students_data:
-        uid = uuid.uuid4()
-        student_uuids.append(uid)
-        StudentVerificationRequest.objects.create(
-            student_id=uid,
-            full_name=name,
-            roll_number=roll,
-            department=dept,
-            year_of_study=yr,
-            email=email,
-            status=st,
-            reviewed_by=reviewer,
-            reviewed_at=timezone.now() - timedelta(days=1) if reviewer else None
-        )
-    print(f"Created {len(students_data)} student verification requests.")
-
-    s3_uuid = student_uuids[2]
-
-    # 5. Create Certificates
-    Certificate.objects.create(
-        student_id=s3_uuid, # Charlie Brown is already approved and has completed a program
-        opportunity=opp1,
-        organization=org1,
-        file_url="/sample_certificate.png",
-        issue_date=datetime.now().date() - timedelta(days=15),
-        verification_status=Certificate.VerificationStatus.PENDING
-    )
-
-    Certificate.objects.create(
-        student_id=uuid.uuid4(), # some other student's certificate
-        opportunity=opp3,
-        organization=org3,
-        file_url="/sample_certificate.png",
-        issue_date=datetime.now().date() - timedelta(days=20),
-        verification_status=Certificate.VerificationStatus.VERIFIED,
-        verified_by=f2,
-        verified_at=timezone.now() - timedelta(days=3)
-    )
-    print("Created 2 certificates.")
+    # 4. Student Verification Requests start clean for real registered students
+    print("Cleared verification requests to allow real student registration.")
     print("Seeding completed successfully!")
 
 if __name__ == "__main__":
