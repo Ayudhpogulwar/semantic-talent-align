@@ -1,16 +1,87 @@
-# React + Vite
+# Semantic Opportunity Alignment - AI Student & Faculty Placement Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern full-stack web application designed for automated resume parsing (spaCy NLP), Sentence-BERT placement opportunity matching, student verification workflows, and faculty approval management.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Key Features
 
-## React Compiler
+* **Student Dashboard**:
+  - **Resume Parsing Engine (spaCy NLP & pypdf)**: Upload PDF/DOCX resumes with instant text extraction & verified technical skill matrix generation.
+  - **Live PDF Document Viewer**: Embedded in-browser PDF viewer with direct download and inspector controls.
+  - **Sentence-BERT Matcher**: Cosine similarity matching between student profiles & placement opportunities.
+  - **Verification Flow**: Automatic sync of student verification requests with the faculty portal.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Faculty Portal**:
+  - **Student Approval Queue**: Review, verify, approve, or reject student registration requests.
+  - **Live Database Sync**: Updates SQLite student verification status & ORM models in real-time.
+  - **Faculty Credentials**: Log in using Employee IDs (`EMP-101`, `EMP-102`, `EMP-103`).
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## 🚀 How to Run the Project Locally
+
+### Prerequisites
+- **Node.js**: v18+
+- **Python**: v3.10+
+
+---
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Ayudhpogulwar/semantic-talent-align.git
+cd semantic-talent-align
+```
+
+---
+
+### Step 2: Set Up & Start the Frontend (Vite + React)
+```bash
+# Install frontend dependencies
+npm install
+
+# Start the Vite local development server
+npm run dev
+```
+> Frontend will be running at **http://localhost:5173**
+
+---
+
+### Step 3: Set Up & Start the Backend (Django + SQLite)
+Open a new terminal window:
+```bash
+cd backend
+
+# Install Python dependencies
+pip install django djangorestframework django-cors-headers pypdf whitenoise gunicorn psycopg2-binary pyjwt
+
+# Seed/Reset clean database
+python seed_data.py
+
+# Run database migrations
+python manage.py migrate
+
+# Start Django backend server
+python manage.py runserver 8000
+```
+> Backend REST API will be running at **http://127.0.0.1:8000/api**
+
+---
+
+## 🔑 Login & Test Credentials
+
+### 1. Student Sign-In / Register
+- **Email**: `sumit@college.edu` (or any `@college.edu` institutional email)
+- **Password**: Any test password
+
+### 2. Faculty Sign-In
+- **Faculty Employee ID**: `EMP-101` (or `EMP-102`, `EMP-103`)
+- **Department**: Computer Science & Engineering
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18, Vite, Lucide Icons, Vanilla CSS Glassmorphism Design
+- **Backend**: Python 3.11, Django REST Framework, SQLite
+- **AI / NLP**: spaCy NLP skill vector extraction, `pypdf` text parsing
