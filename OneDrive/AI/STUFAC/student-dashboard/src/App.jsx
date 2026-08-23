@@ -92,10 +92,17 @@ function StudentDashboardApp() {
     refreshRecsAndReadiness();
   };
 
-  const handleUploadResume = async (file) => {
+  const handleUploadResume = async (file, fileUrl = null) => {
     try {
+      const url = fileUrl || (file instanceof File ? URL.createObjectURL(file) : null);
       const res = await apiService.uploadResumeFile(file);
-      setResume(res || {});
+      const fullResume = {
+        ...res,
+        filename: file?.name || res.filename || "Uploaded_Resume.pdf",
+        file_url: url || res.file_url || null,
+        file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
+      };
+      setResume(fullResume);
       const updatedSkills = await apiService.getSkills();
       setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
       await refreshRecsAndReadiness();

@@ -165,9 +165,15 @@ function StudentDashboardApp() {
           <ResumeSkillsModule
             resume={resume}
             skills={skills}
-            onUploadResume={async (file) => {
+            onUploadResume={async (file, fileUrl) => {
+              const url = fileUrl || (file instanceof File ? URL.createObjectURL(file) : null);
               const res = await apiService.uploadResumeFile(file);
-              setResume(res || {});
+              setResume({
+                ...res,
+                filename: file?.name || res.filename || "Uploaded_Resume.pdf",
+                file_url: url || res.file_url || null,
+                file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
+              });
               const s = await apiService.getSkills();
               setSkills(Array.isArray(s) ? s : []);
             }}
