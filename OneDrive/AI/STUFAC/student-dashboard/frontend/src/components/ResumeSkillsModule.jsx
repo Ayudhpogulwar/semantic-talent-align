@@ -267,6 +267,119 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
 
       </div>
 
+      {/* Resume Viewer & Inspector Modal */}
+      {showPreviewModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 2000,
+            background: 'rgba(11, 15, 25, 0.88)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px'
+          }}
+          onClick={() => setShowPreviewModal(false)}
+        >
+          <div 
+            className="glass-panel animate-fade-in" 
+            style={{
+              maxWidth: '750px',
+              width: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: '20px',
+              border: '1px solid rgba(52, 211, 153, 0.4)',
+              boxShadow: '0 0 40px rgba(16, 185, 129, 0.25)',
+              overflow: 'hidden'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{
+              padding: '20px 24px',
+              borderBottom: '1px solid var(--border-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(15, 23, 42, 0.85)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399' }}>
+                  <FileText size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', margin: 0 }}>
+                    {safeResume.filename || 'Resume_Document.pdf'}
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Verified Document Inspector • Version v{safeResume.version || 1}
+                  </span>
+                </div>
+              </div>
+
+              <button 
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+              <div style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '12px',
+                fontSize: '0.84rem'
+              }}>
+                <div><span style={{ color: 'var(--text-muted)' }}>Status:</span> <strong style={{ color: '#34d399' }}>✓ Verified Parsed</strong></div>
+                <div><span style={{ color: 'var(--text-muted)' }}>File Size:</span> <strong style={{ color: '#fff' }}>{safeResume.file_size || '0.2 MB'}</strong></div>
+                <div><span style={{ color: 'var(--text-muted)' }}>Document ID:</span> <strong style={{ color: '#fff' }}>{safeResume.resume_id || 'RES-1001'}</strong></div>
+              </div>
+
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px', background: 'rgba(255, 255, 255, 0.02)' }}>
+                <h4 style={{ fontSize: '0.95rem', color: '#fff', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={16} color="#c084fc" /> spaCy NLP Skill Vector Analysis
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {safeSkills.length > 0 ? (
+                    safeSkills.map(s => (
+                      <span key={s.skill_id} className="badge badge-indigo" style={{ padding: '6px 12px', fontSize: '0.82rem' }}>
+                        {s.skill_name}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.84rem' }}>No skills extracted yet.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'rgba(15, 23, 42, 0.85)' }}>
+              <button 
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="btn btn-primary"
+                style={{ padding: '8px 22px' }}
+              >
+                Close Inspector
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
