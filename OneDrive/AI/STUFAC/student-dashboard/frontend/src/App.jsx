@@ -153,7 +153,14 @@ function StudentDashboardApp() {
       />
       <main style={{ maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '32px 24px', flex: 1 }}>
         {activeTab === 'home' && <DashboardOverview profile={profile} resume={resume} readiness={readiness} applications={applications} recommendations={recommendations} setActiveTab={setActiveTab} />}
-        {activeTab === 'profile' && <ProfileModule profile={profile} onUpdateProfile={(fields) => setProfile(apiService.updateProfile(fields))} />}
+        {activeTab === 'profile' && (
+          <ProfileModule
+            profile={profile}
+            resume={resume}
+            onUpdateProfile={(fields) => setProfile(apiService.updateProfile(fields))}
+            setActiveTab={setActiveTab}
+          />
+        )}
         {activeTab === 'resume' && <ResumeSkillsModule resume={resume} skills={skills} onUploadResume={async (file) => setResume(await apiService.uploadResumeFile(file))} onAddSkill={(n, c) => setSkills(apiService.addSkill(n, c))} onRemoveSkill={(id) => setSkills(apiService.removeSkill(id))} />}
         {activeTab === 'opportunities' && (
           <OpportunitiesModule 

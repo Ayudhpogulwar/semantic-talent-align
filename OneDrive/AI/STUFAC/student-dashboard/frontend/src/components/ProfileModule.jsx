@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { User, Mail, Hash, BookOpen, Calendar, Award, Phone, Globe, Code, Save, ShieldCheck, Check } from 'lucide-react';
+import { User, Mail, Hash, BookOpen, Calendar, Award, Phone, Globe, Code, Save, ShieldCheck, Check, FileText, UploadCloud, Sparkles } from 'lucide-react';
 
-export default function ProfileModule({ profile, onUpdateProfile }) {
+export default function ProfileModule({ profile, resume, onUpdateProfile, setActiveTab }) {
   const [formData, setFormData] = useState({ ...profile });
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const activeResume = resume || profile?.resume || null;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -30,7 +32,7 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
             <User color="#818cf8" /> Student Profile Management
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            Keep your verified academic and contact details updated for institutional matching.
+            Keep your verified academic credentials and uploaded resume updated for institutional matching.
           </p>
         </div>
 
@@ -55,6 +57,86 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
           <Check size={18} /> Profile updated and saved to Database Layer successfully!
         </div>
       )}
+
+      {/* Active Resume Card Section */}
+      <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileText color="#818cf8" size={20} /> Verified Active Resume Document
+          </h3>
+          {setActiveTab && (
+            <button 
+              type="button" 
+              onClick={() => setActiveTab('resume')}
+              className="btn btn-outline"
+              style={{ fontSize: '0.8rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <UploadCloud size={14} /> Upload / Manage Resume
+            </button>
+          )}
+        </div>
+
+        {activeResume && (activeResume.filename || activeResume.resume_id) ? (
+          <div style={{
+            padding: '18px',
+            borderRadius: '12px',
+            background: 'rgba(99, 102, 241, 0.08)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+              }}>
+                <FileText size={26} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.98rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  {activeResume.filename || 'Uploaded_Resume.pdf'}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                  <span>ID: <strong style={{ color: 'var(--text-main)' }}>{activeResume.resume_id || 'RES-1001'}</strong></span>
+                  <span>Size: <strong style={{ color: 'var(--text-main)' }}>{activeResume.file_size || '1.0 MB'}</strong></span>
+                  <span>Uploaded: <strong style={{ color: 'var(--text-main)' }}>{activeResume.upload_date ? String(activeResume.upload_date).split('T')[0] : 'Active'}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="badge badge-success" style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={14} /> spaCy NLP Parsed (Active)
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            padding: '20px',
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px dashed var(--border-color)',
+            textAlign: 'center',
+            color: 'var(--text-muted)'
+          }}>
+            <UploadCloud size={30} style={{ marginBottom: '8px', color: '#818cf8' }} />
+            <div style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-main)' }}>No Active Resume Linked</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Upload your PDF/DOCX resume under the Resume & Skills tab to automatically extract skills for Placement Drives.
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

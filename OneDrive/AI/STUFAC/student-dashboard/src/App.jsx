@@ -199,7 +199,9 @@ function StudentDashboardApp() {
         {activeTab === 'profile' && (
           <ProfileModule
             profile={profile}
+            resume={resume}
             onUpdateProfile={handleUpdateProfile}
+            setActiveTab={setActiveTab}
           />
         )}
 

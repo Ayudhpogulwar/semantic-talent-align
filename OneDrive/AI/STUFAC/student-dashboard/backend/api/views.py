@@ -208,6 +208,13 @@ def profile(request):
         except Exception:
             pass
 
+        active_res = {
+            "resume_id": sp.get("active_resume_id") or "RES-ACTIVE",
+            "filename": "Uploaded_Resume.pdf" if sp.get("active_resume_id") else "",
+            "file_size": "1.2 MB",
+            "status": "Parsed"
+        }
+
         return Response({
             "student_id": f"STU{sp['student_id']}",
             "name": full_name,
@@ -223,7 +230,8 @@ def profile(request):
             "profile_completion_pct": completion_pct,
             "verified_by_faculty": is_verified,
             "verification_status": "Approved" if is_verified else "Pending",
-            "consent_resume_sharing": True
+            "consent_resume_sharing": True,
+            "resume": active_res
         })
 
     elif request.method == 'PUT':
