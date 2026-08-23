@@ -93,22 +93,35 @@ function StudentDashboardApp() {
   };
 
   const handleUploadResume = async (file) => {
-    const res = await apiService.uploadResumeFile(file);
-    setResume(res);
-    setSkills(apiService.getSkills());
-    refreshRecsAndReadiness();
+    try {
+      const res = await apiService.uploadResumeFile(file);
+      setResume(res || {});
+      const updatedSkills = await apiService.getSkills();
+      setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Upload resume error:", err);
+    }
   };
 
-  const handleAddSkill = (skillName, category) => {
-    const updatedSkills = apiService.addSkill(skillName, category);
-    setSkills(updatedSkills);
-    refreshRecsAndReadiness();
+  const handleAddSkill = async (skillName, category) => {
+    try {
+      const updatedSkills = await apiService.addSkill(skillName, category);
+      setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Add skill error:", err);
+    }
   };
 
-  const handleRemoveSkill = (skillId) => {
-    const updatedSkills = apiService.removeSkill(skillId);
-    setSkills(updatedSkills);
-    refreshRecsAndReadiness();
+  const handleRemoveSkill = async (skillId) => {
+    try {
+      const updatedSkills = await apiService.removeSkill(skillId);
+      setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Remove skill error:", err);
+    }
   };
 
   const handleApplyToOpportunity = async (oppId) => {

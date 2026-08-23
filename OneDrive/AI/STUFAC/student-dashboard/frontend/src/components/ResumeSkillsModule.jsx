@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { FileText, Upload, Sparkles, Plus, Trash2, CheckCircle, RefreshCw, AlertCircle, FileCode } from 'lucide-react';
 
-export default function ResumeSkillsModule({ resume, skills, onUploadResume, onAddSkill, onRemoveSkill }) {
+export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadResume, onAddSkill, onRemoveSkill }) {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [categoryInput, setCategoryInput] = useState('Programming');
+
+  const safeSkills = Array.isArray(skills) ? skills : [];
+  const safeResume = resume || {};
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -42,6 +45,8 @@ export default function ResumeSkillsModule({ resume, skills, onUploadResume, onA
     setIsUploading(true);
     try {
       await onUploadResume(file);
+    } catch (err) {
+      console.error("Error during upload process:", err);
     } finally {
       setIsUploading(false);
     }
@@ -71,7 +76,7 @@ export default function ResumeSkillsModule({ resume, skills, onUploadResume, onA
 
         <div style={{ textAlign: 'right' }}>
           <span className="badge badge-cyan" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
-            Current Version: v{resume.version} ({resume.status})
+            Current Version: v{safeResume.version || 1} ({safeResume.status || 'Active'})
           </span>
         </div>
       </div>

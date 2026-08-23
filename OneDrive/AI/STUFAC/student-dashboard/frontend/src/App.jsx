@@ -161,7 +161,26 @@ function StudentDashboardApp() {
             setActiveTab={setActiveTab}
           />
         )}
-        {activeTab === 'resume' && <ResumeSkillsModule resume={resume} skills={skills} onUploadResume={async (file) => setResume(await apiService.uploadResumeFile(file))} onAddSkill={(n, c) => setSkills(apiService.addSkill(n, c))} onRemoveSkill={(id) => setSkills(apiService.removeSkill(id))} />}
+        {activeTab === 'resume' && (
+          <ResumeSkillsModule
+            resume={resume}
+            skills={skills}
+            onUploadResume={async (file) => {
+              const res = await apiService.uploadResumeFile(file);
+              setResume(res || {});
+              const s = await apiService.getSkills();
+              setSkills(Array.isArray(s) ? s : []);
+            }}
+            onAddSkill={async (n, c) => {
+              const s = await apiService.addSkill(n, c);
+              setSkills(Array.isArray(s) ? s : []);
+            }}
+            onRemoveSkill={async (id) => {
+              const s = await apiService.removeSkill(id);
+              setSkills(Array.isArray(s) ? s : []);
+            }}
+          />
+        )}
         {activeTab === 'opportunities' && (
           <OpportunitiesModule 
             opportunities={opportunities} 
