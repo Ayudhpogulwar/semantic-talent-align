@@ -11,6 +11,7 @@ import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { 
   UserCheck, 
+  FileCheck,
   Building2, 
   Briefcase, 
   Award, 
@@ -26,6 +27,7 @@ import "./FacultyDashboardLayout.css";
 
 const NAV_ITEMS = [
   { to: "/faculty/student-verifications", label: "Student Verification", icon: UserCheck },
+  { to: "/faculty/applications", label: "Applications Review", icon: FileCheck },
   { to: "/faculty/organizations", label: "Organizations", icon: Building2 },
   { to: "/faculty/opportunities", label: "Opportunities", icon: Briefcase },
   { to: "/faculty/certificates", label: "Certificates", icon: Award },

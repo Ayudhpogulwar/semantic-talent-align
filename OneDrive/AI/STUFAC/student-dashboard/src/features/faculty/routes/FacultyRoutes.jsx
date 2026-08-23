@@ -10,6 +10,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import FacultyDashboardLayout from "../components/FacultyDashboardLayout";
 import StudentVerificationTable from "../components/StudentVerificationTable";
+import FacultyApplicationsTable from "../components/FacultyApplicationsTable";
 import OrganizationDirectory from "../components/OrganizationDirectory";
 import OpportunityManager from "../components/OpportunityManager";
 import CertificateVerificationTable from "../components/CertificateVerificationTable";
@@ -34,6 +35,7 @@ export default function FacultyRoutes() {
       >
         <Route index element={<Navigate to="student-verifications" replace />} />
         <Route path="student-verifications" element={<StudentVerificationTable />} />
+        <Route path="applications" element={<FacultyApplicationsTable />} />
         <Route path="organizations" element={<OrganizationDirectory />} />
         <Route path="opportunities" element={<OpportunityManager />} />
         <Route path="certificates" element={<CertificateVerificationTable />} />
