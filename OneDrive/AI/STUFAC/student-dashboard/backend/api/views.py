@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from api.db_helper import get_db
+from api.services import auth_service, nlp_recommendation_engine, readiness_service
 
 SECRET_KEY = "saiotaf_jwt_secret_python_key_2026"
 ALGORITHM = "HS256"
@@ -28,6 +29,14 @@ DYNAMIC_SKILLS = []
 def login(request):
     email = request.data.get('email', '')
     password = request.data.get('password', '')
+
+    try:
+        res = auth_service.authenticate_or_register(email, password)
+        return Response(res)
+    except ValueError as val_err:
+        return Response({"detail": str(val_err)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     if not email.endswith("@ghrietn.raisoni.net"):
         return Response({"detail": "Invalid institutional email. Must end with @ghrietn.raisoni.net"}, status=status.HTTP_400_BAD_REQUEST)
@@ -643,117 +652,16 @@ def applications(request):
 # --- Recommendations ---
 @api_view(['GET'])
 def get_recommendations(request):
-    user_skills = [s["skill_name"].lower() for s in DYNAMIC_SKILLS]
-    
-    opps = []
-    # 1. Fetch real approved opportunities from Django ORM
-    try:
-        from faculty_app.models import Opportunity
-        qs = Opportunity.objects.filter(status="APPROVED").select_related('organization')
-        for o in qs:
-            req_skills = o.required_skills if isinstance(o.required_skills, list) else ["React", "Python"]
-            opps.append({
-                "id": str(o.id),
-                "title": o.title,
-                "organization": o.organization.name if o.organization else "Partner Org",
-                "domain": "Software Dev" if o.opportunity_type == "INTERNSHIP" else "Environment & Community",
-                "location": o.location or "Remote",
-                "work_mode": o.work_mode.title() if o.work_mode else "Remote",
-                "stipend": f"{o.compensation_currency} {o.compensation_amount:,.0f}/mo" if o.compensation_amount else "Unpaid / Volunteer",
-                "description": o.description,
-                "required_skills": req_skills
-            })
-    except Exception as e:
-        print("ORM fetch opps exception:", e)
-
-    # 2. Fallback to SQL database if ORM returns empty
-    if not opps:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT o.*, org.name AS organization_name 
-            FROM opportunities o 
-            JOIN organizations org ON o.org_id = org.org_id
-        """)
-        opp_rows = cursor.fetchall()
-        conn.close()
-        for r in opp_rows:
-            opp = dict(r)
-            opps.append({
-                "id": str(opp["opportunity_id"]),
-                "title": opp["title"],
-                "organization": opp["organization_name"],
-                "domain": "Engineering & AI" if opp["opportunity_type"] == "Internship" else "Environment & Community",
-                "location": opp["location"] or "Remote",
-                "work_mode": opp.get("mode") or "Remote",
-                "stipend": "₹35,000 / month" if opp["opportunity_type"] == "Internship" else "₹10,000 / month",
-                "description": opp.get("description", "Opportunity position"),
-                "required_skills": ["Python", "SQL", "React", "Git"]
-            })
-    
-    results = []
-    for opp in opps:
-        req_skills = opp["required_skills"]
-        matched = [r_skill for r_skill in req_skills if any(u_skill in r_skill.lower() or r_skill.lower() in u_skill for u_skill in user_skills)]
-        missing = [r_skill for r_skill in req_skills if r_skill not in matched]
-        
-        # Calculate real dynamic match score based on user's actual skills
-        if len(req_skills) > 0:
-            match_score = int(40 + (len(matched) / len(req_skills)) * 55)
-        else:
-            match_score = 60
-
-        match_score = min(98, max(45, match_score))
-            
-        results.append({
-            "id": opp["id"],
-            "title": opp["title"],
-            "organization": opp["organization"],
-            "domain": opp["domain"],
-            "location": opp["location"],
-            "work_mode": opp["work_mode"],
-            "stipend": opp["stipend"],
-            "description": opp["description"],
-            "required_skills": req_skills,
-            "match_score": match_score,
-            "matched_skills": matched if matched else ["General Alignment"],
-            "missing_skills": missing,
-            "model_source": "Sentence-BERT + JobFormer NLP Engine",
-            "explanation": f"Matched on {len(matched)} skill{'s' if len(matched) != 1 else ''}: {', '.join(matched) if matched else 'General fit based on profile'}."
-        })
-        
-    results.sort(key=lambda x: x["match_score"], reverse=True)
+    user_skills = [s["skill_name"] for s in DYNAMIC_SKILLS]
+    results = nlp_recommendation_engine.generate_recommendations(user_skills)
     return Response(results)
 
 # --- Readiness Score ---
 @api_view(['GET'])
 def get_readiness(request):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT placement_readiness_score FROM student_profiles ORDER BY student_id DESC LIMIT 1")
-    row = cursor.fetchone()
-
-    cursor.execute("SELECT COUNT(*) AS app_count FROM applications")
-    app_row = cursor.fetchone()
-    conn.close()
-
-    app_count = app_row["app_count"] if app_row else 0
-    score = float(row["placement_readiness_score"]) if row and float(row["placement_readiness_score"]) > 0 else (len(DYNAMIC_SKILLS) * 15 + app_count * 20)
-    score = min(100.0, max(0.0, score))
-    
-    return Response({
-        "overall_score": int(score),
-        "category_scores": {
-            "resume_quality": 60 if score > 0 else 0,
-            "skill_coverage": min(100, len(DYNAMIC_SKILLS) * 20),
-            "application_activity": min(100, app_count * 50)
-        },
-        "actionable_suggestions": [
-            "Upload your resume to complete your skill extraction.",
-            "Add at least 3 core technical skills to increase recommendation accuracy.",
-            "Apply to available opportunities to build placement history."
-        ]
-    })
+    user_skills = [s["skill_name"] for s in DYNAMIC_SKILLS]
+    res = readiness_service.calculate_readiness_score(user_skills)
+    return Response(res)
 
 DYNAMIC_NOTIFICATIONS = [
     {
