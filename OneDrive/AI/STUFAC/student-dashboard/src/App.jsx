@@ -145,9 +145,13 @@ function StudentDashboardApp() {
     }
   };
 
-  const handleMarkNotifRead = (id) => {
-    const updated = apiService.markNotificationRead(id);
-    setNotifications(updated);
+  const handleMarkNotifRead = async (id) => {
+    try {
+      const updated = await apiService.markNotificationRead(id);
+      setNotifications(Array.isArray(updated) ? updated : []);
+    } catch (e) {
+      console.error("Mark notif read error:", e);
+    }
   };
 
   const refreshRecsAndReadiness = async () => {

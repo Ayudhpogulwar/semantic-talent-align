@@ -17,7 +17,7 @@ export default function AIRecommendations({ recommendations, onApply }) {
             Semantic AI Engine Architecture
           </span>
         </div>
-        <h2 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: 800 }}>
+        <h2 style={{ fontSize: '1.6rem', color: 'var(--text-main)', fontWeight: 800 }}>
           Personalized Opportunity Recommendations
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginTop: '6px', maxWidth: '800px', lineHeight: '1.5' }}>
@@ -30,7 +30,7 @@ export default function AIRecommendations({ recommendations, onApply }) {
         {recommendations.length === 0 ? (
           <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>
             <AlertCircle size={32} color="var(--accent-amber)" style={{ marginBottom: '12px' }} />
-            <h4 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '6px' }}>No Recommendations Generated Yet</h4>
+            <h4 style={{ color: 'var(--text-main)', fontSize: '1.1rem', marginBottom: '6px' }}>No Recommendations Generated Yet</h4>
             <p style={{ fontSize: '0.88rem' }}>Please add at least 3 skills or upload your resume in the Resume & Skills section to trigger the Semantic AI Engine.</p>
           </div>
         ) : (
@@ -47,12 +47,12 @@ export default function AIRecommendations({ recommendations, onApply }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                    <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)', fontSize: '0.9rem', padding: '6px 14px', fontWeight: 800 }}>
+                    <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.2)', color: 'var(--accent-purple)', border: '1px solid rgba(168, 85, 247, 0.4)', fontSize: '0.9rem', padding: '6px 14px', fontWeight: 800 }}>
                       <Sparkles size={14} /> {opp.match_score}% Match Score
                     </span>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Source: {opp.model_source}</span>
                   </div>
-                  <h3 style={{ fontSize: '1.3rem', color: '#fff', fontWeight: 700 }}>{opp.title}</h3>
+                  <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)', fontWeight: 700 }}>{opp.title}</h3>
                   <div style={{ fontSize: '0.92rem', color: 'var(--primary-light)', fontWeight: 600 }}>{opp.organization} • {opp.stipend}</div>
                 </div>
 
@@ -69,25 +69,25 @@ export default function AIRecommendations({ recommendations, onApply }) {
               <div style={{
                 padding: '14px 16px',
                 borderRadius: '12px',
-                background: 'rgba(6, 182, 212, 0.08)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
+                background: 'rgba(6, 182, 212, 0.1)',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px'
               }}>
-                <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '0.82rem', color: 'var(--accent-cyan)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <BrainCircuit size={16} /> Explainable AI Rationale:
                 </div>
-                <div style={{ fontSize: '0.88rem', color: '#e2e8f0', lineHeight: '1.4' }}>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', lineHeight: '1.45', fontWeight: 500 }}>
                   {opp.explanation}
                 </div>
 
                 <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '0.78rem' }}>
-                  <div style={{ color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                     <CheckCircle size={14} /> Matched: {opp.matched_skills.join(', ')}
                   </div>
                   {opp.missing_skills.length > 0 && (
-                    <div style={{ color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                       <AlertCircle size={14} /> Recommended gap closing: {opp.missing_skills.join(', ')}
                     </div>
                   )}

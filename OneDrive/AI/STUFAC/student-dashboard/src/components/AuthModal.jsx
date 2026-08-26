@@ -20,13 +20,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
 
     try {
       if (isRegister) {
-        if (!email.endsWith('@college.edu')) {
-          throw new Error('Institutional email validation failed! Must end with @college.edu (FR-1)');
+        if (!email.endsWith('@ghrietn.raisoni.net')) {
+          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net (FR-1)');
         }
         await onLoginSuccess({ type: 'register', data: { name, email, password, roll_no: rollNo } });
       } else {
-        if (!email.endsWith('@college.edu')) {
-          throw new Error('Please login using your verified @college.edu student email.');
+        if (!email.endsWith('@ghrietn.raisoni.net')) {
+          throw new Error('Please login using your verified @ghrietn.raisoni.net student email.');
         }
         await onLoginSuccess({ type: 'login', email, password });
       }
@@ -153,13 +153,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
 
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-              Institutional Email (@college.edu)
+              Institutional Email (@ghrietn.raisoni.net)
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 type="email"
                 className="form-control"
-                placeholder="student@college.edu"
+                placeholder="student@ghrietn.raisoni.net"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

@@ -66,7 +66,7 @@ export default function ApplicationTracker({ applications }) {
               <div key={app.id || app.application_id} style={{
                 padding: '20px',
                 borderRadius: '12px',
-                background: 'rgba(15, 23, 42, 0.6)',
+                background: 'var(--input-bg)',
                 border: '1px solid var(--border-color)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -78,12 +78,12 @@ export default function ApplicationTracker({ applications }) {
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>ID: {app.id || app.application_id}</span>
                       {getStatusBadge(app.status)}
                     </div>
-                    <h3 style={{ fontSize: '1.15rem', color: '#fff', fontWeight: 700 }}>{app.opportunity_title}</h3>
+                    <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 700 }}>{app.opportunity_title}</h3>
                     <div style={{ fontSize: '0.88rem', color: 'var(--primary-light)', fontWeight: 600 }}>{app.organization}</div>
                   </div>
 
                   <div style={{ textAlign: 'right', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    <div>Applied On: <strong>{app.applied_date}</strong></div>
+                    <div>Applied On: <strong style={{ color: 'var(--text-main)' }}>{app.applied_date}</strong></div>
                     <div style={{ marginTop: '2px', color: 'var(--text-dim)' }}>Last Updated: {new Date(app.last_updated).toLocaleString()}</div>
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export default function ApplicationTracker({ applications }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: 'rgba(255,255,255,0.02)',
+                  background: 'rgba(255,255,255,0.03)',
                   padding: '12px 16px',
                   borderRadius: '10px',
                   border: '1px solid var(--border-color)',
@@ -105,7 +105,7 @@ export default function ApplicationTracker({ applications }) {
                     const isCompleted = idx <= currentIdx;
                     return (
                       <React.Fragment key={step}>
-                        <div style={{ display: 'flex', flexColumn: 'column', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                           <div style={{
                             width: '24px',
                             height: '24px',
@@ -121,7 +121,7 @@ export default function ApplicationTracker({ applications }) {
                           }}>
                             {idx + 1}
                           </div>
-                          <span style={{ fontSize: '0.72rem', color: isCompleted ? '#fff' : 'var(--text-dim)', fontWeight: isCompleted ? 700 : 400 }}>
+                          <span style={{ fontSize: '0.72rem', color: isCompleted ? 'var(--text-main)' : 'var(--text-dim)', fontWeight: isCompleted ? 700 : 400 }}>
                             {step}
                           </span>
                         </div>
@@ -135,13 +135,13 @@ export default function ApplicationTracker({ applications }) {
 
                 <div style={{
                   fontSize: '0.82rem',
-                  color: 'var(--text-muted)',
-                  background: 'rgba(99, 102, 241, 0.06)',
+                  color: 'var(--text-main)',
+                  background: 'rgba(99, 102, 241, 0.1)',
                   padding: '10px 14px',
                   borderRadius: '8px',
                   borderLeft: '3px solid var(--primary-light)'
                 }}>
-                  💬 <strong>Status Update Note:</strong> {app.notes}
+                  💬 <strong style={{ color: 'var(--primary-light)' }}>Status Update Note:</strong> {app.notes}
                 </div>
               </div>
             ))}

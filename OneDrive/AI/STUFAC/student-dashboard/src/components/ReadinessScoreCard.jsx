@@ -69,7 +69,7 @@ export default function ReadinessScoreCard({ readiness }) {
 
           {/* Sub-score 1: Resume Quality */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#fff', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
               <span>Resume Quality Assessment (ResumeNet)</span>
               <strong style={{ color: '#818cf8' }}>{category_scores.resume_quality} / 100</strong>
             </div>
@@ -80,7 +80,7 @@ export default function ReadinessScoreCard({ readiness }) {
 
           {/* Sub-score 2: Skill Coverage */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#fff', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
               <span>Skill Coverage & Alignment (SkillRec)</span>
               <strong style={{ color: '#38bdf8' }}>{category_scores.skill_coverage} / 100</strong>
             </div>
@@ -91,7 +91,7 @@ export default function ReadinessScoreCard({ readiness }) {
 
           {/* Sub-score 3: Application Activity */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#fff', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
               <span>Application Velocity & Pipeline</span>
               <strong style={{ color: '#fbbf24' }}>{category_scores.application_activity} / 100</strong>
             </div>
@@ -114,14 +114,14 @@ export default function ReadinessScoreCard({ readiness }) {
             <div key={idx} style={{
               padding: '14px',
               borderRadius: '10px',
-              background: 'rgba(255,255,255,0.03)',
+              background: 'var(--input-bg)',
               border: '1px solid var(--border-color)',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
               <CheckCircle size={18} color="#34d399" />
-              <div style={{ fontSize: '0.88rem', color: '#e2e8f0' }}>{s}</div>
+              <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', fontWeight: 500 }}>{s}</div>
             </div>
           ))}
         </div>

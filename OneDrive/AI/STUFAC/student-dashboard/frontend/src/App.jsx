@@ -46,9 +46,13 @@ function StudentDashboardApp() {
     }
   };
 
-  const handleMarkNotifRead = (id) => {
-    const updated = apiService.markNotificationRead(id);
-    setNotifications(updated);
+  const handleMarkNotifRead = async (id) => {
+    try {
+      const updated = await apiService.markNotificationRead(id);
+      setNotifications(Array.isArray(updated) ? updated : []);
+    } catch (e) {
+      console.error("Mark notif read error:", e);
+    }
   };
 
   const refreshRecsAndReadiness = async () => {
@@ -149,7 +153,7 @@ function StudentDashboardApp() {
         user={profile}
         onLogout={handleLogout}
         notifications={notifications}
-        onMarkNotifRead={() => {}}
+        onMarkNotifRead={handleMarkNotifRead}
       />
       <main style={{ maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '32px 24px', flex: 1 }}>
         {activeTab === 'home' && <DashboardOverview profile={profile} resume={resume} readiness={readiness} applications={applications} recommendations={recommendations} setActiveTab={setActiveTab} />}

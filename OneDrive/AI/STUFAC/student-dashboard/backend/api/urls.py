@@ -27,4 +27,5 @@ urlpatterns = [
 
     # Notifications
     path('notifications', views.get_notifications),
+    path('notifications/<str:notif_id>/read', views.mark_notification_read),
 ]

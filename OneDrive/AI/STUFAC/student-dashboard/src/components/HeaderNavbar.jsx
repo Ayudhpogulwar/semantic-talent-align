@@ -85,7 +85,7 @@ export default function HeaderNavbar({ activeTab, setActiveTab, user, onLogout, 
           </div>
           <div>
             <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              TalentAlign <span style={{ fontSize: '0.68rem', padding: '2px 6px', background: 'rgba(6, 182, 212, 0.18)', color: 'var(--accent-cyan)', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.3)', fontWeight: 800 }}>AI PORTAL</span>
+              TalentAlign
             </div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Semantic Opportunity Alignment</div>
           </div>

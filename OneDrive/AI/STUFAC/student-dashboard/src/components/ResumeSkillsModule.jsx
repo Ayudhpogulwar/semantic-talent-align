@@ -98,7 +98,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
             onDrop={handleDrop}
             style={{
               border: dragActive ? '2px dashed var(--primary)' : '2px dashed var(--border-color)',
-              background: dragActive ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.5)',
+              background: dragActive ? 'rgba(99, 102, 241, 0.15)' : 'var(--input-bg)',
               borderRadius: '16px',
               padding: '36px 20px',
               textAlign: 'center',
@@ -125,17 +125,17 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
 
             {isUploading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                <RefreshCw size={36} color="#38bdf8" className="pulse-glow" style={{ animation: 'spin 1.5s linear infinite' }} />
-                <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem' }}>spaCy NLP Parsing Engine Running...</div>
+                <RefreshCw size={36} color="var(--accent-cyan)" className="pulse-glow" style={{ animation: 'spin 1.5s linear infinite' }} />
+                <div style={{ color: 'var(--text-main)', fontWeight: 600, fontSize: '0.95rem' }}>spaCy NLP Parsing Engine Running...</div>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Extracting entities, work history & technical skill vectors</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <FileCode size={24} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>Drag & drop your resume file here</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>Drag & drop your resume file here</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Supports PDF or DOCX up to 5MB</div>
                 </div>
                 <button type="button" className="btn btn-outline-cyan" style={{ fontSize: '0.8rem', padding: '6px 16px', marginTop: '6px', pointerEvents: 'none' }}>
@@ -152,7 +152,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
               style={{
                 padding: '14px 16px',
                 borderRadius: '12px',
-                background: 'rgba(16, 185, 129, 0.12)',
+                background: 'rgba(16, 185, 129, 0.15)',
                 border: '1px solid rgba(16, 185, 129, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
@@ -166,7 +166,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <CheckCircle size={22} color="#34d399" />
                 <div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {safeResume.filename} <Eye size={14} color="#34d399" />
                   </div>
                   <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -201,9 +201,9 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
           {/* Extracted Education & Work History */}
           {resume.parsed_data && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-              <h4 style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>Extracted Experience Highlights:</h4>
+              <h4 style={{ fontSize: '0.88rem', color: 'var(--text-main)', fontWeight: 700 }}>Extracted Experience Highlights:</h4>
               {resume.parsed_data.experience.map((exp, idx) => (
-                <div key={idx} style={{ fontSize: '0.8rem', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', borderLeft: '3px solid var(--primary-light)', color: '#e2e8f0' }}>
+                <div key={idx} style={{ fontSize: '0.82rem', padding: '10px 14px', background: 'var(--input-bg)', borderRadius: '8px', borderLeft: '3px solid var(--primary-light)', color: 'var(--text-main)', fontWeight: 500 }}>
                   {exp}
                 </div>
               ))}
@@ -214,10 +214,10 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
         {/* Right Column: Skills & Interests Tagging (FR-4) */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Sparkles size={18} color="#c084fc" /> Verified Skill Matrix ({skills.length})
             </h3>
-            <span style={{ fontSize: '0.75rem', color: skills.length >= 3 ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: skills.length >= 3 ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
               {skills.length >= 3 ? '✓ Minimum skill threshold met' : '⚠️ Need ≥3 skills for recommendations'}
             </span>
           </div>
@@ -263,20 +263,20 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    padding: '6px 12px',
+                    padding: '6px 14px',
                     borderRadius: '20px',
-                    background: skill.source === 'parsed' ? 'rgba(99, 102, 241, 0.18)' : 'rgba(6, 182, 212, 0.18)',
-                    border: skill.source === 'parsed' ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid rgba(6, 182, 212, 0.35)',
-                    fontSize: '0.82rem',
-                    color: skill.source === 'parsed' ? '#a5b4fc' : '#38bdf8',
-                    fontWeight: 600
+                    background: skill.source === 'parsed' ? 'rgba(99, 102, 241, 0.22)' : 'rgba(6, 182, 212, 0.22)',
+                    border: skill.source === 'parsed' ? '1px solid rgba(99, 102, 241, 0.45)' : '1px solid rgba(6, 182, 212, 0.45)',
+                    fontSize: '0.84rem',
+                    color: skill.source === 'parsed' ? 'var(--primary-light)' : 'var(--accent-cyan)',
+                    fontWeight: 700
                   }}
                 >
-                  {skill.source === 'parsed' && <Sparkles size={12} color="#a5b4fc" />}
+                  {skill.source === 'parsed' && <Sparkles size={12} color="var(--primary-light)" />}
                   <span>{skill.skill_name}</span>
                   <button
                     onClick={() => onRemoveSkill(skill.skill_id)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     title="Remove skill"
                   >
                     <Trash2 size={13} />
@@ -288,13 +288,13 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
 
           <div style={{
             fontSize: '0.78rem',
-            color: 'var(--text-dim)',
+            color: 'var(--text-main)',
             padding: '10px 14px',
-            background: 'rgba(255,255,255,0.02)',
+            background: 'var(--input-bg)',
             borderRadius: '8px',
             border: '1px solid var(--border-color)'
           }}>
-            ℹ️ <strong>spaCy Note:</strong> Skills marked with <Sparkles size={11} inline /> were automatically extracted during resume NLP parsing. You can manually adjust them anytime.
+            ℹ️ <strong style={{ color: 'var(--accent-cyan)' }}>spaCy Note:</strong> Skills marked with <Sparkles size={11} inline /> were automatically extracted during resume NLP parsing. You can manually adjust them anytime.
           </div>
         </div>
 

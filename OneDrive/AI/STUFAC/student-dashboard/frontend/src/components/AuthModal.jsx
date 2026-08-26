@@ -18,13 +18,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
 
     try {
       if (isRegister) {
-        if (!email.endsWith('@college.edu')) {
-          throw new Error('Institutional email validation failed! Must end with @college.edu (FR-1)');
+        if (!email.endsWith('@ghrietn.raisoni.net')) {
+          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net (FR-1)');
         }
         await onLoginSuccess({ type: 'register', data: { name, email, password, roll_no: rollNo } });
       } else {
-        if (!email.endsWith('@college.edu')) {
-          throw new Error('Please login using your verified @college.edu student email.');
+        if (!email.endsWith('@ghrietn.raisoni.net')) {
+          throw new Error('Please login using your verified @ghrietn.raisoni.net student email.');
         }
         await onLoginSuccess({ type: 'login', email, password });
       }
@@ -188,13 +188,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
 
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-              Institutional Email (@college.edu)
+              Institutional Email (@ghrietn.raisoni.net)
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 type="email"
                 className="form-control"
-                placeholder="student@college.edu"
+                placeholder="student@ghrietn.raisoni.net"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -224,15 +224,20 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
             type="submit"
             className="btn btn-primary"
             disabled={loading}
-            style={{ width: '100%', marginTop: '8px', padding: '12px' }}
+            style={{
+              width: '100%',
+              marginTop: '8px',
+              padding: '12px',
+              background: 'var(--primary)'
+            }}
           >
-            {loading ? 'Authenticating...' : isRegister ? 'Create Verified Account' : 'Login to Dashboard'}
+            {loading ? 'Authenticating...' : isRegister ? 'Create Verified Account' : 'Sign In'}
             {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-          🔒 Restricted to verified institutional students with `@college.edu` domain.
+        <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+          🔒 Restricted to verified institutional students with `@ghrietn.raisoni.net` domain.
         </div>
       </div>
     </div>
