@@ -86,10 +86,14 @@ function StudentDashboardApp() {
     setShowAuthModal(false);
   };
 
-  const handleUpdateProfile = (fields) => {
-    const updated = apiService.updateProfile(fields);
-    setProfile(updated);
-    refreshRecsAndReadiness();
+  const handleUpdateProfile = async (fields) => {
+    try {
+      const updated = await apiService.updateProfile(fields);
+      setProfile(prev => ({ ...prev, ...updated }));
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Update profile error:", err);
+    }
   };
 
   const handleUploadResume = async (file, fileUrl = null) => {

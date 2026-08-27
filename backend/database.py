@@ -226,9 +226,18 @@ class DatabaseLayer:
                 cgpa REAL DEFAULT 0.0,
                 preferred_opportunity_type TEXT DEFAULT 'Both',
                 verification_status TEXT DEFAULT 'Pending',
-                placement_readiness_score REAL DEFAULT 0.0
+                placement_readiness_score REAL DEFAULT 0.0,
+                phone_number TEXT,
+                linkedin TEXT,
+                github TEXT,
+                bio TEXT
             )
             """)
+            for col in ["phone_number", "linkedin", "github", "bio"]:
+                try:
+                    cursor.execute(f"ALTER TABLE student_profiles ADD COLUMN {col} TEXT")
+                except Exception:
+                    pass
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY, title TEXT, message TEXT, timestamp TEXT, read INTEGER, type TEXT
