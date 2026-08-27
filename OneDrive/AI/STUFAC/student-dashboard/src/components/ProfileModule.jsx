@@ -162,7 +162,7 @@ export default function ProfileModule({ profile, resume, onUpdateProfile, setAct
 
             <div>
               <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Institutional Email *</label>
-              <input type="email" name="email" className="form-control" value={formData.email || ''} onChange={handleChange} required disabled style={{ opacity: 0.7 }} />
+              <input type="email" name="email" className="form-control" value={formData.email || ''} onChange={handleChange} required />
             </div>
 
             <div>

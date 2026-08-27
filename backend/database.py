@@ -30,6 +30,10 @@ class CursorWrapper:
     def fetchall(self):
         return self.cursor.fetchall()
 
+    @property
+    def lastrowid(self):
+        return self.cursor.lastrowid
+
 class DBWrapper:
     def __init__(self, conn, is_mysql=False):
         self.conn = conn
@@ -193,10 +197,47 @@ class DatabaseLayer:
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS applications (
-                application_id TEXT PRIMARY KEY, opportunity_id TEXT, opportunity_title TEXT,
+                application_id TEXT PRIMARY KEY, student_id TEXT, opportunity_id TEXT, opportunity_title TEXT,
                 organization TEXT, applied_date TEXT, status TEXT, last_updated TEXT, notes TEXT
             )
             """)
+            try:
+                cursor.execute("ALTER TABLE applications ADD COLUMN student_id TEXT")
+            except Exception:
+                pass
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE,
+                password_hash TEXT,
+                role TEXT DEFAULT 'Student',
+                is_active INTEGER DEFAULT 1,
+                is_verified INTEGER DEFAULT 0
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS student_profiles (
+                student_id INTEGER PRIMARY KEY,
+                roll_number TEXT,
+                first_name TEXT,
+                last_name TEXT,
+                department TEXT,
+                graduation_year INTEGER DEFAULT 2027,
+                cgpa REAL DEFAULT 0.0,
+                preferred_opportunity_type TEXT DEFAULT 'Both',
+                verification_status TEXT DEFAULT 'Pending',
+                placement_readiness_score REAL DEFAULT 0.0,
+                phone_number TEXT,
+                linkedin TEXT,
+                github TEXT,
+                bio TEXT
+            )
+            """)
+            for col in ["phone_number", "linkedin", "github", "bio"]:
+                try:
+                    cursor.execute(f"ALTER TABLE student_profiles ADD COLUMN {col} TEXT")
+                except Exception:
+                    pass
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY, title TEXT, message TEXT, timestamp TEXT, read INTEGER, type TEXT

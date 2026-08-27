@@ -23,10 +23,15 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
     setSuccessMsg(null);
     setLoading(true);
 
+    const isValidDomain = (em) => {
+      const e = em.toLowerCase();
+      return e.endsWith('@ghrietn.raisoni.net') || e.endsWith('@college.edu') || e.endsWith('.edu') || e.endsWith('.ac.in');
+    };
+
     try {
       if (authMode === 'forgot') {
-        if (!email.endsWith('@ghrietn.raisoni.net')) {
-          throw new Error('Reset restricted to institutional email (@ghrietn.raisoni.net).');
+        if (!isValidDomain(email)) {
+          throw new Error('Reset restricted to institutional email.');
         }
         if (newPassword !== confirmPassword) {
           throw new Error('New passwords do not match!');
@@ -43,13 +48,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
           setPassword('');
         }, 2000);
       } else if (authMode === 'register') {
-        if (!email.endsWith('@ghrietn.raisoni.net')) {
-          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net');
+        if (!isValidDomain(email)) {
+          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net or valid institutional domain.');
         }
         await onLoginSuccess({ type: 'register', data: { name, email, password, roll_no: rollNo } });
       } else {
-        if (!email.endsWith('@ghrietn.raisoni.net')) {
-          throw new Error('Please login using your verified @ghrietn.raisoni.net student email.');
+        if (!isValidDomain(email)) {
+          throw new Error('Please login using your verified institutional student email.');
         }
         await onLoginSuccess({ type: 'login', email, password });
       }

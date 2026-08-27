@@ -90,14 +90,11 @@ function StudentDashboardApp() {
   const handleUpdateProfile = async (fields) => {
     try {
       const updated = await apiService.updateProfile(fields);
-      setProfile(updated);
+      setProfile(prev => ({ ...prev, ...updated }));
+      await refreshRecsAndReadiness();
     } catch (err) {
-      console.error("Profile update error:", err);
-      const fallback = { ...profile, ...fields };
-      localStorage.setItem("stufac_profile", JSON.stringify(fallback));
-      setProfile(fallback);
+      console.error("Update profile error:", err);
     }
-    refreshRecsAndReadiness();
   };
 
   const handleUploadResume = async (file, fileUrl = null) => {
