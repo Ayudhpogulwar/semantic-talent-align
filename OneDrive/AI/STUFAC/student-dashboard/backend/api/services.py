@@ -52,10 +52,14 @@ class AbstractPlacementReadinessService(ABC):
 # 2. CONCRETE IMPLEMENTATIONS (Encapsulation)
 # ==========================================
 
+def _is_valid_domain(email: str) -> bool:
+    e = email.lower().strip()
+    return e.endswith("@ghrietn.raisoni.net") or e.endswith("@college.edu") or e.endswith(".edu") or e.endswith(".ac.in")
+
 class StudentAuthService(AbstractAuthService):
     def authenticate_or_register(self, email: str, password: str) -> dict:
-        if not email.endswith("@ghrietn.raisoni.net"):
-            raise ValueError("Invalid institutional email. Must end with @ghrietn.raisoni.net")
+        if not _is_valid_domain(email):
+            raise ValueError("Invalid institutional email. Must be an official college domain email (e.g. @ghrietn.raisoni.net or @college.edu)")
 
         conn = get_db()
         cursor = conn.cursor()
@@ -98,8 +102,8 @@ class StudentAuthService(AbstractAuthService):
         roll_no = data.get('roll_no') or data.get('student_id', '')
         dept = data.get('dept') or data.get('department', 'Computer Science & Engineering')
 
-        if not email.endswith("@ghrietn.raisoni.net"):
-            raise ValueError("Registration restricted to college domain email (@ghrietn.raisoni.net).")
+        if not _is_valid_domain(email):
+            raise ValueError("Registration restricted to official college domain email (e.g. @ghrietn.raisoni.net or @college.edu).")
 
         conn = get_db()
         cursor = conn.cursor()

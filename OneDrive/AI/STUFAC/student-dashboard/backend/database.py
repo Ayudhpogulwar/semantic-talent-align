@@ -24,15 +24,15 @@ class CursorWrapper:
             query = query.replace("?", "%s")
         return self.cursor.execute(query, params)
 
-    @property
-    def lastrowid(self):
-        return self.cursor.lastrowid
-
     def fetchone(self):
         return self.cursor.fetchone()
 
     def fetchall(self):
         return self.cursor.fetchall()
+
+    @property
+    def lastrowid(self):
+        return self.cursor.lastrowid
 
 class DBWrapper:
     def __init__(self, conn, is_mysql=False):
@@ -199,6 +199,30 @@ class DatabaseLayer:
             CREATE TABLE IF NOT EXISTS applications (
                 application_id TEXT PRIMARY KEY, opportunity_id TEXT, opportunity_title TEXT,
                 organization TEXT, applied_date TEXT, status TEXT, last_updated TEXT, notes TEXT
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE,
+                password_hash TEXT,
+                role TEXT DEFAULT 'Student',
+                is_active INTEGER DEFAULT 1,
+                is_verified INTEGER DEFAULT 0
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS student_profiles (
+                student_id INTEGER PRIMARY KEY,
+                roll_number TEXT,
+                first_name TEXT,
+                last_name TEXT,
+                department TEXT,
+                graduation_year INTEGER DEFAULT 2027,
+                cgpa REAL DEFAULT 0.0,
+                preferred_opportunity_type TEXT DEFAULT 'Both',
+                verification_status TEXT DEFAULT 'Pending',
+                placement_readiness_score REAL DEFAULT 0.0
             )
             """)
             cursor.execute("""

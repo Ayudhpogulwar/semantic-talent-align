@@ -74,9 +74,9 @@ class FacultyLoginView(APIView):
         from django.db.models import Q
         try:
             faculty = Faculty.objects.select_related("user").get(
-                Q(employee_id=employee_id) |
-                Q(user__username=employee_id) |
-                Q(user__email=employee_id),
+                Q(employee_id__iexact=employee_id) |
+                Q(user__username__iexact=employee_id) |
+                Q(user__email__iexact=employee_id),
                 is_active=True
             )
         except Faculty.DoesNotExist:

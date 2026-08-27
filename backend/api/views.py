@@ -23,15 +23,21 @@ def create_token(email: str, user_id: int) -> str:
 
 DYNAMIC_SKILLS = []
 
+ALLOWED_INSTITUTIONAL_DOMAINS = ["@ghrietn.raisoni.net", "@college.edu"]
+
+def is_valid_institutional_email(email: str) -> bool:
+    email_lower = email.lower()
+    return any(email_lower.endswith(dom) for dom in ALLOWED_INSTITUTIONAL_DOMAINS) or email_lower.endswith(".edu") or email_lower.endswith(".ac.in")
+
 # --- Auth ---
 @api_view(['POST'])
 def login(request):
-    email = request.data.get('email', '')
+    email = request.data.get('email', '').strip()
     password = request.data.get('password', '')
 
-    if not email.endswith("@college.edu"):
-        return Response({"detail": "Invalid institutional email. Must end with @college.edu"}, status=status.HTTP_400_BAD_REQUEST)
-    
+    if not is_valid_institutional_email(email):
+        return Response({"detail": "Invalid institutional email. Must be an official college domain email (e.g. @ghrietn.raisoni.net or @college.edu)."}, status=status.HTTP_400_BAD_REQUEST)
+
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT u.user_id, u.email, sp.student_id FROM users u LEFT JOIN student_profiles sp ON u.user_id = sp.student_id WHERE u.email = ?", (email,))
@@ -63,13 +69,13 @@ def login(request):
 
 @api_view(['POST'])
 def register(request):
-    name = request.data.get('name', '')
-    email = request.data.get('email', '')
-    roll_no = request.data.get('roll_no', '')
-    dept = request.data.get('dept', '')
+    name = request.data.get('name', '').strip()
+    email = request.data.get('email', '').strip()
+    roll_no = request.data.get('roll_no', '').strip()
+    dept = request.data.get('dept', '').strip() or 'Computer Science & Engineering'
 
-    if not email.endswith("@college.edu"):
-        return Response({"detail": "Registration restricted to college domain email (@college.edu)."}, status=status.HTTP_400_BAD_REQUEST)
+    if not is_valid_institutional_email(email):
+        return Response({"detail": "Registration restricted to college domain email (e.g. @ghrietn.raisoni.net or @college.edu)."}, status=status.HTTP_400_BAD_REQUEST)
     
     conn = get_db()
     cursor = conn.cursor()

@@ -18,15 +18,20 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
     setError(null);
     setLoading(true);
 
+    const isValidDomain = (em) => {
+      const e = em.toLowerCase();
+      return e.endsWith('@ghrietn.raisoni.net') || e.endsWith('@college.edu') || e.endsWith('.edu') || e.endsWith('.ac.in');
+    };
+
     try {
       if (isRegister) {
-        if (!email.endsWith('@ghrietn.raisoni.net')) {
-          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net (FR-1)');
+        if (!isValidDomain(email)) {
+          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net or @college.edu');
         }
         await onLoginSuccess({ type: 'register', data: { name, email, password, roll_no: rollNo } });
       } else {
-        if (!email.endsWith('@ghrietn.raisoni.net')) {
-          throw new Error('Please login using your verified @ghrietn.raisoni.net student email.');
+        if (!isValidDomain(email)) {
+          throw new Error('Please login using your verified institutional student email (e.g. @ghrietn.raisoni.net).');
         }
         await onLoginSuccess({ type: 'login', email, password });
       }
