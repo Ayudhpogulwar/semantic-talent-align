@@ -55,8 +55,11 @@ function validate(form) {
   return errors;
 }
 
-export default function UploadOpportunityForm({ onSuccess }) {
-  const [form, setForm] = useState(INITIAL_STATE);
+export default function UploadOpportunityForm({ onSuccess, initialOrganization = "" }) {
+  const [form, setForm] = useState({
+    ...INITIAL_STATE,
+    organization: initialOrganization || "",
+  });
   const [errors, setErrors] = useState({});
   const [organizations, setOrganizations] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -125,7 +128,7 @@ export default function UploadOpportunityForm({ onSuccess }) {
   };
 
   return (
-    <form className="upload-opportunity-form bg-white p-4 rounded shadow-sm" onSubmit={handleSubmit} noValidate>
+    <form className="upload-opportunity-form glass-panel p-4" onSubmit={handleSubmit} noValidate>
       <h4 className="mb-3">Post New Opportunity</h4>
 
       {submitSuccess && (

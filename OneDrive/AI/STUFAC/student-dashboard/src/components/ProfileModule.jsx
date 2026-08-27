@@ -15,11 +15,20 @@ export default function ProfileModule({ profile, resume, onUpdateProfile, setAct
     }));
   };
 
-  const handleSubmit = (e) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onUpdateProfile(formData);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    setIsSaving(true);
+    try {
+      await onUpdateProfile(formData);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 4000);
+    } catch (err) {
+      console.error("Save error:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -233,8 +242,14 @@ export default function ProfileModule({ profile, resume, onUpdateProfile, setAct
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-            <button type="submit" className="btn btn-primary">
-              <Save size={16} /> Save Profile Changes
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="btn btn-primary"
+              disabled={isSaving}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: isSaving ? 'not-allowed' : 'pointer' }}
+            >
+              <Save size={16} /> {isSaving ? "Saving Changes..." : "Save Profile Changes"}
             </button>
           </div>
         </div>

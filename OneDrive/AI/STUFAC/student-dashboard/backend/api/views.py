@@ -24,6 +24,32 @@ def create_token(email: str, user_id: int) -> str:
 
 DYNAMIC_SKILLS = []
 
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data.get('email', '')
+    new_password = request.data.get('new_password', '')
+    
+    if not email.endswith("@ghrietn.raisoni.net"):
+        return Response({"detail": "Reset restricted to institutional email (@ghrietn.raisoni.net)."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not new_password or len(new_password) < 4:
+        return Response({"detail": "New password must be at least 4 characters."}, status=status.HTTP_400_BAD_REQUEST)
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users WHERE email = ?", (email,))
+    row = cursor.fetchone()
+    
+    if not row:
+        conn.close()
+        return Response({"detail": "No account found registered with this institutional email."}, status=status.HTTP_404_NOT_FOUND)
+        
+    cursor.execute("UPDATE users SET password_hash = ? WHERE email = ?", (new_password, email))
+    conn.commit()
+    conn.close()
+    
+    return Response({"status": "success", "message": "Password reset successfully. You can now sign in with your new password."})
+
 # --- Auth ---
 @api_view(['POST'])
 def login(request):
@@ -290,7 +316,7 @@ def get_resume(request):
             FROM resume r 
             JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
             JOIN users u ON sp.student_id = u.user_id 
-            WHERE u.email COLLATE utf8mb4_general_ci = ? COLLATE utf8mb4_general_ci
+            WHERE u.email = ?
         """, (email,))
         row = cursor.fetchone()
     else:
@@ -436,8 +462,14 @@ def upload_resume(request):
                 })
                 existing_skills_set.add(skill_name.lower())
 
+    parsed_skills_list = [
+        {"skill_id": s["skill_id"], "skill_name": s["skill_name"], "category": s["category"]}
+        for s in DYNAMIC_SKILLS
+    ]
+
     parsed_payload = {
-        "skills": [s["skill_name"] for s in DYNAMIC_SKILLS],
+        "skills": parsed_skills_list,
+        "skill_names": [s["skill_name"] for s in DYNAMIC_SKILLS],
         "experience": ["Extracted Experience Highlight: Software Engineering & Data Analysis"],
         "education": "B.Tech Computer Science"
     }
@@ -465,7 +497,7 @@ def upload_resume(request):
     if email:
         cursor.execute("""
             UPDATE student_profiles SET active_resume_id = ? 
-            WHERE student_id = (SELECT user_id FROM users WHERE email COLLATE utf8mb4_general_ci = ? COLLATE utf8mb4_general_ci)
+            WHERE student_id = (SELECT user_id FROM users WHERE email = ?)
         """, (resume_id, email))
     else:
         cursor.execute("UPDATE student_profiles SET active_resume_id = ? ORDER BY student_id DESC LIMIT 1", (resume_id,))
@@ -480,7 +512,8 @@ def upload_resume(request):
         "upload_date": now_iso,
         "version": 1,
         "status": "Parsed",
-        "parsed_data": parsed_payload
+        "parsed_data": parsed_payload,
+        "skills": DYNAMIC_SKILLS
     })
 
 # --- Skills ---
@@ -563,8 +596,24 @@ def applications(request):
                 ORDER BY a.applied_at DESC
             """, (email,))
             rows = cursor.fetchall()
+            if not rows:
+                cursor.execute("""
+                    SELECT a.*, o.title AS opportunity_title, org.name AS organization 
+                    FROM applications a 
+                    JOIN opportunities o ON a.opportunity_id = o.opportunity_id 
+                    JOIN organizations org ON o.org_id = org.org_id
+                    ORDER BY a.applied_at DESC
+                """)
+                rows = cursor.fetchall()
         else:
-            rows = []
+            cursor.execute("""
+                SELECT a.*, o.title AS opportunity_title, org.name AS organization 
+                FROM applications a 
+                JOIN opportunities o ON a.opportunity_id = o.opportunity_id 
+                JOIN organizations org ON o.org_id = org.org_id
+                ORDER BY a.applied_at DESC
+            """)
+            rows = cursor.fetchall()
         conn.close()
         
         apps = []
@@ -648,6 +697,47 @@ def applications(request):
             "last_updated": now_iso,
             "notes": "Application submitted successfully."
         })
+
+@api_view(['PUT'])
+def update_application_status(request, app_id):
+    global DYNAMIC_NOTIFICATIONS
+    new_status = request.data.get('status')
+    if not new_status:
+        return Response({"detail": "Status is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Sanitize numeric application_id if prefixed with APP-
+    clean_id = app_id.replace("APP-", "")
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT a.*, o.title AS opp_title 
+        FROM applications a 
+        LEFT JOIN opportunities o ON a.opportunity_id = o.opportunity_id 
+        WHERE a.application_id = ? OR a.opportunity_id = ?
+    """, (clean_id, app_id))
+    app_row = cursor.fetchone()
+
+    cursor.execute("""
+        UPDATE applications SET current_status = ?, updated_at = ? WHERE application_id = ? OR opportunity_id = ?
+    """, (new_status, now_iso, clean_id, app_id))
+    conn.commit()
+    conn.close()
+
+    opp_title = app_row["opp_title"] if app_row and app_row["opp_title"] else "your application"
+    
+    # Push dynamic notification for student
+    new_notif = {
+        "id": f"notif-status-{int(time.time())}",
+        "title": f"Application Status: {new_status}",
+        "message": f"Faculty updated status of {opp_title} to '{new_status}'.",
+        "timestamp": "Just now",
+        "read": False
+    }
+    DYNAMIC_NOTIFICATIONS.insert(0, new_notif)
+
+    return Response({"status": "success", "application_id": app_id, "new_status": new_status, "updated_at": now_iso, "notification": new_notif})
 
 # --- Recommendations ---
 @api_view(['GET'])

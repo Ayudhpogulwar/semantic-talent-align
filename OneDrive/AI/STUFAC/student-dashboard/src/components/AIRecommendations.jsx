@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, BrainCircuit, CheckCircle, AlertCircle, ArrowRight, Zap, Target, Cpu } from 'lucide-react';
 
-export default function AIRecommendations({ recommendations, onApply }) {
+export default function AIRecommendations({ recommendations = [], applications = [], onApply, onCancel }) {
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
@@ -14,14 +14,14 @@ export default function AIRecommendations({ recommendations, onApply }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <Cpu size={20} color="#c084fc" />
           <span style={{ fontSize: '0.8rem', color: '#c084fc', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Semantic AI Engine Architecture
+            Smart Opportunity Matching System
           </span>
         </div>
         <h2 style={{ fontSize: '1.6rem', color: 'var(--text-main)', fontWeight: 800 }}>
           Personalized Opportunity Recommendations
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginTop: '6px', maxWidth: '800px', lineHeight: '1.5' }}>
-          Powered by <strong>Sentence-BERT Embedding</strong> → <strong>Semantic Similarity Matching</strong> → <strong>JobFormer Transformer Engine</strong> → <strong>CareerBERT Resume Matching</strong>. Each match is fully explainable.
+          Powered by <strong>Intelligent Skill Analysis</strong> → <strong>Semantic Profile Matching</strong> → <strong>Automated Opportunity Scoring</strong>. Each match is fully explainable.
         </p>
       </div>
 
@@ -50,19 +50,50 @@ export default function AIRecommendations({ recommendations, onApply }) {
                     <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.2)', color: 'var(--accent-purple)', border: '1px solid rgba(168, 85, 247, 0.4)', fontSize: '0.9rem', padding: '6px 14px', fontWeight: 800 }}>
                       <Sparkles size={14} /> {opp.match_score}% Match Score
                     </span>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Source: {opp.model_source}</span>
                   </div>
                   <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)', fontWeight: 700 }}>{opp.title}</h3>
                   <div style={{ fontSize: '0.92rem', color: 'var(--primary-light)', fontWeight: 600 }}>{opp.organization} • {opp.stipend}</div>
                 </div>
 
-                <button
-                  className="btn btn-primary"
-                  onClick={() => onApply(opp.id)}
-                  style={{ padding: '10px 20px' }}
-                >
-                  Apply via AI Profile <ArrowRight size={16} />
-                </button>
+                {(() => {
+                  const existingApp = applications.find(a => String(a.opportunity_id) === String(opp.id) || String(a.id) === String(opp.id));
+                  if (!existingApp) {
+                    return (
+                      <button
+                        className="btn btn-primary"
+                        onClick={async () => {
+                          await onApply(opp.id);
+                        }}
+                        style={{ padding: '10px 20px' }}
+                      >
+                        Apply Now <ArrowRight size={16} />
+                      </button>
+                    );
+                  }
+                  
+                  const isAdvancedStage = ['shortlisted', 'interview', 'selected'].includes(String(existingApp.status || '').toLowerCase());
+                  
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="badge badge-emerald" style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
+                        <CheckCircle size={14} /> {existingApp.status || 'Applied'}
+                      </span>
+                      {!isAdvancedStage && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to cancel your application for "${opp.title}"?`)) {
+                              await onCancel(opp.id);
+                            }
+                          }}
+                          style={{ padding: '8px 14px', fontSize: '0.8rem', borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)' }}
+                        >
+                          Withdraw Application
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Explainability Snippet Box (PRD FR-7 Acceptance Criteria) */}

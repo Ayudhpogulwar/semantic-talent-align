@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Zap, TrendingUp, CheckCircle, Target, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Award, Zap, TrendingUp, CheckCircle, Target, ShieldCheck, AlertCircle, FileText } from 'lucide-react';
 
 export default function ReadinessScoreCard({ readiness }) {
   const { overall_score, category_scores, actionable_suggestions } = readiness;
@@ -67,36 +67,42 @@ export default function ReadinessScoreCard({ readiness }) {
             Sub-Category Assessment Breakdown
           </h3>
 
-          {/* Sub-score 1: Resume Quality */}
+          {/* Sub-score 1: ATS Resume Score */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-              <span>Resume Quality Assessment (ResumeNet)</span>
-              <strong style={{ color: '#818cf8' }}>{category_scores.resume_quality} / 100</strong>
+              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FileText size={15} color="#818cf8" /> ATS Resume Score (NLP Parsing & Structure)
+              </span>
+              <strong style={{ color: '#818cf8' }}>{category_scores.ats_resume_score || category_scores.resume_quality} / 100</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${category_scores.resume_quality}%`, height: '100%', background: '#6366f1', borderRadius: '4px' }}></div>
+              <div style={{ width: `${category_scores.ats_resume_score || category_scores.resume_quality}%`, height: '100%', background: 'linear-gradient(90deg, #6366f1, #818cf8)', borderRadius: '4px' }}></div>
             </div>
           </div>
 
           {/* Sub-score 2: Skill Coverage */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-              <span>Skill Coverage & Alignment (SkillRec)</span>
+              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Target size={15} color="#38bdf8" /> Skill Coverage & Alignment (SkillRec)
+              </span>
               <strong style={{ color: '#38bdf8' }}>{category_scores.skill_coverage} / 100</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${category_scores.skill_coverage}%`, height: '100%', background: '#06b6d4', borderRadius: '4px' }}></div>
+              <div style={{ width: `${category_scores.skill_coverage}%`, height: '100%', background: 'linear-gradient(90deg, #06b6d4, #38bdf8)', borderRadius: '4px' }}></div>
             </div>
           </div>
 
           {/* Sub-score 3: Application Activity */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-              <span>Application Velocity & Pipeline</span>
+              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Zap size={15} color="#fbbf24" /> Application Velocity & Pipeline
+              </span>
               <strong style={{ color: '#fbbf24' }}>{category_scores.application_activity} / 100</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${category_scores.application_activity}%`, height: '100%', background: '#f59e0b', borderRadius: '4px' }}></div>
+              <div style={{ width: `${category_scores.application_activity}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', borderRadius: '4px' }}></div>
             </div>
           </div>
         </div>

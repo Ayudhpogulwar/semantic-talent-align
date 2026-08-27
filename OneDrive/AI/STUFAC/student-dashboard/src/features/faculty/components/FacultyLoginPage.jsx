@@ -52,7 +52,6 @@ export default function FacultyLoginPage() {
           <Link to="/" className="d-flex align-items-center justify-content-center gap-2 mb-2 text-decoration-none" title="Go to Main Landing Page">
             <GraduationCap size={28} className="text-primary" />
             <h3 className="mb-0 fw-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>TalentAlign</h3>
-            <span className="badge bg-primary ms-1 px-2 py-1" style={{ fontSize: "0.7rem", verticalAlign: "middle" }}>AI PORTAL</span>
           </Link>
           
           <p className="text-secondary small mb-4">Semantic Opportunity Alignment System</p>
@@ -73,7 +72,12 @@ export default function FacultyLoginPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="form-label">Password</label>
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <label className="form-label mb-0">Password</label>
+                  <Link to="/faculty/forgot-password" className="text-primary small text-decoration-none">
+                    Forgot Password?
+                  </Link>
+                </div>
                 <input
                   type="password"
                   className="form-control"

@@ -42,7 +42,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
             Welcome back, <span className="gradient-text">{profile.name}</span>!
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.5' }}>
-            Your student profile is active. Sentence-BERT has scored your resume against <strong>{recommendations.length} curated opportunities</strong> with a top compatibility match of <strong>{topMatch ? topMatch.match_score : 92}%</strong>.
+            Your student profile is active. Our intelligent matching system has analyzed your resume against <strong>{recommendations.length} curated opportunities</strong> with a top compatibility match of <strong>{topMatch ? topMatch.match_score : 92}%</strong>.
           </p>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
@@ -145,7 +145,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
         <div className="glass-panel" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => setActiveTab('recommendations')}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>AI Match Matches</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>AI Matches</span>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#c084fc', marginTop: '4px' }}>{recommendations.length}</h3>
             </div>
             <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}>
@@ -156,7 +156,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
             Top: {topMatch ? topMatch.title : 'Data Analyst'} ({topMatch ? topMatch.match_score : 92}%)
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
-            CareerBERT + JobFormer AI Engine
+            Smart Skill & Opportunity Alignment
           </div>
         </div>
 

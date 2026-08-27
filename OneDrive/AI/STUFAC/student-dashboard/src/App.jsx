@@ -46,8 +46,9 @@ function StudentDashboardApp() {
         apiService.getNotifications()
       ]);
 
+      const localSavedResume = JSON.parse(localStorage.getItem("stufac_resume") || "{}");
       setProfile(p || {});
-      setResume(r || {});
+      setResume({ ...(r || {}), file_url: (r?.file_url || localSavedResume.file_url || null) });
       setSkills(Array.isArray(s) ? s : []);
       setOpportunities(Array.isArray(o) ? o : []);
       setApplications(Array.isArray(a) ? a : []);
@@ -86,9 +87,16 @@ function StudentDashboardApp() {
     setShowAuthModal(false);
   };
 
-  const handleUpdateProfile = (fields) => {
-    const updated = apiService.updateProfile(fields);
-    setProfile(updated);
+  const handleUpdateProfile = async (fields) => {
+    try {
+      const updated = await apiService.updateProfile(fields);
+      setProfile(updated);
+    } catch (err) {
+      console.error("Profile update error:", err);
+      const fallback = { ...profile, ...fields };
+      localStorage.setItem("stufac_profile", JSON.stringify(fallback));
+      setProfile(fallback);
+    }
     refreshRecsAndReadiness();
   };
 
@@ -102,6 +110,7 @@ function StudentDashboardApp() {
         file_url: url || res.file_url || null,
         file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
       };
+      localStorage.setItem("stufac_resume", JSON.stringify(fullResume));
       setResume(fullResume);
       const updatedSkills = await apiService.getSkills();
       setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
@@ -142,6 +151,17 @@ function StudentDashboardApp() {
       refreshRecsAndReadiness();
     } catch (err) {
       console.error("Apply error:", err);
+    }
+  };
+
+  const handleCancelOpportunity = async (oppId) => {
+    try {
+      await apiService.cancelApplication(oppId);
+      const apps = await apiService.getApplications();
+      setApplications(Array.isArray(apps) ? apps : []);
+      refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Cancel error:", err);
     }
   };
 
@@ -244,6 +264,7 @@ function StudentDashboardApp() {
             opportunities={opportunities}
             applications={applications}
             onApply={handleApplyToOpportunity}
+            onCancel={handleCancelOpportunity}
           />
         )}
 
@@ -256,7 +277,9 @@ function StudentDashboardApp() {
         {activeTab === 'recommendations' && (
           <AIRecommendations
             recommendations={recommendations}
+            applications={applications}
             onApply={handleApplyToOpportunity}
+            onCancel={handleCancelOpportunity}
           />
         )}
 

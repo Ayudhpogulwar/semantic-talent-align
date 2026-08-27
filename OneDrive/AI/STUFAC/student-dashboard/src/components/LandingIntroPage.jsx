@@ -63,7 +63,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
             </div>
             <div>
               <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                TalentAlign <span style={{ fontSize: '0.68rem', padding: '2px 6px', background: 'rgba(6, 182, 212, 0.18)', color: 'var(--accent-cyan)', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.3)', fontWeight: 800 }}>AI PLATFORM</span>
+                TalentAlign
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Semantic Opportunity Alignment System</div>
             </div>
@@ -155,7 +155,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
           lineHeight: '1.6',
           marginBottom: '32px'
         }}>
-          Upload your resume to extract skills using spaCy NLP, receive Sentence-BERT personalized internship recommendations, and track real-time faculty verifications & departmental placement readiness.
+          Upload your resume to automatically extract your top skills, receive AI-powered personalized internship recommendations, and track real-time faculty verifications & placement readiness.
         </p>
 
         {/* Action Buttons Bar */}
@@ -224,9 +224,9 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
             }}>
               <BrainCircuit size={26} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '10px' }}>spaCy Resume NLP Parsing</h3>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '10px' }}>Smart Resume Skill Extraction</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.6' }}>
-              Auto-extract skills, education, and domain expertise directly from PDF/DOCX resumes for instant skill taxonomy matching.
+              Auto-extract skills, education, and domain expertise directly from PDF/DOCX resumes for instant skill matching.
             </p>
           </div>
 

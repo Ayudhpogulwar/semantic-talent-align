@@ -18,6 +18,7 @@ import AnalyticsDashboard from "../components/AnalyticsDashboard";
 import ReportsPanel from "../components/ReportsPanel";
 import FacultyLoginPage from "../components/FacultyLoginPage";
 import FacultySignUpPage from "../components/FacultySignUpPage";
+import FacultyForgotPasswordPage from "../components/FacultyForgotPasswordPage";
 import RequireFacultyAuth from "../components/RequireFacultyAuth";
 
 export default function FacultyRoutes() {
@@ -25,6 +26,7 @@ export default function FacultyRoutes() {
     <Routes>
       <Route path="login" element={<FacultyLoginPage />} />
       <Route path="signup" element={<FacultySignUpPage />} />
+      <Route path="forgot-password" element={<FacultyForgotPasswordPage />} />
 
       <Route
         element={

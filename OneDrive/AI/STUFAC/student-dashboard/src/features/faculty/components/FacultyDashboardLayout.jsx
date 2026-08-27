@@ -88,8 +88,8 @@ export default function FacultyDashboardLayout() {
       try {
         const u = JSON.parse(storedUserStr);
         let name = u.first_name || u.username || "Faculty";
-        // Get just the first word (e.g., "sumit" from "sumit la")
         name = name.split(" ")[0];
+        name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         setUserName(`${name} Sir`);
         return;
       } catch (e) { /* fallback to token */ }
@@ -101,6 +101,7 @@ export default function FacultyDashboardLayout() {
       if (decoded) {
         let name = decoded.first_name || decoded.username || "Faculty";
         name = name.split(" ")[0];
+        name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         setUserName(`${name} Sir`);
       }
     }
@@ -153,7 +154,17 @@ export default function FacultyDashboardLayout() {
 
           <div className="d-flex align-items-center gap-3">
             <ThemeToggle />
-            <span className="text-muted small fw-medium">{userName}</span>
+            <div className="faculty-user-badge d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill">
+              <div 
+                className="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
+                style={{ width: 28, height: 28, background: "linear-gradient(135deg, var(--primary) 0%, var(--faculty-accent) 100%)", fontSize: "0.8rem" }}
+              >
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="small fw-semibold text-capitalize" style={{ letterSpacing: "0.01em" }}>
+                {userName}
+              </span>
+            </div>
             <button className="btn btn-outline-danger d-flex align-items-center gap-1.5" onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: '10px' }}>
               <LogOut size={16} />
               <span>Log out</span>

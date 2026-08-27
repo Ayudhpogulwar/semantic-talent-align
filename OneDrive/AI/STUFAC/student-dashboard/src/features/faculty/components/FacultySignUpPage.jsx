@@ -63,7 +63,6 @@ export default function FacultySignUpPage() {
           <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
             <GraduationCap size={28} className="text-primary" />
             <h3 className="mb-0 fw-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>TalentAlign</h3>
-            <span className="badge bg-primary ms-1 px-2 py-1" style={{ fontSize: "0.7rem", verticalAlign: "middle" }}>AI PORTAL</span>
           </div>
 
           <p className="text-secondary text-center small mb-4">Semantic Opportunity Alignment System</p>

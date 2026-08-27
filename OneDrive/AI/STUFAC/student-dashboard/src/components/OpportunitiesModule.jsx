@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Briefcase, Search, Filter, MapPin, DollarSign, Calendar, Clock, CheckCircle, ChevronRight, AlertCircle, X } from 'lucide-react';
 
-export default function OpportunitiesModule({ opportunities, applications, onApply }) {
+export default function OpportunitiesModule({ opportunities, applications, onApply, onCancel }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDomain, setSelectedDomain] = useState('All');
   const [selectedMode, setSelectedMode] = useState('All');
@@ -27,6 +27,18 @@ export default function OpportunitiesModule({ opportunities, applications, onApp
     try {
       await onApply(oppId);
       setApplyMessage({ type: 'success', text: 'Application submitted successfully with your verified student profile!' });
+    } catch (err) {
+      setApplyMessage({ type: 'error', text: err.message });
+    }
+    setTimeout(() => setApplyMessage(null), 4000);
+  };
+
+  const handleCancelClick = async (oppId) => {
+    try {
+      if (window.confirm('Are you sure you want to withdraw this application?')) {
+        await onCancel(oppId);
+        setApplyMessage({ type: 'success', text: 'Application successfully withdrawn.' });
+      }
     } catch (err) {
       setApplyMessage({ type: 'error', text: err.message });
     }
@@ -166,19 +178,39 @@ export default function OpportunitiesModule({ opportunities, applications, onApp
                       </div>
                     </div>
 
-                    {applied ? (
-                      <span className="badge badge-emerald" style={{ padding: '6px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                        <CheckCircle size={14} /> Applied
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleApplyClick(opp.id || opp.opportunity_id)}
-                        className="btn btn-primary"
-                        style={{ padding: '8px 18px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-                      >
-                        One-Click Apply
-                      </button>
-                    )}
+                    {(() => {
+                      const existingApp = applications.find(a => String(a.opportunity_id) === String(opp.id || opp.opportunity_id) || String(a.id) === String(opp.id || opp.opportunity_id));
+                      if (!existingApp) {
+                        return (
+                          <button
+                            onClick={() => handleApplyClick(opp.id || opp.opportunity_id)}
+                            className="btn btn-primary"
+                            style={{ padding: '8px 18px', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                          >
+                            One-Click Apply
+                          </button>
+                        );
+                      }
+
+                      const isAdvancedStage = ['shortlisted', 'interview', 'selected'].includes(String(existingApp.status || '').toLowerCase());
+
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="badge badge-emerald" style={{ padding: '6px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                            <CheckCircle size={14} /> {existingApp.status || 'Applied'}
+                          </span>
+                          {!isAdvancedStage && (
+                            <button
+                              onClick={() => handleCancelClick(opp.id || opp.opportunity_id)}
+                              className="btn btn-secondary"
+                              style={{ padding: '6px 12px', fontSize: '0.78rem', whiteSpace: 'nowrap', color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.4)', background: 'rgba(244, 63, 94, 0.1)' }}
+                            >
+                              Withdraw
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <p style={{
@@ -280,13 +312,39 @@ export default function OpportunitiesModule({ opportunities, applications, onApp
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
               <button className="btn btn-secondary" onClick={() => setSelectedOpportunity(null)}>Close</button>
-              {isApplied(selectedOpportunity.id) ? (
-                <button className="btn btn-secondary" disabled style={{ opacity: 0.7 }}>Already Applied</button>
-              ) : (
-                <button className="btn btn-primary" onClick={() => { handleApplyClick(selectedOpportunity.id); setSelectedOpportunity(null); }}>
-                  Confirm Application
-                </button>
-              )}
+              {(() => {
+                const existingApp = applications.find(a => String(a.opportunity_id) === String(selectedOpportunity.id || selectedOpportunity.opportunity_id) || String(a.id) === String(selectedOpportunity.id || selectedOpportunity.opportunity_id));
+                if (!existingApp) {
+                  return (
+                    <button className="btn btn-primary" onClick={() => { handleApplyClick(selectedOpportunity.id); setSelectedOpportunity(null); }}>
+                      Confirm Application
+                    </button>
+                  );
+                }
+
+                const isAdvancedStage = ['shortlisted', 'interview', 'selected'].includes(String(existingApp.status || '').toLowerCase());
+
+                if (isAdvancedStage) {
+                  return (
+                    <button className="btn btn-secondary" disabled style={{ opacity: 0.8, color: '#34d399', borderColor: 'rgba(52, 211, 153, 0.4)', background: 'rgba(52, 211, 153, 0.15)', cursor: 'not-allowed' }}>
+                      <CheckCircle size={14} style={{ display: 'inline', marginRight: '4px' }} /> {existingApp.status}
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      handleCancelClick(selectedOpportunity.id || selectedOpportunity.opportunity_id);
+                      setSelectedOpportunity(null);
+                    }}
+                    style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.4)', background: 'rgba(244, 63, 94, 0.1)' }}
+                  >
+                    Withdraw Application
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>
