@@ -197,10 +197,14 @@ class DatabaseLayer:
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS applications (
-                application_id TEXT PRIMARY KEY, opportunity_id TEXT, opportunity_title TEXT,
+                application_id TEXT PRIMARY KEY, student_id TEXT, opportunity_id TEXT, opportunity_title TEXT,
                 organization TEXT, applied_date TEXT, status TEXT, last_updated TEXT, notes TEXT
             )
             """)
+            try:
+                cursor.execute("ALTER TABLE applications ADD COLUMN student_id TEXT")
+            except Exception:
+                pass
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
