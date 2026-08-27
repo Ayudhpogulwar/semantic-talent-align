@@ -169,6 +169,54 @@ class OrganizationViewSet(viewsets.ViewSet):
             })
         return Response(results, status=status.HTTP_200_OK)
 
+    def create(self, request):
+        data = request.data
+        name = data.get("name", "").strip()
+        if not name:
+            return Response({"detail": "Organization name is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        contact_name = data.get("contact_name", "").strip()
+        contact_email = data.get("contact_email", "").strip()
+        if not contact_email:
+            return Response({"detail": "Contact email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        org_type = data.get("org_type", "COMPANY")
+        website = data.get("website", "").strip()
+        contact_phone = data.get("contact_phone", "").strip()
+        notes = data.get("notes", "").strip()
+
+        org = Organization.objects.create(
+            name=name,
+            org_type=org_type,
+            website=website or None,
+            contact_name=contact_name,
+            contact_email=contact_email,
+            contact_phone=contact_phone or None,
+            verification_status="PENDING"
+        )
+
+        actor = getattr(request.user, "faculty_profile", None)
+        if actor:
+            _write_audit_log(
+                actor=actor,
+                target_type=AuditLogEntry.TargetType.ORGANIZATION,
+                target_id=str(org.id),
+                action_name="CREATE_ORGANIZATION",
+                reason=notes or "New organization registration",
+                metadata={"name": name, "org_type": org_type}
+            )
+
+        return Response({
+            "id": str(org.id),
+            "name": org.name,
+            "org_type": org.org_type,
+            "website": org.website,
+            "contact_name": org.contact_name,
+            "contact_email": org.contact_email,
+            "contact_phone": org.contact_phone,
+            "verification_status": org.verification_status
+        }, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["post"], url_path="verify")
     def verify(self, request, pk=None):
         action_val = request.data.get("action", "VERIFY")
