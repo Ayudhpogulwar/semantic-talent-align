@@ -6,12 +6,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { organizationApi } from "../api/facultyApi";
+import AddOrganizationForm from "./AddOrganizationForm";
 
 const STATUS_BADGE = {
   PENDING: "bg-warning text-dark",
-  VERIFIED: "bg-success",
-  REJECTED: "bg-danger",
-  SUSPENDED: "bg-dark",
+  VERIFIED: "bg-success text-white",
+  REJECTED: "bg-danger text-white",
+  SUSPENDED: "bg-dark text-white",
 };
 
 export default function OrganizationDirectory() {
@@ -20,6 +21,7 @@ export default function OrganizationDirectory() {
   const [typeFilter, setTypeFilter] = useState("");
   const [error, setError] = useState(null);
   const [actioningId, setActioningId] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const fetchOrgs = useCallback(async () => {
     setLoading(true);
@@ -52,7 +54,16 @@ export default function OrganizationDirectory() {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0">Organizations</h4>
+        <div className="d-flex align-items-center gap-3">
+          <h4 className="mb-0 text-dark fw-bold">Organizations</h4>
+          <button
+            className={`btn btn-sm ${showAddForm ? "btn-secondary" : "btn-primary"} fw-semibold px-3`}
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? "← Back to Directory" : "+ Add Organization"}
+          </button>
+        </div>
+
         <select
           className="form-select form-select-sm"
           style={{ width: 180 }}
@@ -65,82 +76,96 @@ export default function OrganizationDirectory() {
         </select>
       </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {showAddForm ? (
+        <div className="mb-4">
+          <AddOrganizationForm
+            onSuccess={() => {
+              setShowAddForm(false);
+              fetchOrgs();
+            }}
+            onCancel={() => setShowAddForm(false)}
+          />
+        </div>
+      ) : (
+        <>
+          {error && <div className="alert alert-danger">{error}</div>}
 
-      <div className="table-responsive">
-        <table className="table table-hover bg-white align-middle">
-          <thead className="table-light">
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Contact</th>
-              <th>Status</th>
-              <th className="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={5} className="text-center py-4 text-muted">Loading…</td>
-              </tr>
-            )}
-            {!loading && orgs.length === 0 && (
-              <tr>
-                <td colSpan={5} className="text-center py-4 text-muted">No organizations found.</td>
-              </tr>
-            )}
-            {!loading &&
-              orgs.map((org) => (
-                <tr key={org.id}>
-                  <td>
-                    {org.name}
-                    {org.website && (
-                      <>
-                        {" "}
-                        <a href={org.website} target="_blank" rel="noreferrer" className="small">
-                          ↗
-                        </a>
-                      </>
-                    )}
-                  </td>
-                  <td>{org.org_type}</td>
-                  <td className="text-muted small">{org.contact_email}</td>
-                  <td>
-                    <span className={`badge ${STATUS_BADGE[org.verification_status]}`}>
-                      {org.verification_status}
-                    </span>
-                  </td>
-                  <td className="text-end">
-                    <div className="btn-group btn-group-sm">
-                      <button
-                        className="btn btn-outline-success"
-                        disabled={actioningId === org.id || org.verification_status === "VERIFIED"}
-                        onClick={() => handleVerify(org.id, "VERIFY")}
-                      >
-                        Verify
-                      </button>
-                      <button
-                        className="btn btn-outline-danger"
-                        disabled={actioningId === org.id || org.verification_status === "REJECTED"}
-                        onClick={() => handleVerify(org.id, "REJECT")}
-                      >
-                        Reject
-                      </button>
-                      <button
-                        className="btn btn-outline-dark"
-                        disabled={actioningId === org.id || org.verification_status === "SUSPENDED"}
-                        onClick={() => handleVerify(org.id, "SUSPEND")}
-                        title="Requires Department Admin or Super Admin"
-                      >
-                        Suspend
-                      </button>
-                    </div>
-                  </td>
+          <div className="table-responsive shadow-sm rounded border">
+            <table className="table table-hover bg-white align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th className="fw-bold">Name</th>
+                  <th className="fw-bold">Type</th>
+                  <th className="fw-bold">Contact</th>
+                  <th className="fw-bold">Status</th>
+                  <th className="text-end fw-bold">Actions</th>
                 </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-muted">Loading…</td>
+                  </tr>
+                )}
+                {!loading && orgs.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-muted">No organizations found.</td>
+                  </tr>
+                )}
+                {!loading &&
+                  orgs.map((org) => (
+                    <tr key={org.id}>
+                      <td className="fw-semibold">
+                        {org.name}
+                        {org.website && (
+                          <>
+                            {" "}
+                            <a href={org.website} target="_blank" rel="noreferrer" className="small text-primary">
+                              ↗
+                            </a>
+                          </>
+                        )}
+                      </td>
+                      <td><span className="badge bg-light text-dark border">{org.org_type}</span></td>
+                      <td className="text-muted small">{org.contact_email}</td>
+                      <td>
+                        <span className={`badge ${STATUS_BADGE[org.verification_status] || 'bg-secondary'}`}>
+                          {org.verification_status}
+                        </span>
+                      </td>
+                      <td className="text-end">
+                        <div className="btn-group btn-group-sm">
+                          <button
+                            className="btn btn-outline-success"
+                            disabled={actioningId === org.id || org.verification_status === "VERIFIED"}
+                            onClick={() => handleVerify(org.id, "VERIFY")}
+                          >
+                            Verify
+                          </button>
+                          <button
+                            className="btn btn-outline-danger"
+                            disabled={actioningId === org.id || org.verification_status === "REJECTED"}
+                            onClick={() => handleVerify(org.id, "REJECT")}
+                          >
+                            Reject
+                          </button>
+                          <button
+                            className="btn btn-outline-dark"
+                            disabled={actioningId === org.id || org.verification_status === "SUSPENDED"}
+                            onClick={() => handleVerify(org.id, "SUSPEND")}
+                            title="Requires Department Admin or Super Admin"
+                          >
+                            Suspend
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }
