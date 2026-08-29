@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 import os
 
-USE_SQLITE = os.environ.get("USE_SQLITE", "true").lower() == "true"
+USE_SQLITE = os.environ.get("USE_SQLITE", "false").lower() == "true"
 
 if USE_SQLITE:
     DATABASES = {
@@ -102,16 +102,17 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'saiotaf_db',
-            'USER': 'root',
-            'PASSWORD': 'Sai@123456',
-            'HOST': '127.0.0.1',
-            'PORT': '3306',
+            'NAME': os.environ.get('DB_NAME', 'saiotaf_db'),
+            'USER': os.environ.get('DB_USER', 'root'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'Sai@123456'),
+            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': {
                 'charset': 'utf8mb4',
             },
         }
     }
+
 
 
 # Password validation
