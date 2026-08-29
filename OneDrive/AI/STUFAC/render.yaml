@@ -2,8 +2,8 @@ services:
   - type: web
     name: saiotaf-backend
     env: python
-    buildCommand: cd student-dashboard/backend && pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
-    startCommand: cd student-dashboard/backend && gunicorn config.wsgi:application
+    buildCommand: pip install -r student-dashboard/backend/requirements.txt && python student-dashboard/backend/manage.py collectstatic --noinput && python student-dashboard/backend/manage.py migrate
+    startCommand: gunicorn --chdir student-dashboard/backend config.wsgi:application
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
