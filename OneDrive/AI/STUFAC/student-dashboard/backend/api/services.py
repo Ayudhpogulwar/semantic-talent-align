@@ -194,7 +194,7 @@ class SentenceBertRecommendationEngine(AbstractNLPRecommendationEngine):
                     "id": str(o.id),
                     "title": o.title,
                     "organization": o.organization.name if o.organization else "Partner Org",
-                    "domain": "Software Dev" if o.opportunity_type == "INTERNSHIP" else "Environment & Community",
+                    "domain": "Software Dev" if o.opportunity_type in ["INTERNSHIP", "JOB"] else "Environment & Community",
                     "location": o.location or "Remote",
                     "work_mode": o.work_mode.title() if o.work_mode else "Remote",
                     "stipend": f"{o.compensation_currency} {o.compensation_amount:,.0f}/mo" if o.compensation_amount else "Unpaid / Volunteer",
@@ -220,10 +220,10 @@ class SentenceBertRecommendationEngine(AbstractNLPRecommendationEngine):
                     "id": str(opp["opportunity_id"]),
                     "title": opp["title"],
                     "organization": opp["organization_name"],
-                    "domain": "Engineering & AI" if opp["opportunity_type"] == "Internship" else "Environment & Community",
+                    "domain": "Engineering & AI" if opp["opportunity_type"] in ["Internship", "Job", "JOB"] else "Environment & Community",
                     "location": opp["location"] or "Remote",
                     "work_mode": opp.get("mode") or "Remote",
-                    "stipend": "₹35,000 / month" if opp["opportunity_type"] == "Internship" else "₹10,000 / month",
+                    "stipend": "₹6,00,000 / yr" if opp["opportunity_type"] in ["Job", "JOB"] else ("₹35,000 / month" if opp["opportunity_type"] in ["Internship", "INTERNSHIP"] else "₹10,000 / month"),
                     "description": opp.get("description", "Opportunity position"),
                     "required_skills": ["Python", "SQL", "React", "Git"]
                 })

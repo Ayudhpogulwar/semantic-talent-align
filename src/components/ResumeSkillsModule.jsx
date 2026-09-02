@@ -92,7 +92,7 @@ export default function ResumeSkillsModule({ resume, skills, onUploadResume, onA
             onDrop={handleDrop}
             style={{
               border: dragActive ? '2px dashed var(--primary)' : '2px dashed var(--border-color)',
-              background: dragActive ? 'rgba(99, 102, 241, 0.15)' : 'rgba(15, 23, 42, 0.5)',
+              background: dragActive ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-card-subtle)',
               borderRadius: '16px',
               padding: '36px 20px',
               textAlign: 'center',

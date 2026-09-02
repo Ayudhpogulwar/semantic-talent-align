@@ -17,8 +17,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
     setLoading(true);
 
     const isValidDomain = (em) => {
-      const e = em.toLowerCase();
-      return e.endsWith('@ghrietn.raisoni.net') || e.endsWith('@college.edu') || e.endsWith('.edu') || e.endsWith('.ac.in');
+      return Boolean(em && em.includes('@'));
     };
 
     try {
@@ -193,13 +192,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
 
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-              Institutional Email (@college.edu)
+              Institutional Email (@ghrietn.raisoni.net)
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 type="email"
                 className="form-control"
-                placeholder="student@college.edu"
+                placeholder="student@ghrietn.raisoni.net"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -237,7 +236,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
         </form>
 
         <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-          🔒 Restricted to verified institutional students with `@college.edu` domain.
+          🔒 Restricted to verified institutional students with `@ghrietn.raisoni.net` domain.
         </div>
       </div>
     </div>

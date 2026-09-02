@@ -169,6 +169,7 @@ export default function UploadOpportunityForm({ onSuccess }) {
             onChange={handleChange("opportunity_type")}
           >
             <option value="INTERNSHIP">Internship</option>
+            <option value="JOB">Job</option>
             <option value="NGO">NGO</option>
           </select>
         </div>

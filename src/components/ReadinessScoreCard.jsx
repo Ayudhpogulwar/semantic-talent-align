@@ -2,7 +2,7 @@ import React from 'react';
 import { Award, Zap, TrendingUp, CheckCircle, Target, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function ReadinessScoreCard({ readiness }) {
-  const { overall_score, category_scores, actionable_suggestions } = readiness;
+  const { overall_score, category_scores, actionable_suggestions, probability_text, percentile_text } = readiness;
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1000px', margin: '0 auto' }}>
@@ -19,7 +19,7 @@ export default function ReadinessScoreCard({ readiness }) {
         </div>
 
         <span className="badge badge-emerald" style={{ padding: '6px 14px', fontSize: '0.82rem' }}>
-          <TrendingUp size={14} /> Top 15% Percentile in Dept
+          <TrendingUp size={14} /> {percentile_text || "Top 15% Percentile in Dept"}
         </span>
       </div>
 
@@ -53,8 +53,8 @@ export default function ReadinessScoreCard({ readiness }) {
             </div>
           </div>
 
-          <div style={{ marginTop: '20px', fontSize: '0.9rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <ShieldCheck size={18} /> High Placement Probability
+          <div style={{ marginTop: '20px', fontSize: '0.9rem', color: overall_score >= 70 ? 'var(--accent-emerald)' : '#f59e0b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ShieldCheck size={18} /> {probability_text || "High Placement Probability"}
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '4px' }}>
             Score automatically recalculates on resume update or skill changes.

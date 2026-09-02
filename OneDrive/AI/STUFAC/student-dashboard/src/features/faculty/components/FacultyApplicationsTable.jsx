@@ -26,6 +26,21 @@ export default function FacultyApplicationsTable() {
     fetchApplications();
   }, []);
 
+  const handleStatusChange = async (appId, newStatus) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/applications/${appId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, notes: `Status updated to ${newStatus} by Faculty.` })
+      });
+      if (res.ok) {
+        setApplications(prev => prev.map(a => (a.id === appId || a.application_id === appId) ? { ...a, status: newStatus, notes: `Status updated to ${newStatus} by Faculty.` } : a));
+      }
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
+
   const filteredApps = applications.filter(a => {
     const matchesSearch = search === "" || 
       (a.opportunity_title && a.opportunity_title.toLowerCase().includes(search.toLowerCase())) ||
@@ -57,6 +72,7 @@ export default function FacultyApplicationsTable() {
             <option value="Applied">Applied</option>
             <option value="Under Review">Under Review</option>
             <option value="Shortlisted">Shortlisted</option>
+            <option value="Interview">Interview</option>
             <option value="Selected">Selected</option>
           </select>
         </div>
@@ -70,7 +86,7 @@ export default function FacultyApplicationsTable() {
               <th>Opportunity</th>
               <th>Organization</th>
               <th>Applied Date</th>
-              <th>Status</th>
+              <th>Status Action</th>
               <th>Notes</th>
             </tr>
           </thead>
@@ -87,7 +103,25 @@ export default function FacultyApplicationsTable() {
                 <td className="fw-bold">{a.opportunity_title}</td>
                 <td>{a.organization}</td>
                 <td>{a.applied_date}</td>
-                <td><span className="badge bg-primary">{a.status}</span></td>
+                <td>
+                  <select
+                    className="form-select form-select-sm fw-bold"
+                    style={{
+                      backgroundColor: a.status === 'Selected' ? '#d1fae5' : a.status === 'Shortlisted' ? '#e0f2fe' : a.status === 'Under Review' ? '#fef3c7' : '#f3f4f6',
+                      color: a.status === 'Selected' ? '#065f46' : a.status === 'Shortlisted' ? '#075985' : a.status === 'Under Review' ? '#92400e' : '#374151',
+                      cursor: 'pointer',
+                      borderRadius: '6px'
+                    }}
+                    value={a.status || "Applied"}
+                    onChange={(e) => handleStatusChange(a.id || a.application_id, e.target.value)}
+                  >
+                    <option value="Applied">Applied</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Shortlisted">Shortlisted</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Selected">Selected</option>
+                  </select>
+                </td>
                 <td className="text-muted small">{a.notes}</td>
               </tr>
             ))}

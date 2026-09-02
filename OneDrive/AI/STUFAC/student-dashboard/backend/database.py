@@ -233,7 +233,7 @@ class DatabaseLayer:
                 bio TEXT
             )
             """)
-            for col in ["phone_number", "linkedin", "github", "bio"]:
+            for col in ["phone_number", "linkedin", "github", "bio", "active_resume_id"]:
                 try:
                     cursor.execute(f"ALTER TABLE student_profiles ADD COLUMN {col} TEXT")
                 except Exception:

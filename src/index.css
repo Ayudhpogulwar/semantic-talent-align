@@ -4,6 +4,7 @@
 :root {
   --bg-dark: #0b0f19;
   --bg-card: rgba(18, 26, 43, 0.85);
+  --bg-card-subtle: rgba(15, 23, 42, 0.6);
   --bg-card-hover: rgba(28, 40, 65, 0.95);
   --border-color: rgba(255, 255, 255, 0.1);
   --border-glow: rgba(99, 102, 241, 0.35);
@@ -28,9 +29,10 @@
 }
 
 [data-theme="light"] {
-  --bg-dark: #f1f5f9;
+  --bg-dark: #f8fafc;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
+  --bg-card-subtle: #f1f5f9;
+  --bg-card-hover: #e2e8f0;
   --border-color: #cbd5e1;
   --border-glow: rgba(79, 70, 229, 0.3);
   
@@ -44,9 +46,9 @@
   --accent-purple: #7e22ce;
 
   --text-main: #0f172a;
-  --text-muted: #1e293b;
-  --text-dim: #475569;
-  --input-bg: #ffffff;
+  --text-muted: #334155;
+  --text-dim: #64748b;
+  --input-bg: #f8fafc;
 
   --shadow-glow: 0 10px 30px rgba(79, 70, 229, 0.15);
 }
@@ -277,6 +279,24 @@ h1, h2, h3, h4, h5, h6 {
 .form-control:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.form-control:disabled,
+.form-control[disabled],
+.form-control[readonly] {
+  background: var(--input-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  opacity: 0.85 !important;
+  cursor: not-allowed;
+}
+
+[data-theme="light"] .form-control:disabled,
+[data-theme="light"] .form-control[disabled],
+[data-theme="light"] .form-control[readonly] {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Animations */

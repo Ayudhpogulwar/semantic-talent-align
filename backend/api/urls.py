@@ -21,6 +21,7 @@ urlpatterns = [
     path('opportunities', views.get_opportunities),
     path('opportunities/recommendations', views.get_recommendations),
     path('applications', views.applications),
+    path('applications/<str:app_id>/status', views.update_application_status),
 
     # 14.6 AI & Readiness
     path('readiness', views.get_readiness),

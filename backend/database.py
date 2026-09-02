@@ -170,41 +170,45 @@ class DatabaseLayer:
             """)
         else:
             cursor.execute("""
-            CREATE TABLE IF NOT EXISTS profile (
-                student_id TEXT PRIMARY KEY,
-                name TEXT, email TEXT UNIQUE, roll_no TEXT, dept TEXT, year TEXT, cgpa TEXT,
-                contact TEXT, linkedin TEXT, github TEXT, bio TEXT, profile_completion_pct INTEGER,
-                verified_by_faculty INTEGER, consent_resume_sharing INTEGER
-            )
-            """)
-            cursor.execute("""
-            CREATE TABLE IF NOT EXISTS resume (
-                resume_id TEXT PRIMARY KEY, filename TEXT, file_size TEXT, upload_date TEXT,
-                version INTEGER, status TEXT, parsed_data TEXT
-            )
-            """)
-            cursor.execute("""
-            CREATE TABLE IF NOT EXISTS skills (
-                skill_id TEXT PRIMARY KEY, skill_name TEXT, category TEXT, source TEXT
+            CREATE TABLE IF NOT EXISTS organizations (
+                org_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                org_type TEXT DEFAULT 'Company',
+                website TEXT,
+                contact_name TEXT,
+                contact_email TEXT,
+                verification_status TEXT DEFAULT 'Verified'
             )
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS opportunities (
-                id TEXT PRIMARY KEY, title TEXT, organization TEXT, domain TEXT, location TEXT,
-                stipend TEXT, duration TEXT, mode TEXT, deadline TEXT, description TEXT,
-                eligibility TEXT, required_skills TEXT, type TEXT
+                opportunity_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                org_id INTEGER,
+                title TEXT,
+                opportunity_type TEXT DEFAULT 'Internship',
+                description TEXT,
+                mode TEXT DEFAULT 'Hybrid',
+                location TEXT DEFAULT 'Remote',
+                status TEXT DEFAULT 'Active'
             )
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS applications (
-                application_id TEXT PRIMARY KEY, student_id TEXT, opportunity_id TEXT, opportunity_title TEXT,
-                organization TEXT, applied_date TEXT, status TEXT, last_updated TEXT, notes TEXT
+                application_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT,
+                opportunity_id INTEGER,
+                opportunity_title TEXT,
+                organization TEXT,
+                applied_at TEXT,
+                applied_date TEXT,
+                current_status TEXT DEFAULT 'Applied',
+                status TEXT DEFAULT 'Applied',
+                updated_at TEXT,
+                last_updated TEXT,
+                cover_note TEXT,
+                notes TEXT
             )
             """)
-            try:
-                cursor.execute("ALTER TABLE applications ADD COLUMN student_id TEXT")
-            except Exception:
-                pass
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -233,7 +237,7 @@ class DatabaseLayer:
                 bio TEXT
             )
             """)
-            for col in ["phone_number", "linkedin", "github", "bio"]:
+            for col in ["phone_number", "linkedin", "github", "bio", "active_resume_id"]:
                 try:
                     cursor.execute(f"ALTER TABLE student_profiles ADD COLUMN {col} TEXT")
                 except Exception:

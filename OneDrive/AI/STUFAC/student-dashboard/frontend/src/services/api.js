@@ -231,12 +231,21 @@ class RealApiService {
         const data = await res.json();
         if (Array.isArray(data)) {
           const local = JSON.parse(localStorage.getItem("stufac_applications") || "[]");
-          const merged = [...local];
-          data.forEach(r => {
-            if (!merged.some(m => String(m.opportunity_id) === String(r.opportunity_id) || String(m.id) === String(r.id))) {
-              merged.push(r);
-            }
+          const localMap = new Map();
+          local.forEach(item => {
+            const key = String(item.opportunity_id || item.id || item.application_id);
+            localMap.set(key, item);
           });
+          
+          data.forEach(r => {
+            const key = String(r.opportunity_id || r.id || r.application_id);
+            const existing = localMap.get(key) || {};
+            // Merge backend record over local cache so Faculty status updates take effect
+            localMap.set(key, { ...existing, ...r });
+          });
+
+          const merged = Array.from(localMap.values());
+          localStorage.setItem("stufac_applications", JSON.stringify(merged));
           return merged;
         }
       }

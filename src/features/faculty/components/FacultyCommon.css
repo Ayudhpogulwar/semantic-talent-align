@@ -1,0 +1,229 @@
+/*
+ * SAIOTAF - Faculty & Moderator Module
+ * Common Stylesheet for Dashboard Views (Tables, Badges, Modals, Forms)
+ */
+
+/* Unified Card styling */
+.faculty-card {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12) !important;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+[data-theme="light"] .faculty-card {
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Modern Pill Badges - Vibrant & Clear */
+.badge-pill-custom {
+  font-weight: 700 !important;
+  font-size: 0.75rem;
+  padding: 0.4em 0.85em;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-pending {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+[data-theme="light"] .badge-pending {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+
+.badge-approved, .badge-verified {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+[data-theme="light"] .badge-approved, [data-theme="light"] .badge-verified {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.badge-rejected {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+  color: #f43f5e !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+}
+[data-theme="light"] .badge-rejected {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+.badge-flagged, .badge-suspended {
+  background-color: rgba(249, 115, 22, 0.15) !important;
+  color: #f97316 !important;
+  border: 1px solid rgba(249, 115, 22, 0.35) !important;
+}
+[data-theme="light"] .badge-flagged, [data-theme="light"] .badge-suspended {
+  background-color: #ffedd5 !important;
+  color: #c2410c !important;
+  border: 1px solid #fed7aa !important;
+}
+
+.badge-closed, .badge-expired {
+  background-color: rgba(148, 163, 184, 0.15) !important;
+  color: var(--text-dim) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Table Enhancements */
+.faculty-table-container {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .faculty-table-container {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06) !important;
+}
+
+.faculty-table {
+  margin-bottom: 0;
+  width: 100% !important;
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+.faculty-table th {
+  font-weight: 700 !important;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted) !important;
+  background-color: var(--bg-card-subtle) !important;
+  padding: 0.75rem 0.6rem;
+  border-bottom: 2px solid var(--border-color) !important;
+}
+
+.faculty-table td {
+  padding: 0.75rem 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-main) !important;
+  background-color: var(--bg-card) !important;
+  word-break: break-word;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.faculty-table tr:hover td {
+  background-color: var(--bg-card-hover) !important;
+}
+
+.faculty-table .text-dark {
+  color: var(--text-main) !important;
+}
+
+.faculty-table .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.faculty-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Action Buttons */
+.btn-action-custom {
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 6px !important;
+  transition: all 0.2s !important;
+}
+
+.btn-action-custom.btn-outline-success {
+  color: #10b981 !important;
+  border-color: #10b981 !important;
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+.btn-action-custom.btn-outline-success:hover:not(:disabled) {
+  color: #ffffff !important;
+  background-color: #10b981 !important;
+}
+
+.btn-action-custom.btn-outline-danger {
+  color: #f43f5e !important;
+  border-color: #f43f5e !important;
+  background-color: rgba(244, 63, 94, 0.1) !important;
+}
+.btn-action-custom.btn-outline-danger:hover:not(:disabled) {
+  color: #ffffff !important;
+  background-color: #f43f5e !important;
+}
+
+.btn-action-custom.btn-outline-secondary,
+.btn-action-custom.btn-outline-dark {
+  color: var(--text-muted) !important;
+  border-color: var(--border-color) !important;
+  background-color: var(--bg-card-subtle) !important;
+}
+.btn-action-custom.btn-outline-secondary:hover:not(:disabled),
+.btn-action-custom.btn-outline-dark:hover:not(:disabled) {
+  color: var(--text-main) !important;
+  background-color: var(--bg-card-hover) !important;
+}
+
+/* Modern Form Controls */
+.faculty-search-input {
+  background-color: var(--input-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.faculty-search-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+  outline: none;
+}
+
+.faculty-select-filter {
+  background-color: var(--input-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 8px;
+  padding: 0.55rem 1.75rem 0.55rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.faculty-select-filter:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+  outline: none;
+}
+
+/* Glassmorphic Modal Backdrop blur */
+.faculty-modal-backdrop {
+  background: rgba(11, 15, 25, 0.75) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.faculty-modal-content {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+}

@@ -1,12 +1,35 @@
 import React, { useState } from 'react';
 import { CheckCircle, Clock, FileText, AlertTriangle, ShieldCheck, Filter, ChevronRight, ExternalLink } from 'lucide-react';
 
-export default function ApplicationTracker({ applications }) {
+export default function ApplicationTracker({ applications = [] }) {
   const [statusFilter, setStatusFilter] = useState('All');
+  const [localApps, setLocalApps] = useState(applications);
+
+  React.useEffect(() => {
+    setLocalApps(applications);
+  }, [applications]);
+
+  const handleStatusChange = async (appId, newStatus) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/applications/${appId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, notes: `Application moved to '${newStatus}' in Pipeline.` })
+      });
+      if (res.ok) {
+        setLocalApps(prev => prev.map(a => (String(a.id) === String(appId) || String(a.application_id) === String(appId))
+          ? { ...a, status: newStatus, notes: `Application moved to '${newStatus}' in Pipeline.`, last_updated: new Date().toISOString() }
+          : a
+        ));
+      }
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
 
   const statuses = ['All', 'Applied', 'Under Review', 'Shortlisted', 'Interview', 'Selected'];
 
-  const filteredApps = applications.filter(app => {
+  const filteredApps = localApps.filter(app => {
     if (statusFilter === 'All') return true;
     return app.status === statusFilter;
   });
@@ -74,9 +97,29 @@ export default function ApplicationTracker({ applications }) {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>ID: {app.id || app.application_id}</span>
                       {getStatusBadge(app.status)}
+                      <select
+                        style={{
+                          fontSize: '0.72rem',
+                          padding: '2px 8px',
+                          height: '24px',
+                          background: 'rgba(255,255,255,0.08)',
+                          color: '#fff',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                        value={app.status || 'Applied'}
+                        onChange={(e) => handleStatusChange(app.id || app.application_id, e.target.value)}
+                      >
+                        <option value="Applied" style={{ background: '#1e293b' }}>Status: Applied</option>
+                        <option value="Under Review" style={{ background: '#1e293b' }}>Status: Under Review</option>
+                        <option value="Shortlisted" style={{ background: '#1e293b' }}>Status: Shortlisted</option>
+                        <option value="Interview" style={{ background: '#1e293b' }}>Status: Interview</option>
+                        <option value="Selected" style={{ background: '#1e293b' }}>Status: Selected</option>
+                      </select>
                     </div>
                     <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 700 }}>{app.opportunity_title}</h3>
                     <div style={{ fontSize: '0.88rem', color: 'var(--primary-light)', fontWeight: 600 }}>{app.organization}</div>
@@ -101,7 +144,15 @@ export default function ApplicationTracker({ applications }) {
                 }}>
                   {['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Selected'].map((step, idx) => {
                     const stepOrder = ['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Selected'];
-                    const currentIdx = stepOrder.indexOf(app.status);
+                    const cleanStatus = (app.status || 'Applied').toString().replace(/_/g, ' ').trim();
+                    let currentIdx = stepOrder.findIndex(s => s.toLowerCase() === cleanStatus.toLowerCase());
+                    if (currentIdx === -1) {
+                      if (cleanStatus.toLowerCase().includes('review') || cleanStatus.toLowerCase().includes('under')) currentIdx = 1;
+                      else if (cleanStatus.toLowerCase().includes('short')) currentIdx = 2;
+                      else if (cleanStatus.toLowerCase().includes('interv')) currentIdx = 3;
+                      else if (cleanStatus.toLowerCase().includes('select')) currentIdx = 4;
+                      else currentIdx = 0;
+                    }
                     const isCompleted = idx <= currentIdx;
                     return (
                       <React.Fragment key={step}>

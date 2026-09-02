@@ -40,7 +40,7 @@ export default function OpportunitiesModule({ opportunities, applications, onApp
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Briefcase color="#10b981" /> Verified Internship & NGO Opportunities
+            <Briefcase color="#10b981" /> Verified Internship, Job & NGO Opportunities
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
             Browse verified institutional listings. Apply in one click using your active profile & resume version.

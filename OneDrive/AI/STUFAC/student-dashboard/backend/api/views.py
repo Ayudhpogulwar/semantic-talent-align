@@ -284,30 +284,35 @@ def get_resume(request):
         except Exception:
             pass
 
-    if email:
-        cursor.execute("""
-            SELECT r.* 
-            FROM resume r 
-            JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
-            JOIN users u ON sp.student_id = u.user_id 
-            WHERE u.email COLLATE utf8mb4_general_ci = ? COLLATE utf8mb4_general_ci
-        """, (email,))
-        row = cursor.fetchone()
-    else:
-        row = None
+    row = None
+    try:
+        if email:
+            cursor.execute("""
+                SELECT r.* 
+                FROM resume r 
+                JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
+                JOIN users u ON sp.student_id = u.user_id 
+                WHERE u.email = ?
+            """, (email,))
+            row = cursor.fetchone()
+
+        if not row:
+            cursor.execute("""
+                SELECT r.* 
+                FROM resume r 
+                JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
+                ORDER BY sp.student_id DESC LIMIT 1
+            """)
+            row = cursor.fetchone()
+    except Exception as ex:
+        print(f"Resume join query note: {ex}")
 
     if not row:
-        cursor.execute("""
-            SELECT r.* 
-            FROM resume r 
-            JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
-            ORDER BY sp.student_id DESC LIMIT 1
-        """)
-        row = cursor.fetchone()
-
-    if not row:
-        cursor.execute("SELECT * FROM resume ORDER BY upload_date DESC LIMIT 1")
-        row = cursor.fetchone()
+        try:
+            cursor.execute("SELECT * FROM resume ORDER BY upload_date DESC LIMIT 1")
+            row = cursor.fetchone()
+        except Exception:
+            row = None
 
     conn.close()
     
@@ -536,12 +541,42 @@ def get_opportunities(request):
     except Exception as e:
         return Response([])
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST', 'PUT'])
 def applications(request):
     conn = get_db()
     cursor = conn.cursor()
 
-    if request.method == 'GET':
+    if request.method == 'PUT':
+        app_id = request.data.get('application_id') or request.data.get('id')
+        new_status = request.data.get('status')
+        notes = request.data.get('notes')
+        if not app_id or not new_status:
+            conn.close()
+            return Response({"detail": "application_id and status are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        try:
+            if notes:
+                cursor.execute("""
+                    UPDATE applications 
+                    SET status = ?, last_updated = ?, notes = ? 
+                    WHERE application_id = ?
+                """, (new_status, now_iso, notes, app_id))
+            else:
+                cursor.execute("""
+                    UPDATE applications 
+                    SET status = ?, last_updated = ? 
+                    WHERE application_id = ?
+                """, (new_status, now_iso, app_id))
+            conn.commit()
+        except Exception as e:
+            conn.close()
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        conn.close()
+        return Response({"message": f"Application status updated to '{new_status}'.", "status": new_status, "last_updated": now_iso})
+
+    elif request.method == 'GET':
         auth_header = request.headers.get('Authorization', '')
         email = None
         if auth_header.startswith('Bearer '):
@@ -660,6 +695,43 @@ def applications(request):
             "last_updated": now_iso,
             "notes": "Application submitted successfully via AI Profile."
         }, status=status.HTTP_201_CREATED)
+
+@api_view(['PUT', 'PATCH'])
+def update_application_status(request, app_id):
+    new_status = request.data.get('status')
+    notes = request.data.get('notes')
+    if not new_status:
+        return Response({"detail": "Status is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    try:
+        if notes:
+            cursor.execute("""
+                UPDATE applications 
+                SET status = ?, last_updated = ?, notes = ? 
+                WHERE application_id = ?
+            """, (new_status, now_iso, notes, app_id))
+        else:
+            cursor.execute("""
+                UPDATE applications 
+                SET status = ?, last_updated = ? 
+                WHERE application_id = ?
+            """, (new_status, now_iso, app_id))
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    conn.close()
+    return Response({
+        "message": f"Application status updated to '{new_status}'.",
+        "application_id": app_id,
+        "status": new_status,
+        "last_updated": now_iso
+    })
 
 # --- Recommendations ---
 @api_view(['GET'])

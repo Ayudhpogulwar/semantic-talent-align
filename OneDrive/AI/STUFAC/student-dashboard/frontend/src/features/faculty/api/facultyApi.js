@@ -139,6 +139,8 @@ export const opportunityApi = {
 
 export const certificateApi = {
   list: (params) => client.get("/faculty/certificates/", { params }),
+  create: (payload) => client.post("/faculty/certificates/", payload),
+  remove: (id) => client.delete(`/faculty/certificates/${id}/`),
   review: (id, action, rejectionReason = "") =>
     client.post(`/faculty/certificates/${id}/review/`, {
       action,

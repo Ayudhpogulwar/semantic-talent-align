@@ -54,8 +54,20 @@ export default function OrganizationDirectory() {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="d-flex align-items-center gap-3">
-          <h4 className="mb-0 text-dark fw-bold">Organizations</h4>
+        <h4 className="mb-0 text-dark fw-bold">Organizations</h4>
+
+        <div className="d-flex align-items-center gap-2">
+          <select
+            className="form-select form-select-sm"
+            style={{ width: 180 }}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="">All types</option>
+            <option value="COMPANY">Company</option>
+            <option value="NGO">NGO</option>
+          </select>
+
           <button
             className={`btn btn-sm ${showAddForm ? "btn-secondary" : "btn-primary"} fw-semibold px-3`}
             onClick={() => setShowAddForm(!showAddForm)}
@@ -63,17 +75,6 @@ export default function OrganizationDirectory() {
             {showAddForm ? "← Back to Directory" : "+ Add Organization"}
           </button>
         </div>
-
-        <select
-          className="form-select form-select-sm"
-          style={{ width: 180 }}
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="">All types</option>
-          <option value="COMPANY">Company</option>
-          <option value="NGO">NGO</option>
-        </select>
       </div>
 
       {showAddForm ? (

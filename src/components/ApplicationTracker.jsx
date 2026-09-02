@@ -62,11 +62,11 @@ export default function ApplicationTracker({ applications }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredApps.map(app => (
-              <div key={app.application_id} style={{
+            {filteredApps.map((app, index) => (
+              <div key={app.id || app.application_id || index} style={{
                 padding: '20px',
                 borderRadius: '12px',
-                background: 'rgba(15, 23, 42, 0.6)',
+                background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border-color)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -78,7 +78,7 @@ export default function ApplicationTracker({ applications }) {
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>ID: {app.application_id}</span>
                       {getStatusBadge(app.status)}
                     </div>
-                    <h3 style={{ fontSize: '1.15rem', color: '#fff', fontWeight: 700 }}>{app.opportunity_title}</h3>
+                    <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 700 }}>{app.opportunity_title}</h3>
                     <div style={{ fontSize: '0.88rem', color: 'var(--primary-light)', fontWeight: 600 }}>{app.organization}</div>
                   </div>
 
@@ -93,7 +93,7 @@ export default function ApplicationTracker({ applications }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: 'rgba(255,255,255,0.02)',
+                  background: 'var(--input-bg)',
                   padding: '12px 16px',
                   borderRadius: '10px',
                   border: '1px solid var(--border-color)',
@@ -105,12 +105,12 @@ export default function ApplicationTracker({ applications }) {
                     const isCompleted = idx <= currentIdx;
                     return (
                       <React.Fragment key={step}>
-                        <div style={{ display: 'flex', flexColumn: 'column', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                           <div style={{
                             width: '24px',
                             height: '24px',
                             borderRadius: '50%',
-                            background: isCompleted ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                            background: isCompleted ? 'var(--primary)' : 'var(--border-color)',
                             color: '#fff',
                             fontSize: '0.7rem',
                             fontWeight: 800,
@@ -121,12 +121,12 @@ export default function ApplicationTracker({ applications }) {
                           }}>
                             {idx + 1}
                           </div>
-                          <span style={{ fontSize: '0.72rem', color: isCompleted ? '#fff' : 'var(--text-dim)', fontWeight: isCompleted ? 700 : 400 }}>
+                          <span style={{ fontSize: '0.72rem', color: isCompleted ? 'var(--text-main)' : 'var(--text-dim)', fontWeight: isCompleted ? 700 : 400 }}>
                             {step}
                           </span>
                         </div>
                         {idx < 4 && (
-                          <div style={{ flex: 1, height: '2px', background: idx < currentIdx ? 'var(--primary)' : 'rgba(255,255,255,0.1)', margin: '0 8px' }}></div>
+                          <div style={{ flex: 1, height: '2px', background: idx < currentIdx ? 'var(--primary)' : 'var(--border-color)', margin: '0 8px' }}></div>
                         )}
                       </React.Fragment>
                     );

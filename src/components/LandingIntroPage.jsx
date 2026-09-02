@@ -17,15 +17,35 @@ import {
 } from 'lucide-react';
 
 export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('stufac_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('stufac_theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    const handleStorage = () => {
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.body.setAttribute('data-theme', currentTheme);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('themeChange', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('themeChange', handleStorage);
+    };
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.body.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    window.dispatchEvent(new CustomEvent('themeChange', { detail: nextTheme }));
   };
 
   return (
@@ -88,8 +108,11 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
               {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
             </button>
 
+            <a href="/faculty/login" style={{ gap: '6px', background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)', color: '#fff', textDecoration: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)' }}>
+              <ShieldCheck size={16} /> Faculty Portal
+            </a>
             <button className="btn btn-secondary" onClick={onOpenLogin} style={{ gap: '6px' }}>
-              <LogIn size={16} /> Sign In
+              <LogIn size={16} /> Student Sign In
             </button>
             <button className="btn btn-primary" onClick={onOpenRegister} style={{ gap: '6px' }}>
               <UserPlus size={16} /> Student Register
