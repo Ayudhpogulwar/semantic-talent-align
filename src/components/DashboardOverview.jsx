@@ -188,7 +188,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
               <div key={opp.id} style={{
                 padding: '16px',
                 borderRadius: '12px',
-                background: 'var(--input-bg)',
+                background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border-color)',
                 display: 'flex',
                 justifyContent: 'space-between',

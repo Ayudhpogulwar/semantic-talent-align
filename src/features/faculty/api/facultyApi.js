@@ -86,8 +86,8 @@ client.interceptors.response.use(
 // --- Auth ---------------------------------------------------------------
 
 export const authApi = {
-  login: (employeeId, password) =>
-    client.post("/faculty/auth/login/", { employee_id: employeeId, password }),
+  login: (usernameOrEmail, password) =>
+    client.post("/faculty/auth/login/", { username_or_email: usernameOrEmail, email: usernameOrEmail, password }),
   verifyMfa: (mfaToken, otpCode) =>
     client.post("/faculty/auth/mfa/verify/", { mfa_token: mfaToken, otp_code: otpCode }),
   signup: (payload) =>
@@ -139,6 +139,8 @@ export const opportunityApi = {
 
 export const certificateApi = {
   list: (params) => client.get("/faculty/certificates/", { params }),
+  create: (payload) => client.post("/faculty/certificates/", payload),
+  remove: (id) => client.delete(`/faculty/certificates/${id}/`),
   review: (id, action, rejectionReason = "") =>
     client.post(`/faculty/certificates/${id}/review/`, {
       action,

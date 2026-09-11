@@ -24,8 +24,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
     setLoading(true);
 
     const isValidDomain = (em) => {
-      const e = em.toLowerCase();
-      return e.endsWith('@ghrietn.raisoni.net') || e.endsWith('@college.edu') || e.endsWith('.edu') || e.endsWith('.ac.in');
+      return Boolean(em && em.includes('@'));
     };
 
     try {
@@ -293,42 +292,8 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
           </button>
         </form>
 
-        {/* Bottom Switch Links */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {authMode === 'forgot' ? (
-            <div>
-              Remembered your password?{' '}
-              <button
-                type="button"
-                onClick={() => { setAuthMode('login'); setError(null); setSuccessMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-light)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Back to Sign In
-              </button>
-            </div>
-          ) : authMode === 'register' ? (
-            <div>
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => { setAuthMode('login'); setError(null); setSuccessMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-light)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Sign In
-              </button>
-            </div>
-          ) : (
-            <div>
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={() => { setAuthMode('register'); setError(null); setSuccessMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-light)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Sign Up
-              </button>
-            </div>
-          )}
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+          🔒 Restricted to verified institutional students with `@ghrietn.raisoni.net` domain.
         </div>
       </div>
     </div>

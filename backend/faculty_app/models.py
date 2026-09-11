@@ -115,6 +115,7 @@ class Opportunity(TimeStampedModel):
 
     class OpportunityType(models.TextChoices):
         INTERNSHIP = "INTERNSHIP", "Internship"
+        JOB = "JOB", "Job"
         NGO = "NGO", "NGO"
 
     class WorkMode(models.TextChoices):

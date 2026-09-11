@@ -107,7 +107,6 @@ function StudentDashboardApp() {
         file_url: url || res.file_url || null,
         file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
       };
-      localStorage.setItem("stufac_resume", JSON.stringify(fullResume));
       setResume(fullResume);
       const updatedSkills = await apiService.getSkills();
       setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
@@ -148,17 +147,6 @@ function StudentDashboardApp() {
       refreshRecsAndReadiness();
     } catch (err) {
       console.error("Apply error:", err);
-    }
-  };
-
-  const handleCancelOpportunity = async (oppId) => {
-    try {
-      await apiService.cancelApplication(oppId);
-      const apps = await apiService.getApplications();
-      setApplications(Array.isArray(apps) ? apps : []);
-      refreshRecsAndReadiness();
-    } catch (err) {
-      console.error("Cancel error:", err);
     }
   };
 
@@ -301,6 +289,10 @@ function StudentDashboardApp() {
   );
 }
 
+// Super Admin Module Components
+import AdminRoutes from './features/admin/routes/AdminRoutes';
+import AdminLogin from './components/AdminLogin';
+
 export default function App() {
   return (
     <FacultyAuthProvider>
@@ -309,6 +301,8 @@ export default function App() {
           <Route path="/" element={<StudentDashboardApp />} />
           <Route path="/student/*" element={<StudentDashboardApp />} />
           <Route path="/faculty/*" element={<FacultyRoutes />} />
+          <Route path="/login/admin" element={<AdminLogin />} />
+          <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </BrowserRouter>
     </FacultyAuthProvider>

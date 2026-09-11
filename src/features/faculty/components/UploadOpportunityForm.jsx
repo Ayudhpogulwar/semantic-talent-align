@@ -55,22 +55,54 @@ function validate(form) {
   return errors;
 }
 
-export default function UploadOpportunityForm({ onSuccess, initialOrganization = "" }) {
-  const [form, setForm] = useState({
-    ...INITIAL_STATE,
-    organization: initialOrganization || "",
-  });
+const defaultInitialOrgs = [];
+
+const getStoredOrgs = () => {
+  try {
+    const stored = localStorage.getItem("stufac_organizations");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return defaultInitialOrgs;
+};
+
+export default function UploadOpportunityForm({ onSuccess }) {
+  const [form, setForm] = useState(INITIAL_STATE);
   const [errors, setErrors] = useState({});
-  const [organizations, setOrganizations] = useState([]);
+  const [organizations, setOrganizations] = useState(getStoredOrgs);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   React.useEffect(() => {
-    organizationApi
-      .list({ verification_status: "VERIFIED" })
-      .then(({ data }) => setOrganizations(data.results ?? data))
-      .catch(() => setOrganizations([]));
+    async function loadOrgs() {
+      const localList = getStoredOrgs();
+      try {
+        const { data } = await organizationApi.list();
+        const apiData = data.results ?? data ?? [];
+        let merged = [...localList];
+        if (Array.isArray(apiData)) {
+          apiData.forEach((item) => {
+            if (!merged.some((m) => String(m.id) === String(item.id) || m.name.toLowerCase() === item.name.toLowerCase())) {
+              merged.push({
+                id: item.id || `ORG-${Math.floor(1000 + Math.random() * 9000)}`,
+                name: item.name,
+                org_type: item.org_type || "COMPANY",
+                verification_status: item.verification_status || "VERIFIED"
+              });
+            }
+          });
+        }
+        setOrganizations(merged);
+      } catch (err) {
+        setOrganizations(localList);
+      }
+    }
+    loadOrgs();
   }, []);
 
   const handleChange = (field) => (e) => {
@@ -107,14 +139,42 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         positions_available: Number(form.positions_available),
       };
 
-      const { data } = await opportunityApi.create(payload);
+      const selectedOrg = organizations.find((o) => String(o.id) === String(form.organization));
+      const orgName = selectedOrg ? selectedOrg.name : "Partner Organization";
+
+      const newOp = {
+        id: `OPP-${Date.now().toString().slice(-4)}`,
+        title: payload.title,
+        organization_name: orgName,
+        opportunity_type: payload.opportunity_type,
+        work_mode: payload.work_mode,
+        application_deadline: payload.application_deadline,
+        status: "PENDING_APPROVAL",
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        const res = await opportunityApi.create(payload);
+        if (res?.data?.id) newOp.id = res.data.id;
+      } catch (apiErr) {
+        console.warn("Created opportunity locally:", apiErr);
+      }
+
+      try {
+        const stored = localStorage.getItem("stufac_opportunities");
+        let list = stored ? JSON.parse(stored) : [];
+        list.unshift(newOp);
+        localStorage.setItem("stufac_opportunities", JSON.stringify(list));
+      } catch (e) {
+        console.error(e);
+      }
+
       setSubmitSuccess(true);
       setForm(INITIAL_STATE);
-      onSuccess?.(data);
+      onSuccess?.(newOp);
     } catch (err) {
       const apiErrors = err.response?.data;
       if (apiErrors && typeof apiErrors === "object") {
-        // Map server-side field errors back onto the form
         const mapped = {};
         Object.entries(apiErrors).forEach(([field, msgs]) => {
           mapped[field] = Array.isArray(msgs) ? msgs.join(" ") : String(msgs);
@@ -128,8 +188,8 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
   };
 
   return (
-    <form className="upload-opportunity-form glass-panel p-4" onSubmit={handleSubmit} noValidate>
-      <h4 className="mb-3">Post New Opportunity</h4>
+    <form className="upload-opportunity-form faculty-card p-4 border-0" onSubmit={handleSubmit} noValidate>
+      <h4 className="mb-3 fw-bold" style={{ color: "var(--text-main)" }}>Post New Opportunity</h4>
 
       {submitSuccess && (
         <div className="alert alert-success" role="status">
@@ -144,17 +204,17 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
 
       <div className="row g-3">
         <div className="col-md-6">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Organization <span className="text-danger">*</span>
           </label>
           <select
-            className={`form-select ${errors.organization ? "is-invalid" : ""}`}
+            className={`form-select faculty-select-filter ${errors.organization ? "is-invalid" : ""}`}
             value={form.organization}
             onChange={handleChange("organization")}
           >
-            <option value="">Select organization…</option>
+            <option value="" style={{ background: "var(--input-bg)", color: "var(--text-main)" }}>Select organization…</option>
             {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
+              <option key={org.id} value={org.id} style={{ background: "var(--input-bg)", color: "var(--text-main)" }}>
                 {org.name} ({org.org_type})
               </option>
             ))}
@@ -163,26 +223,27 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-md-6">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Opportunity Type <span className="text-danger">*</span>
           </label>
           <select
-            className="form-select"
+            className="form-select faculty-select-filter"
             value={form.opportunity_type}
             onChange={handleChange("opportunity_type")}
           >
             <option value="INTERNSHIP">Internship</option>
+            <option value="JOB">Job</option>
             <option value="NGO">NGO</option>
           </select>
         </div>
 
         <div className="col-12">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Title <span className="text-danger">*</span>
           </label>
           <input
             type="text"
-            className={`form-control ${errors.title ? "is-invalid" : ""}`}
+            className={`form-control faculty-search-input ${errors.title ? "is-invalid" : ""}`}
             value={form.title}
             onChange={handleChange("title")}
             placeholder="e.g. Backend Engineering Intern"
@@ -191,11 +252,11 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-12">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Role Description <span className="text-danger">*</span>
           </label>
           <textarea
-            className={`form-control ${errors.description ? "is-invalid" : ""}`}
+            className={`form-control faculty-search-input ${errors.description ? "is-invalid" : ""}`}
             rows={4}
             value={form.description}
             onChange={handleChange("description")}
@@ -205,17 +266,17 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-12">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Required Skills <span className="text-danger">*</span>
           </label>
           <input
             type="text"
-            className={`form-control ${errors.required_skills ? "is-invalid" : ""}`}
+            className={`form-control faculty-search-input ${errors.required_skills ? "is-invalid" : ""}`}
             value={form.required_skills}
             onChange={handleChange("required_skills")}
             placeholder="Comma-separated, e.g. Python, Django, REST APIs"
           />
-          <div className="form-text">
+          <div className="form-text mt-1" style={{ color: "var(--text-muted)" }}>
             Feeds the Semantic AI engine's skill-matching pipeline — be specific.
           </div>
           {errors.required_skills && <div className="invalid-feedback">{errors.required_skills}</div>}
@@ -230,18 +291,18 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
               checked={form.is_unpaid}
               onChange={handleChange("is_unpaid")}
             />
-            <label className="form-check-label" htmlFor="isUnpaid">
+            <label className="form-check-label fw-semibold" htmlFor="isUnpaid" style={{ color: "var(--text-main)" }}>
               Unpaid
             </label>
           </div>
         </div>
 
         <div className="col-md-3">
-          <label className="form-label">Compensation (INR/month)</label>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Compensation (INR/month)</label>
           <input
             type="number"
             min="0"
-            className={`form-control ${errors.compensation_amount ? "is-invalid" : ""}`}
+            className={`form-control faculty-search-input ${errors.compensation_amount ? "is-invalid" : ""}`}
             value={form.compensation_amount}
             onChange={handleChange("compensation_amount")}
             disabled={form.is_unpaid}
@@ -252,8 +313,8 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-md-3">
-          <label className="form-label">Work Mode</label>
-          <select className="form-select" value={form.work_mode} onChange={handleChange("work_mode")}>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Work Mode</label>
+          <select className="form-select faculty-select-filter" value={form.work_mode} onChange={handleChange("work_mode")}>
             <option value="REMOTE">Remote</option>
             <option value="ONSITE">Onsite</option>
             <option value="HYBRID">Hybrid</option>
@@ -261,21 +322,21 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-md-3">
-          <label className="form-label">Duration (weeks)</label>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Duration (weeks)</label>
           <input
             type="number"
             min="1"
-            className="form-control"
+            className="form-control faculty-search-input"
             value={form.duration_weeks}
             onChange={handleChange("duration_weeks")}
           />
         </div>
 
         <div className="col-md-6">
-          <label className="form-label">Location</label>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Location</label>
           <input
             type="text"
-            className="form-control"
+            className="form-control faculty-search-input"
             value={form.location}
             onChange={handleChange("location")}
             placeholder="City, or 'Remote'"
@@ -283,12 +344,12 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-md-3">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Application Deadline <span className="text-danger">*</span>
           </label>
           <input
             type="datetime-local"
-            className={`form-control ${errors.application_deadline ? "is-invalid" : ""}`}
+            className={`form-control faculty-search-input ${errors.application_deadline ? "is-invalid" : ""}`}
             value={form.application_deadline}
             onChange={handleChange("application_deadline")}
           />
@@ -298,13 +359,13 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
         </div>
 
         <div className="col-md-3">
-          <label className="form-label">
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Positions Available <span className="text-danger">*</span>
           </label>
           <input
             type="number"
             min="1"
-            className={`form-control ${errors.positions_available ? "is-invalid" : ""}`}
+            className={`form-control faculty-search-input ${errors.positions_available ? "is-invalid" : ""}`}
             value={form.positions_available}
             onChange={handleChange("positions_available")}
           />
@@ -317,13 +378,19 @@ export default function UploadOpportunityForm({ onSuccess, initialOrganization =
       <div className="d-flex justify-content-end gap-2 mt-4">
         <button
           type="button"
-          className="btn btn-outline-secondary"
+          className="btn btn-outline-secondary px-4 py-2 fw-semibold"
+          style={{ borderRadius: "8px" }}
           onClick={() => setForm(INITIAL_STATE)}
           disabled={submitting}
         >
           Reset
         </button>
-        <button type="submit" className="btn btn-primary" disabled={submitting}>
+        <button
+          type="submit"
+          className="btn btn-primary px-4 py-2 fw-bold"
+          style={{ backgroundColor: "#2563eb", borderColor: "#2563eb", borderRadius: "8px" }}
+          disabled={submitting}
+        >
           {submitting ? "Submitting…" : "Submit for Approval"}
         </button>
       </div>

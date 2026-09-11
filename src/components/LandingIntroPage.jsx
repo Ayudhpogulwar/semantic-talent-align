@@ -3,33 +3,48 @@ import { Link } from 'react-router-dom';
 import { 
   Sparkles, 
   BrainCircuit, 
-  Target, 
   Award, 
-  Briefcase, 
-  CheckCircle2, 
-  ArrowRight, 
   ShieldCheck, 
   GraduationCap, 
-  TrendingUp,
   LogIn,
   UserPlus,
   Sun,
   Moon,
-  Building2,
-  FileSpreadsheet,
-  UserCheck
+  Shield,
+  ArrowRight,
+  ChevronRight
 } from 'lucide-react';
 
 export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('stufac_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('stufac_theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    const handleStorage = () => {
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.body.setAttribute('data-theme', currentTheme);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('themeChange', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('themeChange', handleStorage);
+    };
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.body.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    window.dispatchEvent(new CustomEvent('themeChange', { detail: nextTheme }));
   };
 
   return (
@@ -45,7 +60,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
         borderBottom: '1px solid var(--border-color)',
         padding: '16px 32px'
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           
           {/* Logo & Title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -69,15 +84,14 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
             </div>
           </div>
 
-          {/* Right Corner: Theme Toggle + Faculty & Student Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Theme Toggle Button */}
+          {/* Right Corner: Theme Toggle + 3 Portal Entry Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <button 
               onClick={toggleTheme}
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
               style={{
-                width: '40px',
-                height: '40px',
+                width: '38px',
+                height: '38px',
                 borderRadius: '10px',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
@@ -85,29 +99,26 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                cursor: 'pointer'
               }}
             >
               {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
             </button>
 
-            {/* Direct Link to User's Pre-developed Faculty Portal */}
-            <Link 
-              to="/faculty" 
-              className="btn btn-secondary" 
-              style={{ gap: '6px', textDecoration: 'none', border: '1px solid rgba(6, 182, 212, 0.4)', color: 'var(--accent-cyan)' }}
-            >
-              <Building2 size={16} /> Faculty Portal
+            {/* Portal 1: Student Login */}
+            <button className="btn btn-primary btn-sm" onClick={onOpenLogin} style={{ gap: '6px', fontWeight: 600 }}>
+              <LogIn size={15} /> Student Portal
+            </button>
+
+            {/* Portal 2: Faculty Login */}
+            <Link to="/faculty/login" style={{ gap: '6px', background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)', color: '#fff', textDecoration: 'none', padding: '6px 14px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center' }}>
+              <ShieldCheck size={15} /> Faculty Portal
             </Link>
 
-            <button className="btn btn-secondary" onClick={() => onOpenLogin('login')} style={{ gap: '6px' }}>
-              <LogIn size={16} /> Student Sign In
-            </button>
-            
-            <button className="btn btn-primary" onClick={() => onOpenRegister()} style={{ gap: '6px' }}>
-              <UserPlus size={16} /> Student Register
-            </button>
+            {/* Portal 3: Admin Login */}
+            <Link to="/login/admin" style={{ gap: '6px', background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)', color: '#fff', textDecoration: 'none', padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
+              <Shield size={15} /> Admin Login
+            </Link>
           </div>
         </div>
       </header>
@@ -116,7 +127,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
       <section style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '64px 24px 40px 24px',
+        padding: '60px 24px 40px 24px',
         textAlign: 'center',
         display: 'flex',
         flexDirection: 'column',
@@ -133,154 +144,137 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
           color: 'var(--primary-light)',
           fontSize: '0.85rem',
           fontWeight: 700,
-          marginBottom: '24px'
+          marginBottom: '20px'
         }}>
-          <BrainCircuit size={16} /> Institutional AI Student Career Guidance & Faculty Governance Framework
+          <BrainCircuit size={16} /> Institutional AI Student & Faculty Framework
         </div>
 
         <h1 style={{
-          fontSize: '3.2rem',
+          fontSize: '3rem',
           fontWeight: 800,
           lineHeight: '1.2',
-          maxWidth: '920px',
-          marginBottom: '20px'
+          maxWidth: '900px',
+          marginBottom: '16px'
         }}>
-          Empowering Students & Faculty with <span className="gradient-text">Semantic AI Opportunity Alignment</span>
+          Empowering Academia with <span className="gradient-text">Semantic AI Opportunity Alignment</span>
         </h1>
 
         <p style={{
-          fontSize: '1.12rem',
+          fontSize: '1.1rem',
           color: 'var(--text-muted)',
           maxWidth: '780px',
           lineHeight: '1.6',
           marginBottom: '32px'
         }}>
-          Upload your resume to automatically extract your top skills, receive AI-powered personalized internship recommendations, and track real-time faculty verifications & placement readiness.
+          Multi-tier institutional platform connecting Students, Faculty Officers, and Super Administrators for skill extraction, opportunity verification, and placement analytics.
         </p>
 
-        {/* Action Buttons Bar */}
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => onOpenLogin('login')} 
-            style={{ padding: '14px 28px', fontSize: '1rem', gap: '8px' }}
-          >
-            <GraduationCap size={18} /> Student Portal <ArrowRight size={18} />
-          </button>
-          
-          <Link 
-            to="/faculty" 
-            className="btn btn-secondary" 
-            style={{ 
-              padding: '14px 28px', 
-              fontSize: '1rem', 
-              gap: '8px',
-              textDecoration: 'none',
-              border: '1px solid rgba(6, 182, 212, 0.4)', 
-              background: 'rgba(6, 182, 212, 0.1)',
-              color: 'var(--accent-cyan)'
-            }}
-          >
-            <Building2 size={18} /> Access Faculty Portal
-          </Link>
+        {/* 3 DISTINCT PORTAL CARDS SELECTION GRID */}
+        <div className="container px-0 my-3">
+          <div className="row row-cols-1 row-cols-md-3 g-4 text-start">
+            
+            {/* 1. Student Portal Card */}
+            <div className="col">
+              <div className="p-4 rounded-3 border border-secondary bg-dark h-100 d-flex flexDirection-column justify-content-between hover-border-primary" style={{ transition: "all 0.3s ease" }}>
+                <div>
+                  <div className="p-3 rounded bg-primary bg-opacity-25 text-primary d-inline-flex mb-3">
+                    <GraduationCap size={28} />
+                  </div>
+                  <h4 className="fw-bold text-white mb-2">Student Portal</h4>
+                  <p className="text-secondary small mb-4">
+                    Upload resumes, receive AI match recommendations, track skills gaps, and view real-time placement readiness scores.
+                  </p>
+                </div>
+                <div>
+                  <button className="btn btn-primary w-100 fw-semibold d-flex align-items-center justify-content-center gap-2" onClick={() => onOpenLogin('login')}>
+                    Sign In as Student <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Faculty Portal Card */}
+            <div className="col">
+              <div className="p-4 rounded-3 border border-secondary bg-dark h-100 d-flex flexDirection-column justify-content-between hover-border-primary" style={{ transition: "all 0.3s ease" }}>
+                <div>
+                  <div className="p-3 rounded bg-info bg-opacity-25 text-info d-inline-flex mb-3">
+                    <ShieldCheck size={28} />
+                  </div>
+                  <h4 className="fw-bold text-white mb-2">Faculty Portal</h4>
+                  <p className="text-secondary small mb-4">
+                    Verify student registrations, review certificates, approve corporate opportunities, and generate accreditation reports.
+                  </p>
+                </div>
+                <div>
+                  <Link to="/faculty/login" className="btn btn-outline-info w-100 fw-semibold d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+                    Sign In as Faculty <ChevronRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Super Admin Portal Card (Distinct Darker Styling) */}
+            <div className="col">
+              <div className="p-4 rounded-3 border border-danger bg-dark h-100 d-flex flexDirection-column justify-content-between" style={{ background: "linear-gradient(180deg, rgba(220, 38, 38, 0.1) 0%, #111827 100%)", boxShadow: "0 10px 30px rgba(220, 38, 38, 0.15)" }}>
+                <div>
+                  <div className="p-3 rounded bg-danger bg-opacity-25 text-danger d-inline-flex mb-3">
+                    <Shield size={28} />
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h4 className="fw-bold text-white mb-0">Super Admin</h4>
+                    <span className="badge bg-danger text-white">TIER 3</span>
+                  </div>
+                  <p className="text-secondary small mb-4">
+                    Platform command center. Cross-tier user management, system-wide overrides, live telemetry metrics, and RBAC controls.
+                  </p>
+                </div>
+                <div>
+                  <Link to="/login/admin" className="btn btn-danger w-100 fw-bold d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+                    Sign In as Admin <Shield size={16} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
       {/* Feature Highlights Grid */}
       <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 24px 60px 24px', width: '100%' }}>
-        
-        {/* Section Title */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Comprehensive Platform Capabilities</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '6px' }}>
-            Integrated Student Career Dashboard & Faculty Moderation Engine
-          </p>
-        </div>
-
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
           gap: '24px'
         }}>
           
-          {/* Card 1: Student NLP */}
-          <div className="glass-panel" style={{
-            padding: '32px',
-            borderTop: '3px solid #6366f1',
-            background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.06) 0%, var(--bg-card) 100%)'
-          }}>
-            <div style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.2) 100%)',
-              color: '#818cf8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '20px',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              boxShadow: '0 4px 15px rgba(99, 102, 241, 0.2)'
-            }}>
-              <BrainCircuit size={26} />
+          <div className="glass-panel" style={{ padding: '28px', borderTop: '3px solid #6366f1' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <BrainCircuit size={24} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '10px' }}>Smart Resume Skill Extraction</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.6' }}>
-              Auto-extract skills, education, and domain expertise directly from PDF/DOCX resumes for instant skill matching.
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px' }}>spaCy Resume NLP</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: 0 }}>
+              Auto-extract skills, education, and domain expertise directly from resumes for instant skill taxonomy matching.
             </p>
           </div>
 
-          {/* Card 2: Faculty Verification */}
-          <div className="glass-panel" style={{
-            padding: '32px',
-            borderTop: '3px solid #10b981',
-            background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, var(--bg-card) 100%)'
-          }}>
-            <div style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(6, 182, 212, 0.2) 100%)',
-              color: '#34d399',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '20px',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.2)'
-            }}>
-              <UserCheck size={26} />
+          <div className="glass-panel" style={{ padding: '28px', borderTop: '3px solid #06b6d4' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(6, 182, 212, 0.2)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <Sparkles size={24} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '10px' }}>Faculty Verification & Endorsements</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.6' }}>
-              Faculty advisors review student profiles, verify roll numbers, approve company postings, and stamp authentic certificates.
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px' }}>AI Match Recommendations</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: 0 }}>
+              Powered by Sentence-BERT embeddings & JobFormer recommendation engine with clear human-readable match explanations.
             </p>
           </div>
 
-          {/* Card 3: Skill Gap Reports */}
-          <div className="glass-panel" style={{
-            padding: '32px',
-            borderTop: '3px solid #06b6d4',
-            background: 'linear-gradient(180deg, rgba(6, 182, 212, 0.06) 0%, var(--bg-card) 100%)'
-          }}>
-            <div style={{
-              width: '52px',
-              height: '52px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(59, 130, 246, 0.2) 100%)',
-              color: '#38bdf8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '20px',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              boxShadow: '0 4px 15px rgba(6, 182, 212, 0.2)'
-            }}>
-              <FileSpreadsheet size={26} />
+          <div className="glass-panel" style={{ padding: '28px', borderTop: '3px solid #f43f5e' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.2)', color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <Award size={24} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '10px' }}>Institutional Skill Gap Reports</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.6' }}>
-              Real-time departmental analytics on industry skill shortages, placement funnel conversion rates, and downloadable reports.
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px' }}>Placement Readiness Score</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: 0 }}>
+              Quantify your placement probability with ResumeNet scoring, SkillRec gap reports, and actionable steps.
             </p>
           </div>
 
@@ -297,7 +291,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
         fontSize: '0.82rem',
         background: 'var(--bg-card)'
       }}>
-        TalentAlign AI Framework © 2026 • Semantic-Aware Intelligent Opportunity & Talent Alignment System • Institutional Student & Faculty Portals
+        TalentAlign AI Framework © 2026 • Semantic-Aware Intelligent Opportunity & Talent Alignment System • Institutional Student, Faculty & Admin Portals
       </footer>
 
     </div>

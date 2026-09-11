@@ -291,22 +291,22 @@ export default function OpportunitiesModule({ opportunities, applications, onApp
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               <div>
-                <h4 style={{ color: '#fff', marginBottom: '4px' }}>Description</h4>
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '4px' }}>Description</h4>
                 <p>{selectedOpportunity.description}</p>
               </div>
 
               <div>
-                <h4 style={{ color: '#fff', marginBottom: '4px' }}>Eligibility Criteria</h4>
-                <p style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ color: 'var(--text-main)', marginBottom: '4px' }}>Eligibility Criteria</h4>
+                <p style={{ background: 'var(--input-bg)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   {selectedOpportunity.eligibility}
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'rgba(15, 23, 42, 0.6)', padding: '14px', borderRadius: '10px' }}>
-                <div>Stipend: <strong style={{ color: '#fff' }}>{selectedOpportunity.stipend}</strong></div>
-                <div>Location: <strong style={{ color: '#fff' }}>{selectedOpportunity.location}</strong></div>
-                <div>Mode: <strong style={{ color: '#fff' }}>{selectedOpportunity.mode}</strong></div>
-                <div>Application Deadline: <strong style={{ color: '#f43f5e' }}>{selectedOpportunity.deadline}</strong></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-card-subtle)', padding: '14px', borderRadius: '10px' }}>
+                <div>Stipend: <strong style={{ color: 'var(--text-main)' }}>{selectedOpportunity.stipend}</strong></div>
+                <div>Location: <strong style={{ color: 'var(--text-main)' }}>{selectedOpportunity.location}</strong></div>
+                <div>Mode: <strong style={{ color: 'var(--text-main)' }}>{selectedOpportunity.mode}</strong></div>
+                <div>Application Deadline: <strong style={{ color: 'var(--accent-rose)' }}>{selectedOpportunity.deadline}</strong></div>
               </div>
             </div>
 

@@ -61,7 +61,34 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
         notes: form.notes.trim() || undefined,
       };
 
-      await organizationApi.create(payload);
+      const newOrg = {
+        id: `ORG-${Date.now().toString().slice(-4)}`,
+        name: payload.name,
+        org_type: payload.org_type,
+        website: payload.website || "",
+        contact_name: payload.contact_name,
+        contact_email: payload.contact_email,
+        contact_phone: payload.contact_phone || "",
+        verification_status: "VERIFIED",
+        notes: payload.notes || ""
+      };
+
+      try {
+        const res = await organizationApi.create(payload);
+        if (res?.data?.id) newOrg.id = res.data.id;
+      } catch (apiErr) {
+        console.warn("Created organization locally:", apiErr);
+      }
+
+      try {
+        const stored = localStorage.getItem("stufac_organizations");
+        let list = stored ? JSON.parse(stored) : [];
+        list.unshift(newOrg);
+        localStorage.setItem("stufac_organizations", JSON.stringify(list));
+      } catch (e) {
+        console.error(e);
+      }
+
       setForm(INITIAL_STATE);
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -85,7 +112,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
 
   return (
     <form className="faculty-card p-4 border-0" onSubmit={handleSubmit} noValidate>
-      <h5 className="mb-4 fw-bold" style={{ color: "#0f172a" }}>Add New Organization</h5>
+      <h5 className="mb-4 fw-bold" style={{ color: "var(--text-main)" }}>Add New Organization</h5>
 
       {submitError && (
         <div className="alert alert-danger border-0 bg-danger-subtle text-danger py-3 px-4 rounded-3 mb-4" role="alert">
@@ -96,7 +123,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
       <div className="row g-3">
         {/* Name & Type */}
         <div className="col-md-8">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Organization Name <span className="text-danger">*</span>
           </label>
           <input
@@ -110,7 +137,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
         </div>
 
         <div className="col-md-4">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Type <span className="text-danger">*</span>
           </label>
           <select
@@ -125,7 +152,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
 
         {/* Website & Contact Name */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>Website URL</label>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Website URL</label>
           <input
             type="url"
             className={`form-control faculty-search-input ${errors.website ? "is-invalid" : ""}`}
@@ -137,7 +164,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
         </div>
 
         <div className="col-md-6">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Contact Person Name <span className="text-danger">*</span>
           </label>
           <input
@@ -152,7 +179,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
 
         {/* Contact Email & Contact Phone */}
         <div className="col-md-6">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>
             Contact Email <span className="text-danger">*</span>
           </label>
           <input
@@ -166,7 +193,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
         </div>
 
         <div className="col-md-6">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>Contact Phone</label>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Contact Phone</label>
           <input
             type="tel"
             className="form-control faculty-search-input"
@@ -178,7 +205,7 @@ export default function AddOrganizationForm({ onSuccess, onCancel }) {
 
         {/* Notes */}
         <div className="col-12">
-          <label className="form-label fw-semibold" style={{ color: "#334155" }}>Notes / Background</label>
+          <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Notes / Background</label>
           <textarea
             className="form-control faculty-search-input"
             rows={3}

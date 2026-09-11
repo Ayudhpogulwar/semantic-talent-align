@@ -62,11 +62,11 @@ export default function ApplicationTracker({ applications }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredApps.map(app => (
-              <div key={app.id || app.application_id} style={{
+            {filteredApps.map((app, index) => (
+              <div key={app.id || app.application_id || index} style={{
                 padding: '20px',
                 borderRadius: '12px',
-                background: 'var(--input-bg)',
+                background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border-color)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -93,7 +93,7 @@ export default function ApplicationTracker({ applications }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: 'rgba(255,255,255,0.03)',
+                  background: 'var(--input-bg)',
                   padding: '12px 16px',
                   borderRadius: '10px',
                   border: '1px solid var(--border-color)',
@@ -110,7 +110,7 @@ export default function ApplicationTracker({ applications }) {
                             width: '24px',
                             height: '24px',
                             borderRadius: '50%',
-                            background: isCompleted ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                            background: isCompleted ? 'var(--primary)' : 'var(--border-color)',
                             color: '#fff',
                             fontSize: '0.7rem',
                             fontWeight: 800,
@@ -126,7 +126,7 @@ export default function ApplicationTracker({ applications }) {
                           </span>
                         </div>
                         {idx < 4 && (
-                          <div style={{ flex: 1, height: '2px', background: idx < currentIdx ? 'var(--primary)' : 'rgba(255,255,255,0.1)', margin: '0 8px' }}></div>
+                          <div style={{ flex: 1, height: '2px', background: idx < currentIdx ? 'var(--primary)' : 'var(--border-color)', margin: '0 8px' }}></div>
                         )}
                       </React.Fragment>
                     );

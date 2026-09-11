@@ -248,17 +248,50 @@ class RealApiService {
 
   // 14.5 Opportunities & Applications
   async getOpportunities(filters = {}) {
+    let data = [];
     try {
       let url = `${API_BASE_URL}/opportunities?`;
       if (filters.domain) url += `domain=${encodeURIComponent(filters.domain)}&`;
       if (filters.search) url += `search=${encodeURIComponent(filters.search)}&`;
       const res = await fetch(url, { headers: this.getHeaders() });
-      if (!res.ok) throw new Error("Failed to fetch opportunities");
-      return await res.json();
+      if (res.ok) {
+        data = await res.json();
+      }
     } catch (e) {
       console.error(e);
-      return [];
     }
+
+    try {
+      const stored = localStorage.getItem("stufac_opportunities");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item) => {
+            if (
+              (item.status === "APPROVED" || item.status === "ACTIVE" || item.status === "Active" || item.status === "Approved") &&
+              !data.some((d) => String(d.id) === String(item.id) || d.title.toLowerCase() === item.title.toLowerCase())
+            ) {
+              data.unshift({
+                id: item.id,
+                title: item.title,
+                organization: item.organization_name || item.organization || "Partner Organization",
+                domain: item.opportunity_type === "NGO" ? "Environment & Community" : "Engineering & AI",
+                work_mode: item.work_mode || "Remote",
+                location: item.location || "Remote",
+                duration: item.duration_weeks ? `${item.duration_weeks} Weeks` : "6 Months",
+                deadline: item.application_deadline ? String(item.application_deadline).split("T")[0] : "2026-10-30",
+                required_skills: item.required_skills || ["Python", "JavaScript", "REST APIs"],
+                description: item.description || `${item.title} opportunity.`
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return data;
   }
 
   async getApplications() {
@@ -283,19 +316,19 @@ class RealApiService {
     return JSON.parse(localStorage.getItem("stufac_applications") || "[]");
   }
 
-  async applyToOpportunity(opportunityId, oppObj = null) {
-    let result = null;
-    try {
-      const res = await fetch(`${API_BASE_URL}/applications`, {
-        method: "POST",
-        headers: this.getHeaders(),
-        body: JSON.stringify({ opportunity_id: opportunityId })
-      });
-      if (res.ok) {
-        result = await res.json();
-      }
-    } catch (e) {
-      console.error(e);
+  async applyToOpportunity(opportunityId, opp = {}) {
+    const res = await fetch(`${API_BASE_URL}/applications`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify({
+        opportunity_id: opportunityId,
+        title: opp.title || opp.opportunity_title || "Job Application",
+        organization: opp.organization || opp.organization_name || "Partner Organization"
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Failed to apply");
     }
 
     // Always record locally so UI updates in real-time
