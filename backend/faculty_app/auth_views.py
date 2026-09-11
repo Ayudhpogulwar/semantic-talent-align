@@ -66,7 +66,7 @@ def _issue_tokens(user) -> dict:
 
 
 class FacultyLoginView(APIView):
-    """Step 1 of login: password check (supporting Username or @fac.gh Email), then branch on MFA status."""
+    """Step 1 of login: password check (supporting Username or @raisoni.net Email), then branch on MFA status."""
 
     permission_classes = [AllowAny]
 
@@ -83,10 +83,10 @@ class FacultyLoginView(APIView):
         if not identifier:
             return Response({"detail": "Username or Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Domain Validation Check: If an email address is supplied, it MUST end with @fac.gh
-        if "@" in identifier and not identifier.lower().endswith("@fac.gh"):
+        # Domain Validation Check: If an email address is supplied, it MUST end with @raisoni.net
+        if "@" in identifier and not identifier.lower().endswith("@raisoni.net"):
             return Response(
-                {"error": "Faculty access requires a valid @fac.gh institutional email address."},
+                {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -100,7 +100,7 @@ class FacultyLoginView(APIView):
             conn.close()
             if row and dict(row).get("role") == "Student":
                 return Response(
-                    {"error": "Faculty access requires a valid @fac.gh institutional email address."},
+                    {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
                     status=status.HTTP_403_FORBIDDEN
                 )
         except Exception:
@@ -132,7 +132,7 @@ class FacultyLoginView(APIView):
             if user:
                 if getattr(user, "role", None) == "Student":
                     return Response(
-                        {"error": "Faculty access requires a valid @fac.gh institutional email address."},
+                        {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
                         status=status.HTTP_403_FORBIDDEN
                     )
                 if not user.check_password(password):
@@ -146,9 +146,9 @@ class FacultyLoginView(APIView):
                     }
                 )
             else:
-                # 3. Provision Faculty user for demo accounts or @fac.gh emails
+                # 3. Provision Faculty user for demo accounts or @raisoni.net emails
                 username = identifier.split("@")[0] if "@" in identifier else identifier
-                email_addr = identifier if "@" in identifier else f"{username.lower()}@fac.gh"
+                email_addr = identifier if "@" in identifier else f"{username.lower()}@raisoni.net"
                 user = User.objects.create_user(
                     username=username,
                     email=email_addr,
@@ -237,8 +237,8 @@ class FacultySignUpSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         email_val = value.strip().lower()
-        if not email_val.endswith("@fac.gh"):
-            raise serializers.ValidationError("Faculty access requires a valid @fac.gh institutional email address.")
+        if not email_val.endswith("@raisoni.net"):
+            raise serializers.ValidationError("Faculty access requires a valid @raisoni.net institutional email address.")
         from django.contrib.auth import get_user_model
         User = get_user_model()
         if User.objects.filter(email__iexact=email_val).exists():
@@ -279,9 +279,9 @@ class FacultySignUpView(APIView):
 
     def post(self, request):
         email = request.data.get("email", "").strip().lower()
-        if not email.endswith("@fac.gh"):
+        if not email.endswith("@raisoni.net"):
             return Response(
-                {"error": "Faculty access requires a valid @fac.gh institutional email address."},
+                {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
                 status=status.HTTP_403_FORBIDDEN
             )
 

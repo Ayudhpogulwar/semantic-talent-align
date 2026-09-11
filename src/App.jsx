@@ -285,6 +285,10 @@ function StudentDashboardApp() {
   );
 }
 
+// Super Admin Module Components
+import AdminRoutes from './features/admin/routes/AdminRoutes';
+import AdminLogin from './components/AdminLogin';
+
 export default function App() {
   return (
     <FacultyAuthProvider>
@@ -293,6 +297,8 @@ export default function App() {
           <Route path="/" element={<StudentDashboardApp />} />
           <Route path="/student/*" element={<StudentDashboardApp />} />
           <Route path="/faculty/*" element={<FacultyRoutes />} />
+          <Route path="/login/admin" element={<AdminLogin />} />
+          <Route path="/admin/*" element={<AdminRoutes />} />
         </Routes>
       </BrowserRouter>
     </FacultyAuthProvider>

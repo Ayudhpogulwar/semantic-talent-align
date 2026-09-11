@@ -29,11 +29,11 @@ export default function FacultyLoginPage() {
     setValidationError("");
     const val = usernameOrEmail.trim();
 
-    // If an email address is entered (contains '@'), validate that it ends with @fac.gh
+    // If an email address is entered (contains '@'), validate that it ends with @raisoni.net
     if (val.includes("@")) {
-      const emailRegex = /@fac\.gh$/i;
+      const emailRegex = /@raisoni\.net$/i;
       if (!emailRegex.test(val)) {
-        setValidationError("Faculty access requires a valid @fac.gh institutional email address.");
+        setValidationError("Faculty access requires a valid @raisoni.net institutional email address.");
         return;
       }
     }
@@ -91,7 +91,7 @@ export default function FacultyLoginPage() {
                     setUsernameOrEmail(e.target.value);
                     if (validationError) setValidationError("");
                   }}
-                  placeholder="e.g. omi, FAC101 or name@fac.gh"
+                  placeholder="e.g. omi, FAC101 or name@raisoni.net"
                   required
                 />
                 {validationError && (
@@ -118,7 +118,7 @@ export default function FacultyLoginPage() {
                 <div className="d-flex gap-2 flex-wrap">
                   <button type="button" onClick={() => fillQuickLogin('omi', 'password123')} className="btn btn-outline-primary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>omi</button>
                   <button type="button" onClick={() => fillQuickLogin('FAC101', 'password123')} className="btn btn-outline-secondary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>FAC101</button>
-                  <button type="button" onClick={() => fillQuickLogin('demo@fac.gh', 'password123')} className="btn btn-outline-secondary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>demo@fac.gh</button>
+                  <button type="button" onClick={() => fillQuickLogin('demo@raisoni.net', 'password123')} className="btn btn-outline-secondary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>demo@raisoni.net</button>
                 </div>
               </div>
 

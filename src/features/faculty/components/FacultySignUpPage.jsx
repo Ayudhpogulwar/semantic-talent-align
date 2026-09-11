@@ -39,8 +39,8 @@ export default function FacultySignUpPage() {
     e.preventDefault();
     setLocalError("");
 
-    if (!formData.email.trim().toLowerCase().endsWith("@fac.gh")) {
-      setLocalError("Faculty access requires a valid @fac.gh institutional email address.");
+    if (!formData.email.trim().toLowerCase().endsWith("@raisoni.net")) {
+      setLocalError("Faculty access requires a valid @raisoni.net institutional email address.");
       return;
     }
 

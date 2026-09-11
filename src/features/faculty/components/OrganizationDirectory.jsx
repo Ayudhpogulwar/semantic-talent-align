@@ -1,6 +1,6 @@
 /**
  * SAIOTAF - Faculty & Moderator Module
- * OrganizationDirectory  (FR-FAC-08)
+ * OrganizationDirectory / OrganizationsTable (FR-FAC-08)
  * Verify / manage partnered companies and NGOs.
  */
 
@@ -15,14 +15,63 @@ const STATUS_BADGE = {
   SUSPENDED: "bg-dark text-white",
 };
 
-const defaultInitialOrgs = [];
+const defaultInitialOrgs = [
+  {
+    id: "ORG-1001",
+    name: "Tata Consultancy Services (TCS)",
+    org_type: "COMPANY",
+    location: "Mumbai / Nagpur, Maharashtra",
+    description: "TCS is a global leader in IT services, consulting, and business solutions, partnering with the world's largest businesses in their transformation journeys.",
+    website: "https://tcs.com",
+    contact_name: "Rajesh Kumar",
+    contact_email: "campus.hiring@tcs.com",
+    contact_phone: "+91 22 6778 9999",
+    verification_status: "VERIFIED",
+  },
+  {
+    id: "ORG-1002",
+    name: "Infosys Ltd",
+    org_type: "COMPANY",
+    location: "Bengaluru / Pune, India",
+    description: "Infosys is a digital services and consulting firm enabling clients across 56 countries to navigate their digital transformation with AI and cloud services.",
+    website: "https://infosys.com",
+    contact_name: "Sneha Nair",
+    contact_email: "recruitment@infosys.com",
+    contact_phone: "+91 80 2852 0261",
+    verification_status: "VERIFIED",
+  },
+  {
+    id: "ORG-1003",
+    name: "Tech Mahindra Foundation",
+    org_type: "NGO",
+    location: "New Delhi / Pune, India",
+    description: "CSR arm of Tech Mahindra Ltd, focusing on empowerment through education, vocational skill training, and disability assistance programs.",
+    website: "https://techmahindrafoundation.org",
+    contact_name: "Amit Sharma",
+    contact_email: "contact@techmahindrafoundation.org",
+    contact_phone: "+91 120 4567 890",
+    verification_status: "PENDING",
+  },
+  {
+    id: "ORG-1004",
+    name: "Persistent Systems",
+    org_type: "COMPANY",
+    location: "Nagpur / Pune, Maharashtra",
+    description: "Persistent Systems builds software that drives customers' business with digital engineering, enterprise modernization, and data intelligence.",
+    website: "https://persistent.com",
+    contact_name: "Vikram Joshi",
+    contact_email: "careers@persistent.com",
+    contact_phone: "+91 712 224 8888",
+    verification_status: "VERIFIED",
+  }
+];
 
 const getStoredOrgs = () => {
   try {
     const stored = localStorage.getItem("stufac_organizations");
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (e) {
     console.error(e);
@@ -37,6 +86,7 @@ export default function OrganizationDirectory() {
   const [error, setError] = useState(null);
   const [actioningId, setActioningId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedOrgDetails, setSelectedOrgDetails] = useState(null); // Company details modal state
 
   const fetchOrgs = useCallback(async () => {
     setLoading(true);
@@ -46,13 +96,15 @@ export default function OrganizationDirectory() {
       const res = await organizationApi.list({ org_type: typeFilter || undefined });
       const apiData = res?.data?.results ?? res?.data ?? [];
       let merged = [...localList];
-      if (Array.isArray(apiData)) {
+      if (Array.isArray(apiData) && apiData.length > 0) {
         apiData.forEach((item) => {
           if (!merged.some((m) => String(m.id) === String(item.id) || m.name.toLowerCase() === item.name.toLowerCase())) {
             merged.unshift({
               id: item.id || `ORG-${Math.floor(1000 + Math.random() * 9000)}`,
               name: item.name,
               org_type: item.org_type || "COMPANY",
+              location: item.location || "Nagpur, Maharashtra",
+              description: item.description || "Partnered institution providing technical training, internships, and placement opportunities.",
               website: item.website || "",
               contact_name: item.contact_name || "",
               contact_email: item.contact_email || "",
@@ -94,10 +146,15 @@ export default function OrganizationDirectory() {
     });
   };
 
+  const filteredOrgs = orgs.filter((org) => {
+    if (typeFilter && org.org_type !== typeFilter) return false;
+    return true;
+  });
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0 fw-bold">Organizations</h4>
+        <h4 className="mb-0 fw-bold text-white">Organizations</h4>
 
         <div className="d-flex align-items-center gap-2">
           <select
@@ -151,20 +208,20 @@ export default function OrganizationDirectory() {
                     <td colSpan={5} className="text-center py-4 text-muted">Loading…</td>
                   </tr>
                 )}
-                {!loading && orgs.length === 0 && (
+                {!loading && filteredOrgs.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-4 text-muted">No organizations found.</td>
                   </tr>
                 )}
                 {!loading &&
-                  orgs.map((org) => (
+                  filteredOrgs.map((org) => (
                     <tr key={org.id}>
-                      <td className="fw-semibold">
+                      <td className="fw-semibold text-white">
                         {org.name}
                         {org.website && (
                           <>
                             {" "}
-                            <a href={org.website} target="_blank" rel="noreferrer" className="small text-primary">
+                            <a href={org.website} target="_blank" rel="noreferrer" className="small text-primary text-decoration-none ms-1">
                               ↗
                             </a>
                           </>
@@ -179,6 +236,13 @@ export default function OrganizationDirectory() {
                       </td>
                       <td className="text-end">
                         <div className="btn-group btn-group-sm">
+                          <button
+                            className="btn btn-action-custom btn-outline-info"
+                            onClick={() => setSelectedOrgDetails(org)}
+                            title="View Full Company Details"
+                          >
+                            View Details
+                          </button>
                           <button
                             className="btn btn-action-custom btn-outline-success"
                             disabled={actioningId === org.id || org.verification_status === "VERIFIED"}
@@ -210,6 +274,92 @@ export default function OrganizationDirectory() {
           </div>
         </>
       )}
+
+      {/* Organization Details Modal */}
+      {selectedOrgDetails && (
+        <div
+          className="modal d-block faculty-modal-backdrop"
+          tabIndex={-1}
+          role="dialog"
+          style={{ background: "rgba(0,0,0,0.75)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content faculty-modal-content text-white" style={{ background: "#111827", borderColor: "#374151" }}>
+              <div className="modal-header border-secondary">
+                <h5 className="modal-title fw-bold text-primary d-flex align-items-center gap-2">
+                  <i className="bi bi-building"></i> Company / Organization Details
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setSelectedOrgDetails(null)}
+                  aria-label="Close"
+                />
+              </div>
+              <div className="modal-body py-4">
+                <div className="mb-4 p-3 rounded border border-secondary bg-dark">
+                  <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                    <div>
+                      <h4 className="fw-bold text-white mb-1">{selectedOrgDetails.name}</h4>
+                      <div className="text-info small fw-semibold">
+                        <i className="bi bi-geo-alt-fill me-1"></i> Location: {selectedOrgDetails.location || "Nagpur, Maharashtra, India"}
+                      </div>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <span className="badge bg-info fs-6">{selectedOrgDetails.org_type}</span>
+                      <span className={`badge fs-6 ${STATUS_BADGE[selectedOrgDetails.verification_status] || 'badge-closed'}`}>
+                        {selectedOrgDetails.verification_status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {selectedOrgDetails.website && (
+                    <div className="mb-2">
+                      <span className="text-secondary small">Official Website: </span>
+                      <a href={selectedOrgDetails.website} target="_blank" rel="noreferrer" className="text-primary text-decoration-none">
+                        {selectedOrgDetails.website} ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Company Description */}
+                <div className="mb-4 p-3 rounded border border-secondary bg-dark">
+                  <h6 className="text-uppercase text-secondary fw-bold mb-2 small">Full Company Description & Overview</h6>
+                  <p className="text-light leading-relaxed mb-0" style={{ whiteSpace: "pre-line", fontSize: "0.95rem" }}>
+                    {selectedOrgDetails.description || selectedOrgDetails.about || "No detailed description available."}
+                  </p>
+                </div>
+
+                {/* Contact Information */}
+                <div className="p-3 rounded border border-secondary bg-dark">
+                  <h6 className="text-uppercase text-secondary fw-bold mb-3 small">Contact Information</h6>
+                  <div className="row g-3">
+                    <div className="col-md-4">
+                      <span className="text-secondary small d-block">Contact Person</span>
+                      <span className="fw-semibold text-white">{selectedOrgDetails.contact_name || "N/A"}</span>
+                    </div>
+                    <div className="col-md-4">
+                      <span className="text-secondary small d-block">Contact Email</span>
+                      <span className="fw-semibold text-info">{selectedOrgDetails.contact_email || "N/A"}</span>
+                    </div>
+                    <div className="col-md-4">
+                      <span className="text-secondary small d-block">Phone Number</span>
+                      <span className="fw-semibold text-white">{selectedOrgDetails.contact_phone || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer border-secondary">
+                <button className="btn btn-secondary px-4" onClick={() => setSelectedOrgDetails(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
