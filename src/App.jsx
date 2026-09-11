@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Student Components
 import HeaderNavbar from './components/HeaderNavbar';
 import DashboardOverview from './components/DashboardOverview';
 import ProfileModule from './components/ProfileModule';
@@ -11,13 +14,16 @@ import LandingIntroPage from './components/LandingIntroPage';
 import AuthModal from './components/AuthModal';
 import { apiService } from './services/api';
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// User's Pre-developed Faculty Module Components & Provider
+import FacultyRoutes from './features/faculty/routes/FacultyRoutes';
+import { FacultyAuthProvider } from './features/faculty/hooks/useAuth';
+
+function StudentDashboardApp() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("stufac_token"));
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [initialAuthMode, setInitialAuthMode] = useState('login');
   const [activeTab, setActiveTab] = useState('home');
 
-  // Application Data States
   const [profile, setProfile] = useState(null);
   const [resume, setResume] = useState(null);
   const [skills, setSkills] = useState([]);
@@ -27,7 +33,6 @@ export default function App() {
   const [readiness, setReadiness] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
-  // Load all initial data on mount/auth
   const loadDashboardData = async () => {
     try {
       const [p, r, s, o, a, rec, read, notif] = await Promise.all([
@@ -41,8 +46,9 @@ export default function App() {
         apiService.getNotifications()
       ]);
 
+      const localSavedResume = JSON.parse(localStorage.getItem("stufac_resume") || "{}");
       setProfile(p || {});
-      setResume(r || {});
+      setResume({ ...(r || {}), file_url: (r?.file_url || localSavedResume.file_url || null) });
       setSkills(Array.isArray(s) ? s : []);
       setOpportunities(Array.isArray(o) ? o : []);
       setApplications(Array.isArray(a) ? a : []);
@@ -50,7 +56,7 @@ export default function App() {
       setReadiness(read || {});
       setNotifications(Array.isArray(notif) ? notif : []);
     } catch (e) {
-      console.error("Error loading dashboard state:", e);
+      console.error("Error loading student state:", e);
     }
   };
 
@@ -60,7 +66,6 @@ export default function App() {
     }
   }, [isAuthenticated]);
 
-  // Handlers
   const handleOpenAuth = (mode = 'login') => {
     setInitialAuthMode(mode);
     setShowAuthModal(true);
@@ -92,40 +97,89 @@ export default function App() {
     }
   };
 
-  const handleUploadResume = async (file) => {
-    const res = await apiService.uploadResumeFile(file);
-    setResume(res);
-    setSkills(apiService.getSkills());
-    refreshRecsAndReadiness();
+  const handleUploadResume = async (file, fileUrl = null) => {
+    try {
+      const url = fileUrl || (file instanceof File ? URL.createObjectURL(file) : null);
+      const res = await apiService.uploadResumeFile(file);
+      const fullResume = {
+        ...res,
+        filename: file?.name || res.filename || "Uploaded_Resume.pdf",
+        file_url: url || res.file_url || null,
+        file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
+      };
+      localStorage.setItem("stufac_resume", JSON.stringify(fullResume));
+      setResume(fullResume);
+      const updatedSkills = await apiService.getSkills();
+      setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Upload resume error:", err);
+    }
   };
 
-  const handleAddSkill = (skillName, category) => {
-    const updatedSkills = apiService.addSkill(skillName, category);
-    setSkills(updatedSkills);
-    refreshRecsAndReadiness();
+  const handleAddSkill = async (skillName, category) => {
+    try {
+      const updatedSkills = await apiService.addSkill(skillName, category);
+      setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Add skill error:", err);
+    }
   };
 
-  const handleRemoveSkill = (skillId) => {
-    const updatedSkills = apiService.removeSkill(skillId);
-    setSkills(updatedSkills);
-    refreshRecsAndReadiness();
+  const handleRemoveSkill = async (skillId) => {
+    try {
+      const updatedSkills = await apiService.removeSkill(skillId);
+      setSkills(Array.isArray(updatedSkills) ? updatedSkills : []);
+      await refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Remove skill error:", err);
+    }
   };
 
-  const handleApplyToOpportunity = (oppId) => {
-    apiService.applyToOpportunity(oppId);
-    setApplications(apiService.getApplications());
-    setNotifications(apiService.getNotifications());
-    refreshRecsAndReadiness();
+  const handleApplyToOpportunity = async (oppId) => {
+    try {
+      const opp = opportunities.find(o => String(o.id) === String(oppId) || String(o.opportunity_id) === String(oppId));
+      await apiService.applyToOpportunity(oppId, opp);
+      const apps = await apiService.getApplications();
+      setApplications(Array.isArray(apps) ? apps : []);
+      const notifs = await apiService.getNotifications();
+      setNotifications(Array.isArray(notifs) ? notifs : []);
+      refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Apply error:", err);
+    }
   };
 
-  const handleMarkNotifRead = (id) => {
-    const updated = apiService.markNotificationRead(id);
-    setNotifications(updated);
+  const handleCancelOpportunity = async (oppId) => {
+    try {
+      await apiService.cancelApplication(oppId);
+      const apps = await apiService.getApplications();
+      setApplications(Array.isArray(apps) ? apps : []);
+      refreshRecsAndReadiness();
+    } catch (err) {
+      console.error("Cancel error:", err);
+    }
   };
 
-  const refreshRecsAndReadiness = () => {
-    setRecommendations(apiService.getAIRecommendations());
-    setReadiness(apiService.getReadinessScore());
+  const handleMarkNotifRead = async (id) => {
+    try {
+      const updated = await apiService.markNotificationRead(id);
+      setNotifications(Array.isArray(updated) ? updated : []);
+    } catch (e) {
+      console.error("Mark notif read error:", e);
+    }
+  };
+
+  const refreshRecsAndReadiness = async () => {
+    try {
+      const recs = await apiService.getAIRecommendations();
+      setRecommendations(Array.isArray(recs) ? recs : []);
+      const read = await apiService.getReadinessScore();
+      if (read && typeof read === 'object') setReadiness(read);
+    } catch (e) {
+      console.error("Refresh recs error:", e);
+    }
   };
 
   if (!isAuthenticated) {
@@ -149,15 +203,13 @@ export default function App() {
   if (!profile || !readiness) {
     return (
       <div style={{ color: '#fff', textAlign: 'center', padding: '100px', fontSize: '1.2rem' }}>
-        Loading Semantic AI Student Dashboard...
+        Loading Student Dashboard...
       </div>
     );
   }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)' }}>
-      
-      {/* Header Navigation */}
       <HeaderNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -167,7 +219,6 @@ export default function App() {
         onMarkNotifRead={handleMarkNotifRead}
       />
 
-      {/* Main Content View Container */}
       <main style={{
         maxWidth: '1400px',
         width: '100%',
@@ -189,7 +240,9 @@ export default function App() {
         {activeTab === 'profile' && (
           <ProfileModule
             profile={profile}
+            resume={resume}
             onUpdateProfile={handleUpdateProfile}
+            setActiveTab={setActiveTab}
           />
         )}
 
@@ -208,6 +261,7 @@ export default function App() {
             opportunities={opportunities}
             applications={applications}
             onApply={handleApplyToOpportunity}
+            onCancel={handleCancelOpportunity}
           />
         )}
 
@@ -220,7 +274,9 @@ export default function App() {
         {activeTab === 'recommendations' && (
           <AIRecommendations
             recommendations={recommendations}
+            applications={applications}
             onApply={handleApplyToOpportunity}
+            onCancel={handleCancelOpportunity}
           />
         )}
 
@@ -231,7 +287,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
       <footer style={{
         borderTop: '1px solid var(--border-color)',
         padding: '20px 24px',
@@ -242,7 +297,20 @@ export default function App() {
       }}>
         TalentAlign AI Framework © 2026 • Semantic-Aware Intelligent Opportunity & Talent Alignment System • Institutional Student Portal
       </footer>
-
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <FacultyAuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<StudentDashboardApp />} />
+          <Route path="/student/*" element={<StudentDashboardApp />} />
+          <Route path="/faculty/*" element={<FacultyRoutes />} />
+        </Routes>
+      </BrowserRouter>
+    </FacultyAuthProvider>
   );
 }

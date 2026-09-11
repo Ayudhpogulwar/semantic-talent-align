@@ -5,6 +5,7 @@ urlpatterns = [
     # 14.1 Auth
     path('auth/login', views.login),
     path('auth/register', views.register),
+    path('auth/reset-password', views.reset_password),
 
     # 14.2 Profile
     path('profile', views.profile),
@@ -21,10 +22,12 @@ urlpatterns = [
     path('opportunities', views.get_opportunities),
     path('opportunities/recommendations', views.get_recommendations),
     path('applications', views.applications),
+    path('applications/<str:app_id>/status', views.update_application_status),
 
     # 14.6 AI & Readiness
     path('readiness', views.get_readiness),
 
     # Notifications
     path('notifications', views.get_notifications),
+    path('notifications/<str:notif_id>/read', views.mark_notification_read),
 ]
