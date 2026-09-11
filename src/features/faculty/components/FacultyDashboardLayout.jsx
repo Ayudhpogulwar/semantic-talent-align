@@ -36,15 +36,35 @@ const NAV_ITEMS = [
 ];
 
 function ThemeToggle() {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+
+    const handleStorage = () => {
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.body.setAttribute('data-theme', currentTheme);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('themeChange', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('themeChange', handleStorage);
+    };
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.body.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    window.dispatchEvent(new CustomEvent('themeChange', { detail: nextTheme }));
   };
 
   return (
@@ -88,8 +108,8 @@ export default function FacultyDashboardLayout() {
       try {
         const u = JSON.parse(storedUserStr);
         let name = u.first_name || u.username || "Faculty";
+        // Get just the first word (e.g., "sumit" from "sumit la")
         name = name.split(" ")[0];
-        name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         setUserName(`${name} Sir`);
         return;
       } catch (e) { /* fallback to token */ }
@@ -101,7 +121,6 @@ export default function FacultyDashboardLayout() {
       if (decoded) {
         let name = decoded.first_name || decoded.username || "Faculty";
         name = name.split(" ")[0];
-        name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         setUserName(`${name} Sir`);
       }
     }
@@ -154,17 +173,7 @@ export default function FacultyDashboardLayout() {
 
           <div className="d-flex align-items-center gap-3">
             <ThemeToggle />
-            <div className="faculty-user-badge d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill">
-              <div 
-                className="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
-                style={{ width: 28, height: 28, background: "linear-gradient(135deg, var(--primary) 0%, var(--faculty-accent) 100%)", fontSize: "0.8rem" }}
-              >
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <span className="small fw-semibold text-capitalize" style={{ letterSpacing: "0.01em" }}>
-                {userName}
-              </span>
-            </div>
+            <span className="small fw-medium" style={{ color: "var(--text-main)" }}>{userName}</span>
             <button className="btn btn-outline-danger d-flex align-items-center gap-1.5" onClick={handleLogout} style={{ padding: '8px 16px', borderRadius: '10px' }}>
               <LogOut size={16} />
               <span>Log out</span>

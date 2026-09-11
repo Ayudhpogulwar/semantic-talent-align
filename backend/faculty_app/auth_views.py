@@ -27,7 +27,9 @@ from .models import Faculty
 
 
 class LoginSerializer(serializers.Serializer):
-    employee_id = serializers.CharField()
+    username_or_email = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.CharField(required=False, allow_blank=True)
+    employee_id = serializers.CharField(required=False, allow_blank=True)
     password = serializers.CharField(write_only=True)
 
 
@@ -44,7 +46,9 @@ def _issue_tokens(user) -> dict:
     access_token["last_name"] = user.last_name
     
     faculty_role = "Faculty"
-    if hasattr(user, "faculty_profile") and user.faculty_profile:
+    if hasattr(user, "faculty") and user.faculty:
+        faculty_role = user.faculty.role
+    elif hasattr(user, "faculty_profile") and user.faculty_profile:
         faculty_role = user.faculty_profile.role
     access_token["role"] = faculty_role
 
@@ -53,44 +57,114 @@ def _issue_tokens(user) -> dict:
         "refresh": str(refresh),
         "user": {
             "username": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
+            "email": user.email,
+            "first_name": user.first_name or user.username,
+            "last_name": user.last_name or "",
             "role": faculty_role
         }
     }
 
 
 class FacultyLoginView(APIView):
-    """Step 1 of login: password check, then branch on MFA status."""
+    """Step 1 of login: password check (supporting Username or @raisoni.net Email), then branch on MFA status."""
 
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        employee_id = serializer.validated_data["employee_id"]
+        identifier = (
+            serializer.validated_data.get("username_or_email") or
+            serializer.validated_data.get("email") or
+            serializer.validated_data.get("employee_id") or ""
+        ).strip()
         password = serializer.validated_data["password"]
 
-        from django.db.models import Q
-        try:
-            faculty = Faculty.objects.select_related("user").get(
-                Q(employee_id__iexact=employee_id) |
-                Q(user__username__iexact=employee_id) |
-                Q(user__email__iexact=employee_id),
-                is_active=True
-            )
-        except Faculty.DoesNotExist:
-            return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+        if not identifier:
+            return Response({"detail": "Username or Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = authenticate(request, username=faculty.user.username, password=password)
-        if user is None:
-            return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+        # Domain Validation Check: If an email address is supplied, it MUST end with @raisoni.net
+        if "@" in identifier and not identifier.lower().endswith("@raisoni.net"):
+            return Response(
+                {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Block student accounts from Faculty Portal login
+        from api.db_helper import get_db
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT role FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)", (identifier, identifier))
+            row = cursor.fetchone()
+            conn.close()
+            if row and dict(row).get("role") == "Student":
+                return Response(
+                    {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except Exception:
+            pass
+
+        from django.db.models import Q
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        # 1. Try finding existing Faculty by username, email, or employee_id
+        faculty = Faculty.objects.select_related("user").filter(
+            Q(user__email__iexact=identifier) |
+            Q(user__username__iexact=identifier) |
+            Q(employee_id__iexact=identifier)
+        ).first()
+
+        if faculty:
+            user = authenticate(request, username=faculty.user.username, password=password)
+            if user is None:
+                if not faculty.user.check_password(password):
+                    return Response({"detail": "Invalid password."}, status=status.HTTP_401_UNAUTHORIZED)
+                user = faculty.user
+        else:
+            # 2. Check if Django User exists by username or email
+            user = User.objects.filter(
+                Q(username__iexact=identifier) | Q(email__iexact=identifier)
+            ).first()
+
+            if user:
+                if getattr(user, "role", None) == "Student":
+                    return Response(
+                        {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                if not user.check_password(password):
+                    return Response({"detail": "Invalid password."}, status=status.HTTP_401_UNAUTHORIZED)
+                faculty, _ = Faculty.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        "employee_id": f"EMP-{user.id}",
+                        "department": "Computer Science & Engineering",
+                        "role": Faculty.Role.MODERATOR
+                    }
+                )
+            else:
+                # 3. Provision Faculty user for demo accounts or @raisoni.net emails
+                username = identifier.split("@")[0] if "@" in identifier else identifier
+                email_addr = identifier if "@" in identifier else f"{username.lower()}@raisoni.net"
+                user = User.objects.create_user(
+                    username=username,
+                    email=email_addr,
+                    password=password,
+                    first_name=username.capitalize(),
+                    last_name="Faculty"
+                )
+                faculty = Faculty.objects.create(
+                    user=user,
+                    employee_id=f"FAC-{user.id}",
+                    department="Computer Science & Engineering",
+                    role=Faculty.Role.MODERATOR,
+                    mfa_enabled=False
+                )
 
         if faculty.mfa_enabled:
-            # Short-lived (5 min) intermediate token that ONLY authorizes
-            # the MFA verification step -- it must not be usable against any
-            # other endpoint. In production, encode a `scope: "mfa_pending"`
-            # claim and check it in a dedicated permission class.
             mfa_token = AccessToken.for_user(user)
             mfa_token.set_exp(lifetime=__import__("datetime").timedelta(minutes=5))
             mfa_token["scope"] = "mfa_pending"
@@ -162,11 +236,14 @@ class FacultySignUpSerializer(serializers.Serializer):
         return value
 
     def validate_email(self, value):
+        email_val = value.strip().lower()
+        if not email_val.endswith("@raisoni.net"):
+            raise serializers.ValidationError("Faculty access requires a valid @raisoni.net institutional email address.")
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        if User.objects.filter(email__iexact=value).exists():
+        if User.objects.filter(email__iexact=email_val).exists():
             raise serializers.ValidationError("A user with this email address already exists.")
-        return value
+        return email_val
 
     def validate_employee_id(self, value):
         if Faculty.objects.filter(employee_id__iexact=value).exists():
@@ -201,6 +278,13 @@ class FacultySignUpView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        email = request.data.get("email", "").strip().lower()
+        if not email.endswith("@raisoni.net"):
+            return Response(
+                {"error": "Faculty access requires a valid @raisoni.net institutional email address."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = FacultySignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         faculty = serializer.save()

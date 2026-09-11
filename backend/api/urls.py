@@ -5,7 +5,6 @@ urlpatterns = [
     # 14.1 Auth
     path('auth/login', views.login),
     path('auth/register', views.register),
-    path('auth/reset-password', views.reset_password),
 
     # 14.2 Profile
     path('profile', views.profile),
@@ -29,5 +28,4 @@ urlpatterns = [
 
     # Notifications
     path('notifications', views.get_notifications),
-    path('notifications/<str:notif_id>/read', views.mark_notification_read),
 ]

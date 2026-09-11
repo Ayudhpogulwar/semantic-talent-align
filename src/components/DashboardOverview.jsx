@@ -42,7 +42,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
             Welcome back, <span className="gradient-text">{profile.name}</span>!
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: '1.5' }}>
-            Your student profile is active. Our intelligent matching system has analyzed your resume against <strong>{recommendations.length} curated opportunities</strong> with a top compatibility match of <strong>{topMatch ? topMatch.match_score : 92}%</strong>.
+            Your student profile is active. Sentence-BERT has scored your resume against <strong>{recommendations.length} curated opportunities</strong> with a top compatibility match of <strong>{topMatch ? topMatch.match_score : 92}%</strong>.
           </p>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
@@ -145,7 +145,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
         <div className="glass-panel" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => setActiveTab('recommendations')}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>AI Matches</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>AI Match Matches</span>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#c084fc', marginTop: '4px' }}>{recommendations.length}</h3>
             </div>
             <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}>
@@ -156,7 +156,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
             Top: {topMatch ? topMatch.title : 'Data Analyst'} ({topMatch ? topMatch.match_score : 92}%)
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
-            Smart Skill & Opportunity Alignment
+            CareerBERT + JobFormer AI Engine
           </div>
         </div>
 
@@ -188,7 +188,7 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
               <div key={opp.id} style={{
                 padding: '16px',
                 borderRadius: '12px',
-                background: 'var(--input-bg)',
+                background: 'var(--bg-card-subtle)',
                 border: '1px solid var(--border-color)',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -197,11 +197,11 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                     <span className="badge badge-primary">{opp.match_score}% Match</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 500 }}>{opp.domain}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{opp.domain}</span>
                   </div>
                   <h4 style={{ fontSize: '0.98rem', color: 'var(--text-main)', fontWeight: 700 }}>{opp.title}</h4>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{opp.organization} • {opp.stipend}</div>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--accent-emerald)', marginTop: '6px', fontStyle: 'italic', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.74rem', color: '#34d399', marginTop: '6px', fontStyle: 'italic' }}>
                     "{opp.explanation}"
                   </div>
                 </div>
@@ -237,16 +237,16 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
               <div key={idx} style={{
                 padding: '12px 14px',
                 borderRadius: '10px',
-                background: 'rgba(245, 158, 11, 0.12)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: '10px'
               }}>
-                <div style={{ background: '#f59e0b', color: '#0f172a', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0, marginTop: '2px' }}>
+                <div style={{ background: '#f59e0b', color: '#000', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 800, flexShrink: 0, marginTop: '2px' }}>
                   {idx + 1}
                 </div>
-                <div style={{ fontSize: '0.86rem', color: 'var(--text-main)', lineHeight: '1.45', fontWeight: 500 }}>
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-main)', lineHeight: '1.4' }}>
                   {suggestion}
                 </div>
               </div>

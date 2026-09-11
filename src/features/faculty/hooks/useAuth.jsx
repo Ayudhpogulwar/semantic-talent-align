@@ -9,19 +9,43 @@ import { authApi } from "../api/facultyApi";
 
 const AuthContext = createContext(null);
 
+function isTokenValid(token) {
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(window.atob(base64));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 export function FacultyAuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("saiotaf_access_token")
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const token = localStorage.getItem("saiotaf_access_token");
+    const valid = isTokenValid(token);
+    if (!valid && token) {
+      localStorage.removeItem("saiotaf_access_token");
+      localStorage.removeItem("saiotaf_refresh_token");
+      localStorage.removeItem("saiotaf_user");
+    }
+    return valid;
+  });
   const [mfaPending, setMfaPending] = useState(null); // holds mfa_token when awaiting OTP
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const login = useCallback(async (employeeId, password) => {
+  const login = useCallback(async (usernameOrEmail, password) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await authApi.login(employeeId, password);
+      const { data } = await authApi.login(usernameOrEmail, password);
       if (data.mfa_required) {
         setMfaPending(data.mfa_token);
         return { mfaRequired: true };

@@ -25,11 +25,22 @@ export default function RequireFacultyAuth({ children }) {
     }
   }
 
+  // Fallback: check JWT token payload role directly
+  if (!userRole) {
+    const token = localStorage.getItem("saiotaf_access_token");
+    if (token) {
+      try {
+        const payload = JSON.parse(window.atob(token.split(".")[1]));
+        userRole = payload?.role;
+      } catch (e) {}
+    }
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/faculty/login" replace state={{ from: location }} />;
   }
 
-  // Deny access to students attempting to access Faculty portal
+  // Strictly deny access to students attempting to access Faculty portal
   if (userRole === "Student") {
     return <Navigate to="/student" replace />;
   }

@@ -22,15 +22,35 @@ export default function HeaderNavbar({ activeTab, setActiveTab, user, onLogout, 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('stufac_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('stufac_theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    const handleStorage = () => {
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.body.setAttribute('data-theme', currentTheme);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('themeChange', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('themeChange', handleStorage);
+    };
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.body.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    window.dispatchEvent(new CustomEvent('themeChange', { detail: nextTheme }));
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -85,7 +105,7 @@ export default function HeaderNavbar({ activeTab, setActiveTab, user, onLogout, 
           </div>
           <div>
             <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              TalentAlign
+              TalentAlign <span style={{ fontSize: '0.68rem', padding: '2px 6px', background: 'rgba(6, 182, 212, 0.18)', color: 'var(--accent-cyan)', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.3)', fontWeight: 800 }}>AI PORTAL</span>
             </div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Semantic Opportunity Alignment</div>
           </div>

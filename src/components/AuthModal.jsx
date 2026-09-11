@@ -1,60 +1,34 @@
 import React, { useState } from 'react';
-import { GraduationCap, Mail, Lock, User, Hash, AlertCircle, ArrowRight, X, CheckCircle, RefreshCw } from 'lucide-react';
-import { apiService } from '../services/api';
+import { GraduationCap, Mail, Lock, User, Hash, AlertCircle, ArrowRight, CheckCircle2, X } from 'lucide-react';
 
 export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = false }) {
-  const [authMode, setAuthMode] = useState(defaultRegister ? 'register' : 'login'); // 'login' | 'register' | 'forgot'
-  
-  // Student fields
+  const [isRegister, setIsRegister] = useState(defaultRegister);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [rollNo, setRollNo] = useState('');
 
   const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setSuccessMsg(null);
     setLoading(true);
 
     const isValidDomain = (em) => {
-      const e = em.toLowerCase();
-      return e.endsWith('@ghrietn.raisoni.net') || e.endsWith('@college.edu') || e.endsWith('.edu') || e.endsWith('.ac.in');
+      return Boolean(em && em.includes('@'));
     };
 
     try {
-      if (authMode === 'forgot') {
+      if (isRegister) {
         if (!isValidDomain(email)) {
-          throw new Error('Reset restricted to institutional email.');
-        }
-        if (newPassword !== confirmPassword) {
-          throw new Error('New passwords do not match!');
-        }
-        if (newPassword.length < 4) {
-          throw new Error('Password must be at least 4 characters long.');
-        }
-
-        const res = await apiService.resetPassword(email, newPassword);
-        setSuccessMsg(res.message || 'Password reset successfully! You can now sign in.');
-        setTimeout(() => {
-          setAuthMode('login');
-          setSuccessMsg(null);
-          setPassword('');
-        }, 2000);
-      } else if (authMode === 'register') {
-        if (!isValidDomain(email)) {
-          throw new Error('Institutional email validation failed! Must end with @ghrietn.raisoni.net or valid institutional domain.');
+          throw new Error('Institutional email validation failed! Must be a valid college domain email (e.g. @ghrietn.raisoni.net).');
         }
         await onLoginSuccess({ type: 'register', data: { name, email, password, roll_no: rollNo } });
       } else {
         if (!isValidDomain(email)) {
-          throw new Error('Please login using your verified institutional student email.');
+          throw new Error('Please login using your verified institutional student email (e.g. @ghrietn.raisoni.net).');
         }
         await onLoginSuccess({ type: 'login', email, password });
       }
@@ -79,7 +53,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
       backdropFilter: 'blur(12px)'
     }} onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}>
       <div className="glass-panel glass-panel-glow animate-fade-in" style={{
-        maxWidth: '440px',
+        maxWidth: '460px',
         width: '100%',
         padding: '36px',
         position: 'relative'
@@ -101,9 +75,8 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
             <X size={20} />
           </button>
         )}
-        
-        {/* Header Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
             width: '54px',
             height: '54px',
@@ -117,12 +90,50 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
           }}>
             <GraduationCap size={32} color="#fff" />
           </div>
-          <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', fontWeight: 800 }}>
-            {authMode === 'register' ? 'Student Registration' : authMode === 'forgot' ? 'Reset Password' : 'Student Sign In'}
+          <h2 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: 800 }}>
+            TalentAlign AI Student Portal
           </h2>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Semantic-Aware Opportunity Alignment System
+            Semantic-Aware Intelligent Opportunity Alignment
           </p>
+        </div>
+
+        {/* Tab Selector */}
+        <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', padding: '4px', borderRadius: '10px', marginBottom: '24px' }}>
+          <button
+            type="button"
+            onClick={() => { setIsRegister(false); setError(null); }}
+            style={{
+              flex: 1,
+              padding: '8px',
+              borderRadius: '8px',
+              border: 'none',
+              background: !isRegister ? 'var(--primary)' : 'transparent',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              cursor: 'pointer'
+            }}
+          >
+            Student Login
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIsRegister(true); setError(null); }}
+            style={{
+              flex: 1,
+              padding: '8px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isRegister ? 'var(--primary)' : 'transparent',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              cursor: 'pointer'
+            }}
+          >
+            Register Account
+          </button>
         </div>
 
         {error && (
@@ -142,25 +153,8 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
           </div>
         )}
 
-        {successMsg && (
-          <div style={{
-            padding: '10px 14px',
-            borderRadius: '8px',
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#34d399',
-            fontSize: '0.82rem',
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <CheckCircle size={16} /> {successMsg}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {authMode === 'register' && (
+          {isRegister && (
             <>
               <div>
                 <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Full Name</label>
@@ -214,125 +208,37 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
             </div>
           </div>
 
-          {authMode === 'forgot' ? (
-            <>
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>New Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    style={{ paddingLeft: '34px' }}
-                  />
-                  <Lock size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '10px', top: '12px' }} />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Confirm New Password</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="password"
-                    className="form-control"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    style={{ paddingLeft: '34px' }}
-                  />
-                  <Lock size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '10px', top: '12px' }} />
-                </div>
-              </div>
-            </>
-          ) : (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Password</label>
-                {authMode === 'login' && (
-                  <button
-                    type="button"
-                    onClick={() => { setAuthMode('forgot'); setError(null); setSuccessMsg(null); }}
-                    style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
-                  >
-                    Forgot Password?
-                  </button>
-                )}
-              </div>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="password"
-                  className="form-control"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  style={{ paddingLeft: '34px' }}
-                />
-                <Lock size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '10px', top: '12px' }} />
-              </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ paddingLeft: '34px' }}
+              />
+              <Lock size={16} color="var(--text-dim)" style={{ position: 'absolute', left: '10px', top: '12px' }} />
             </div>
-          )}
+          </div>
 
           <button
             type="submit"
             className="btn btn-primary"
             disabled={loading}
-            style={{
-              width: '100%',
-              marginTop: '8px',
-              padding: '12px',
-              background: 'var(--primary)'
-            }}
+            style={{ width: '100%', marginTop: '8px', padding: '12px' }}
           >
-            {loading ? 'Processing...' : authMode === 'register' ? 'Create Verified Account' : authMode === 'forgot' ? 'Reset Password' : 'Sign In'}
+            {loading ? 'Authenticating...' : isRegister ? 'Create Verified Account' : 'Login to Dashboard'}
             {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
-        {/* Bottom Switch Links */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {authMode === 'forgot' ? (
-            <div>
-              Remembered your password?{' '}
-              <button
-                type="button"
-                onClick={() => { setAuthMode('login'); setError(null); setSuccessMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-light)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Back to Sign In
-              </button>
-            </div>
-          ) : authMode === 'register' ? (
-            <div>
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => { setAuthMode('login'); setError(null); setSuccessMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-light)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Sign In
-              </button>
-            </div>
-          ) : (
-            <div>
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={() => { setAuthMode('register'); setError(null); setSuccessMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-light)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
-              >
-                Sign Up
-              </button>
-            </div>
-          )}
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+          🔒 Restricted to verified institutional students with `@ghrietn.raisoni.net` domain.
         </div>
       </div>
     </div>
   );
 }
-
-

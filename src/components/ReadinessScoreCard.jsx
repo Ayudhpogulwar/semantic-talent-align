@@ -1,8 +1,8 @@
 import React from 'react';
-import { Award, Zap, TrendingUp, CheckCircle, Target, ShieldCheck, AlertCircle, FileText } from 'lucide-react';
+import { Award, Zap, TrendingUp, CheckCircle, Target, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function ReadinessScoreCard({ readiness }) {
-  const { overall_score, category_scores, actionable_suggestions } = readiness;
+  const { overall_score, category_scores, actionable_suggestions, probability_text, percentile_text } = readiness;
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1000px', margin: '0 auto' }}>
@@ -19,7 +19,7 @@ export default function ReadinessScoreCard({ readiness }) {
         </div>
 
         <span className="badge badge-emerald" style={{ padding: '6px 14px', fontSize: '0.82rem' }}>
-          <TrendingUp size={14} /> Top 15% Percentile in Dept
+          <TrendingUp size={14} /> {percentile_text || "Top 15% Percentile in Dept"}
         </span>
       </div>
 
@@ -53,8 +53,8 @@ export default function ReadinessScoreCard({ readiness }) {
             </div>
           </div>
 
-          <div style={{ marginTop: '20px', fontSize: '0.9rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <ShieldCheck size={18} /> High Placement Probability
+          <div style={{ marginTop: '20px', fontSize: '0.9rem', color: overall_score >= 70 ? 'var(--accent-emerald)' : '#f59e0b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ShieldCheck size={18} /> {probability_text || "High Placement Probability"}
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '4px' }}>
             Score automatically recalculates on resume update or skill changes.
@@ -67,42 +67,36 @@ export default function ReadinessScoreCard({ readiness }) {
             Sub-Category Assessment Breakdown
           </h3>
 
-          {/* Sub-score 1: ATS Resume Score */}
+          {/* Sub-score 1: Resume Quality */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FileText size={15} color="#818cf8" /> ATS Resume Score (NLP Parsing & Structure)
-              </span>
-              <strong style={{ color: '#818cf8' }}>{category_scores.ats_resume_score || category_scores.resume_quality} / 100</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#fff', marginBottom: '6px' }}>
+              <span>Resume Quality Assessment (ResumeNet)</span>
+              <strong style={{ color: '#818cf8' }}>{category_scores.resume_quality} / 100</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${category_scores.ats_resume_score || category_scores.resume_quality}%`, height: '100%', background: 'linear-gradient(90deg, #6366f1, #818cf8)', borderRadius: '4px' }}></div>
+              <div style={{ width: `${category_scores.resume_quality}%`, height: '100%', background: '#6366f1', borderRadius: '4px' }}></div>
             </div>
           </div>
 
           {/* Sub-score 2: Skill Coverage */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Target size={15} color="#38bdf8" /> Skill Coverage & Alignment (SkillRec)
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#fff', marginBottom: '6px' }}>
+              <span>Skill Coverage & Alignment (SkillRec)</span>
               <strong style={{ color: '#38bdf8' }}>{category_scores.skill_coverage} / 100</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${category_scores.skill_coverage}%`, height: '100%', background: 'linear-gradient(90deg, #06b6d4, #38bdf8)', borderRadius: '4px' }}></div>
+              <div style={{ width: `${category_scores.skill_coverage}%`, height: '100%', background: '#06b6d4', borderRadius: '4px' }}></div>
             </div>
           </div>
 
           {/* Sub-score 3: Application Activity */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Zap size={15} color="#fbbf24" /> Application Velocity & Pipeline
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: '#fff', marginBottom: '6px' }}>
+              <span>Application Velocity & Pipeline</span>
               <strong style={{ color: '#fbbf24' }}>{category_scores.application_activity} / 100</strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ width: `${category_scores.application_activity}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', borderRadius: '4px' }}></div>
+              <div style={{ width: `${category_scores.application_activity}%`, height: '100%', background: '#f59e0b', borderRadius: '4px' }}></div>
             </div>
           </div>
         </div>
@@ -120,14 +114,14 @@ export default function ReadinessScoreCard({ readiness }) {
             <div key={idx} style={{
               padding: '14px',
               borderRadius: '10px',
-              background: 'var(--input-bg)',
+              background: 'rgba(255,255,255,0.03)',
               border: '1px solid var(--border-color)',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
               <CheckCircle size={18} color="#34d399" />
-              <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', fontWeight: 500 }}>{s}</div>
+              <div style={{ fontSize: '0.88rem', color: '#e2e8f0' }}>{s}</div>
             </div>
           ))}
         </div>

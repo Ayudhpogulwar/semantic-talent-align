@@ -37,35 +37,35 @@ export default function ReportsPanel() {
 
   return (
     <div>
-      <h4 className="mb-3">Generate Report</h4>
+      <h4 className="mb-3 fw-bold">Generate Placement Report</h4>
 
-      <div className="card shadow-sm">
-        <div className="card-body">
+      <div className="faculty-card border-0">
+        <div className="card-body p-0">
           {error && <div className="alert alert-danger">{error}</div>}
 
           <div className="row g-3 align-items-end">
             <div className="col-md-3">
-              <label className="form-label">Format</label>
-              <select className="form-select" value={format} onChange={(e) => setFormat(e.target.value)}>
+              <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Format</label>
+              <select className="form-select faculty-select-filter" value={format} onChange={(e) => setFormat(e.target.value)}>
                 <option value="pdf">PDF (Accreditation)</option>
                 <option value="xlsx">Excel</option>
               </select>
             </div>
             <div className="col-md-4">
-              <label className="form-label">Department (optional)</label>
+              <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Department (optional)</label>
               <input
                 type="text"
-                className="form-control"
+                className="form-control faculty-search-input"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 placeholder="e.g. Computer Science"
               />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Term (optional)</label>
+              <label className="form-label fw-semibold" style={{ color: "var(--text-muted)" }}>Term (optional)</label>
               <input
                 type="text"
-                className="form-control"
+                className="form-control faculty-search-input"
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="e.g. Fall 2026"

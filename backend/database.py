@@ -92,93 +92,123 @@ class DatabaseLayer:
         cursor = conn.cursor()
 
         if self.db_type == "mysql":
-            try:
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS profile (
-                    student_id VARCHAR(50) PRIMARY KEY,
-                    name VARCHAR(100),
-                    email VARCHAR(100) UNIQUE,
-                    roll_no VARCHAR(50),
-                    dept VARCHAR(100),
-                    year VARCHAR(50),
-                    cgpa VARCHAR(20),
-                    contact VARCHAR(50),
-                    linkedin VARCHAR(150),
-                    github VARCHAR(150),
-                    bio TEXT,
-                    profile_completion_pct INT,
-                    verified_by_faculty INT,
-                    consent_resume_sharing INT
-                )
-                """)
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS resume (
-                    resume_id VARCHAR(50) PRIMARY KEY,
-                    filename VARCHAR(150),
-                    file_size VARCHAR(50),
-                    upload_date VARCHAR(100),
-                    version INT,
-                    status VARCHAR(50),
-                    parsed_data TEXT
-                )
-                """)
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS skills (
-                    skill_id VARCHAR(50) PRIMARY KEY,
-                    skill_name VARCHAR(100),
-                    category VARCHAR(100),
-                    source VARCHAR(50)
-                )
-                """)
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS notifications (
-                    id VARCHAR(50) PRIMARY KEY,
-                    title VARCHAR(150),
-                    message TEXT,
-                    timestamp VARCHAR(50),
-                    `read` INT,
-                    type VARCHAR(50)
-                )
-                """)
-            except Exception as e:
-                print(f"Notice during setup_tables: {e}")
-        else:
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS profile (
-                student_id TEXT PRIMARY KEY,
-                name TEXT, email TEXT UNIQUE, roll_no TEXT, dept TEXT, year TEXT, cgpa TEXT,
-                contact TEXT, linkedin TEXT, github TEXT, bio TEXT, profile_completion_pct INTEGER,
-                verified_by_faculty INTEGER, consent_resume_sharing INTEGER
+                student_id VARCHAR(50) PRIMARY KEY,
+                name VARCHAR(100),
+                email VARCHAR(100) UNIQUE,
+                roll_no VARCHAR(50),
+                dept VARCHAR(100),
+                year VARCHAR(50),
+                cgpa VARCHAR(20),
+                contact VARCHAR(50),
+                linkedin VARCHAR(150),
+                github VARCHAR(150),
+                bio TEXT,
+                profile_completion_pct INT,
+                verified_by_faculty INT,
+                consent_resume_sharing INT
             )
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS resume (
-                resume_id TEXT PRIMARY KEY, filename TEXT, file_size TEXT, upload_date TEXT,
-                version INTEGER, status TEXT, parsed_data TEXT
+                resume_id VARCHAR(50) PRIMARY KEY,
+                filename VARCHAR(150),
+                file_size VARCHAR(50),
+                upload_date VARCHAR(100),
+                version INT,
+                status VARCHAR(50),
+                parsed_data TEXT
             )
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS skills (
-                skill_id TEXT PRIMARY KEY, skill_name TEXT, category TEXT, source TEXT
+                skill_id VARCHAR(50) PRIMARY KEY,
+                skill_name VARCHAR(100),
+                category VARCHAR(100),
+                source VARCHAR(50)
             )
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS opportunities (
-                id TEXT PRIMARY KEY, title TEXT, organization TEXT, domain TEXT, location TEXT,
-                stipend TEXT, duration TEXT, mode TEXT, deadline TEXT, description TEXT,
-                eligibility TEXT, required_skills TEXT, type TEXT
+                id VARCHAR(50) PRIMARY KEY,
+                title VARCHAR(150),
+                organization VARCHAR(150),
+                domain VARCHAR(100),
+                location VARCHAR(100),
+                stipend VARCHAR(100),
+                duration VARCHAR(50),
+                mode VARCHAR(50),
+                deadline VARCHAR(50),
+                description TEXT,
+                eligibility TEXT,
+                required_skills TEXT,
+                type VARCHAR(50)
             )
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS applications (
-                application_id TEXT PRIMARY KEY, student_id TEXT, opportunity_id TEXT, opportunity_title TEXT,
-                organization TEXT, applied_date TEXT, status TEXT, last_updated TEXT, notes TEXT
+                application_id VARCHAR(50) PRIMARY KEY,
+                opportunity_id VARCHAR(50),
+                opportunity_title VARCHAR(150),
+                organization VARCHAR(150),
+                applied_date VARCHAR(50),
+                status VARCHAR(50),
+                last_updated VARCHAR(100),
+                notes TEXT
             )
             """)
-            try:
-                cursor.execute("ALTER TABLE applications ADD COLUMN student_id TEXT")
-            except Exception:
-                pass
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id VARCHAR(50) PRIMARY KEY,
+                title VARCHAR(150),
+                message TEXT,
+                timestamp VARCHAR(50),
+                `read` INT,
+                type VARCHAR(50)
+            )
+            """)
+        else:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS organizations (
+                org_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                org_type TEXT DEFAULT 'Company',
+                website TEXT,
+                contact_name TEXT,
+                contact_email TEXT,
+                verification_status TEXT DEFAULT 'Verified'
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS opportunities (
+                opportunity_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                org_id INTEGER,
+                title TEXT,
+                opportunity_type TEXT DEFAULT 'Internship',
+                description TEXT,
+                mode TEXT DEFAULT 'Hybrid',
+                location TEXT DEFAULT 'Remote',
+                status TEXT DEFAULT 'Active'
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS applications (
+                application_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT,
+                opportunity_id INTEGER,
+                opportunity_title TEXT,
+                organization TEXT,
+                applied_at TEXT,
+                applied_date TEXT,
+                current_status TEXT DEFAULT 'Applied',
+                status TEXT DEFAULT 'Applied',
+                updated_at TEXT,
+                last_updated TEXT,
+                cover_note TEXT,
+                notes TEXT
+            )
+            """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -207,7 +237,7 @@ class DatabaseLayer:
                 bio TEXT
             )
             """)
-            for col in ["phone_number", "linkedin", "github", "bio"]:
+            for col in ["phone_number", "linkedin", "github", "bio", "active_resume_id"]:
                 try:
                     cursor.execute(f"ALTER TABLE student_profiles ADD COLUMN {col} TEXT")
                 except Exception:
