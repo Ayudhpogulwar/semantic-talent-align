@@ -75,7 +75,7 @@ export default function ApplicationTracker({ applications }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>ID: {app.id || app.application_id}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>ID: {app.application_id}</span>
                       {getStatusBadge(app.status)}
                     </div>
                     <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 700 }}>{app.opportunity_title}</h3>
@@ -83,7 +83,7 @@ export default function ApplicationTracker({ applications }) {
                   </div>
 
                   <div style={{ textAlign: 'right', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    <div>Applied On: <strong style={{ color: 'var(--text-main)' }}>{app.applied_date}</strong></div>
+                    <div>Applied On: <strong>{app.applied_date}</strong></div>
                     <div style={{ marginTop: '2px', color: 'var(--text-dim)' }}>Last Updated: {new Date(app.last_updated).toLocaleString()}</div>
                   </div>
                 </div>
@@ -135,13 +135,13 @@ export default function ApplicationTracker({ applications }) {
 
                 <div style={{
                   fontSize: '0.82rem',
-                  color: 'var(--text-main)',
-                  background: 'rgba(99, 102, 241, 0.1)',
+                  color: 'var(--text-muted)',
+                  background: 'rgba(99, 102, 241, 0.06)',
                   padding: '10px 14px',
                   borderRadius: '8px',
                   borderLeft: '3px solid var(--primary-light)'
                 }}>
-                  💬 <strong style={{ color: 'var(--primary-light)' }}>Status Update Note:</strong> {app.notes}
+                  💬 <strong>Status Update Note:</strong> {app.notes}
                 </div>
               </div>
             ))}

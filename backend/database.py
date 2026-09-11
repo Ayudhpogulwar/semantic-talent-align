@@ -92,56 +92,82 @@ class DatabaseLayer:
         cursor = conn.cursor()
 
         if self.db_type == "mysql":
-            try:
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS profile (
-                    student_id VARCHAR(50) PRIMARY KEY,
-                    name VARCHAR(100),
-                    email VARCHAR(100) UNIQUE,
-                    roll_no VARCHAR(50),
-                    dept VARCHAR(100),
-                    year VARCHAR(50),
-                    cgpa VARCHAR(20),
-                    contact VARCHAR(50),
-                    linkedin VARCHAR(150),
-                    github VARCHAR(150),
-                    bio TEXT,
-                    profile_completion_pct INT,
-                    verified_by_faculty INT,
-                    consent_resume_sharing INT
-                )
-                """)
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS resume (
-                    resume_id VARCHAR(50) PRIMARY KEY,
-                    filename VARCHAR(150),
-                    file_size VARCHAR(50),
-                    upload_date VARCHAR(100),
-                    version INT,
-                    status VARCHAR(50),
-                    parsed_data TEXT
-                )
-                """)
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS skills (
-                    skill_id VARCHAR(50) PRIMARY KEY,
-                    skill_name VARCHAR(100),
-                    category VARCHAR(100),
-                    source VARCHAR(50)
-                )
-                """)
-                cursor.execute("""
-                CREATE TABLE IF NOT EXISTS notifications (
-                    id VARCHAR(50) PRIMARY KEY,
-                    title VARCHAR(150),
-                    message TEXT,
-                    timestamp VARCHAR(50),
-                    `read` INT,
-                    type VARCHAR(50)
-                )
-                """)
-            except Exception as e:
-                print(f"Notice during setup_tables: {e}")
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS profile (
+                student_id VARCHAR(50) PRIMARY KEY,
+                name VARCHAR(100),
+                email VARCHAR(100) UNIQUE,
+                roll_no VARCHAR(50),
+                dept VARCHAR(100),
+                year VARCHAR(50),
+                cgpa VARCHAR(20),
+                contact VARCHAR(50),
+                linkedin VARCHAR(150),
+                github VARCHAR(150),
+                bio TEXT,
+                profile_completion_pct INT,
+                verified_by_faculty INT,
+                consent_resume_sharing INT
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS resume (
+                resume_id VARCHAR(50) PRIMARY KEY,
+                filename VARCHAR(150),
+                file_size VARCHAR(50),
+                upload_date VARCHAR(100),
+                version INT,
+                status VARCHAR(50),
+                parsed_data TEXT
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS skills (
+                skill_id VARCHAR(50) PRIMARY KEY,
+                skill_name VARCHAR(100),
+                category VARCHAR(100),
+                source VARCHAR(50)
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS opportunities (
+                id VARCHAR(50) PRIMARY KEY,
+                title VARCHAR(150),
+                organization VARCHAR(150),
+                domain VARCHAR(100),
+                location VARCHAR(100),
+                stipend VARCHAR(100),
+                duration VARCHAR(50),
+                mode VARCHAR(50),
+                deadline VARCHAR(50),
+                description TEXT,
+                eligibility TEXT,
+                required_skills TEXT,
+                type VARCHAR(50)
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS applications (
+                application_id VARCHAR(50) PRIMARY KEY,
+                opportunity_id VARCHAR(50),
+                opportunity_title VARCHAR(150),
+                organization VARCHAR(150),
+                applied_date VARCHAR(50),
+                status VARCHAR(50),
+                last_updated VARCHAR(100),
+                notes TEXT
+            )
+            """)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id VARCHAR(50) PRIMARY KEY,
+                title VARCHAR(150),
+                message TEXT,
+                timestamp VARCHAR(50),
+                `read` INT,
+                type VARCHAR(50)
+            )
+            """)
         else:
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS organizations (

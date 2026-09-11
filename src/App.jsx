@@ -46,9 +46,8 @@ function StudentDashboardApp() {
         apiService.getNotifications()
       ]);
 
-      const localSavedResume = JSON.parse(localStorage.getItem("stufac_resume") || "{}");
       setProfile(p || {});
-      setResume({ ...(r || {}), file_url: (r?.file_url || localSavedResume.file_url || null) });
+      setResume(r || {});
       setSkills(Array.isArray(s) ? s : []);
       setOpportunities(Array.isArray(o) ? o : []);
       setApplications(Array.isArray(a) ? a : []);
@@ -249,7 +248,6 @@ function StudentDashboardApp() {
             opportunities={opportunities}
             applications={applications}
             onApply={handleApplyToOpportunity}
-            onCancel={handleCancelOpportunity}
           />
         )}
 
@@ -262,9 +260,7 @@ function StudentDashboardApp() {
         {activeTab === 'recommendations' && (
           <AIRecommendations
             recommendations={recommendations}
-            applications={applications}
             onApply={handleApplyToOpportunity}
-            onCancel={handleCancelOpportunity}
           />
         )}
 

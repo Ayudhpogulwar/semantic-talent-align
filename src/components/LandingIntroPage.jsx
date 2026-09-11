@@ -55,7 +55,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        background: theme === 'light' ? 'rgba(255, 255, 255, 0.88)' : 'rgba(11, 15, 25, 0.88)',
+        background: theme === 'light' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(11, 15, 25, 0.88)',
         backdropFilter: 'blur(16px)',
         borderBottom: '1px solid var(--border-color)',
         padding: '16px 32px'
@@ -78,7 +78,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
             </div>
             <div>
               <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                TalentAlign
+                TalentAlign <span style={{ fontSize: '0.68rem', padding: '2px 6px', background: 'rgba(6, 182, 212, 0.18)', color: 'var(--accent-cyan)', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.3)', fontWeight: 800 }}>AI PORTAL</span>
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Semantic Opportunity Alignment System</div>
             </div>
@@ -162,7 +162,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
         <p style={{
           fontSize: '1.1rem',
           color: 'var(--text-muted)',
-          maxWidth: '780px',
+          maxWidth: '750px',
           lineHeight: '1.6',
           marginBottom: '32px'
         }}>
@@ -297,4 +297,3 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
     </div>
   );
 }
-

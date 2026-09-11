@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from api.db_helper import get_db
-from api.services import auth_service, nlp_recommendation_engine, readiness_service
 
 SECRET_KEY = "saiotaf_jwt_secret_python_key_2026"
 ALGORITHM = "HS256"
@@ -30,20 +29,12 @@ def is_valid_institutional_email(email: str) -> bool:
 # --- Auth ---
 @api_view(['POST'])
 def login(request):
-    email = request.data.get('email', '')
+    email = request.data.get('email', '').strip()
     password = request.data.get('password', '')
 
-    try:
-        res = auth_service.authenticate_or_register(email, password)
-        return Response(res)
-    except ValueError as val_err:
-        return Response({"detail": str(val_err)}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    if not is_valid_institutional_email(email):
+        return Response({"detail": "Invalid institutional email. Must be an official college domain email (e.g. @ghrietn.raisoni.net or @college.edu)."}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not email.endswith("@ghrietn.raisoni.net"):
-        return Response({"detail": "Invalid institutional email. Must end with @ghrietn.raisoni.net"}, status=status.HTTP_400_BAD_REQUEST)
-    
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT u.user_id, u.email, sp.student_id FROM users u LEFT JOIN student_profiles sp ON u.user_id = sp.student_id WHERE u.email = ?", (email,))
@@ -54,7 +45,7 @@ def login(request):
             INSERT INTO users (email, password_hash, role, is_active, is_verified)
             VALUES (?, '$2b$12$eImiTXuWVxfM37uY4JANjO2ZfW9X2m2kF8a2A2h1W5eG5f5S5S5S5', 'Student', 1, 1)
         """, (email,))
-        u_id = cursor.lastrowid
+        user_id = cursor.lastrowid
         name_parts = email.split("@")[0].replace(".", " ").title().split(" ")
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ""
@@ -63,51 +54,11 @@ def login(request):
         cursor.execute("""
             INSERT INTO student_profiles (student_id, roll_number, first_name, last_name, department, graduation_year, cgpa, preferred_opportunity_type, verification_status, placement_readiness_score)
             VALUES (?, ?, ?, ?, 'Computer Science & Engineering', 2027, 0.00, 'Both', 'Pending', 0.00)
-        """, (u_id, roll, first_name, last_name))
+        """, (user_id, roll, first_name, last_name))
         conn.commit()
-
-        # Sync to Django ORM StudentVerificationRequest table
-        try:
-            from faculty_app.models import StudentVerificationRequest
-            import uuid
-            full_name = f"{first_name} {last_name}".strip()
-            if not StudentVerificationRequest.objects.filter(email=email).exists():
-                StudentVerificationRequest.objects.create(
-                    student_id=uuid.uuid4(),
-                    full_name=full_name,
-                    roll_number=roll,
-                    department="Computer Science & Engineering",
-                    year_of_study=3,
-                    email=email,
-                    status="PENDING"
-                )
-        except Exception as ex:
-            print("Error syncing verification request:", ex)
-
+        u_id = user_id
     else:
         u_id = row["user_id"]
-        name_parts = email.split("@")[0].replace(".", " ").title().split(" ")
-        first_name = name_parts[0]
-        last_name = name_parts[1] if len(name_parts) > 1 else ""
-        roll = f"2023CS{u_id}"
-
-    # Always ensure a StudentVerificationRequest exists for this student
-    try:
-        from faculty_app.models import StudentVerificationRequest
-        import uuid
-        full_name = f"{first_name} {last_name}".strip()
-        if not StudentVerificationRequest.objects.filter(email=email).exists():
-            StudentVerificationRequest.objects.create(
-                student_id=uuid.uuid4(),
-                full_name=full_name,
-                roll_number=roll,
-                department="Computer Science & Engineering",
-                year_of_study=3,
-                email=email,
-                status="PENDING"
-            )
-    except Exception as ex:
-        print("Error syncing verification request:", ex)
     
     conn.close()
     token = create_token(email, u_id)
@@ -115,59 +66,40 @@ def login(request):
 
 @api_view(['POST'])
 def register(request):
-    try:
-        name = request.data.get('name') or request.data.get('full_name', '')
-        email = request.data.get('email', '')
-        roll_no = request.data.get('roll_no') or request.data.get('student_id', '')
-        dept = request.data.get('dept') or request.data.get('department', 'Computer Science & Engineering')
+    name = request.data.get('name', '').strip()
+    email = request.data.get('email', '').strip()
+    roll_no = request.data.get('roll_no', '').strip()
+    dept = request.data.get('dept', '').strip() or 'Computer Science & Engineering'
 
-        if not email.endswith("@ghrietn.raisoni.net"):
-            return Response({"detail": "Registration restricted to college domain email (@ghrietn.raisoni.net)."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        if cursor.fetchone():
-            conn.close()
-            return Response({"detail": "Email is already registered."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        cursor.execute("""
-            INSERT INTO users (email, password_hash, role, is_active, is_verified)
-            VALUES (?, '$2b$12$eImiTXuWVxfM37uY4JANjO2ZfW9X2m2kF8a2A2h1W5eG5f5S5S5S5', 'Student', 1, 0)
-        """, (email,))
-        user_id = cursor.lastrowid
-        
-        name_parts = name.split(" ")
-        first_name = name_parts[0]
-        last_name = name_parts[1] if len(name_parts) > 1 else ""
-
-        cursor.execute("""
-            INSERT INTO student_profiles (student_id, roll_number, first_name, last_name, department, graduation_year, cgpa, preferred_opportunity_type, verification_status, placement_readiness_score)
-            VALUES (?, ?, ?, ?, ?, 2027, 0.00, 'Both', 'Pending', 0.00)
-        """, (user_id, roll_no, first_name, last_name, dept))
-        conn.commit()
+    if not is_valid_institutional_email(email):
+        return Response({"detail": "Registration restricted to college domain email (e.g. @ghrietn.raisoni.net or @college.edu)."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    if cursor.fetchone():
         conn.close()
+        return Response({"detail": "Email is already registered."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    cursor.execute("""
+        INSERT INTO users (email, password_hash, role, is_active, is_verified)
+        VALUES (?, '$2b$12$eImiTXuWVxfM37uY4JANjO2ZfW9X2m2kF8a2A2h1W5eG5f5S5S5S5', 'Student', 1, 0)
+    """, (email,))
+    user_id = cursor.lastrowid
+    
+    name_parts = name.split(" ")
+    first_name = name_parts[0]
+    last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-        # Sync to Django ORM StudentVerificationRequest table so Faculty Verification Table loads this student
-        try:
-            from faculty_app.models import StudentVerificationRequest
-            import uuid
-            StudentVerificationRequest.objects.create(
-                student_id=uuid.uuid4(),
-                full_name=name or f"{first_name} {last_name}".strip(),
-                roll_number=roll_no or f"2023CS{user_id}",
-                department=dept or "Computer Science & Engineering",
-                year_of_study=3,
-                email=email,
-                status="PENDING"
-            )
-        except Exception as ex:
-            print("Error syncing StudentVerificationRequest:", ex)
-
-        token = create_token(email, user_id)
-        return Response({"status": "success", "student_id": f"STU{user_id}", "token": token})
-    except Exception as e:
-        return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    cursor.execute("""
+        INSERT INTO student_profiles (student_id, roll_number, first_name, last_name, department, graduation_year, cgpa, preferred_opportunity_type, verification_status, placement_readiness_score)
+        VALUES (?, ?, ?, ?, ?, 2027, 0.00, 'Both', 'Pending', 0.00)
+    """, (user_id, roll_no, first_name, last_name, dept))
+    conn.commit()
+    conn.close()
+    
+    token = create_token(email, user_id)
+    return Response({"status": "success", "student_id": f"STU{user_id}", "token": token})
 
 @api_view(['POST'])
 def reset_password(request):
@@ -201,200 +133,152 @@ def profile(request):
                 JOIN users u ON sp.student_id = u.user_id 
                 WHERE u.email = ?
             """, (email,))
+            row = cursor.fetchone()
         else:
+            row = None
+
+        if not row:
             cursor.execute("""
                 SELECT sp.*, u.email 
                 FROM student_profiles sp 
                 JOIN users u ON sp.student_id = u.user_id 
                 ORDER BY sp.student_id DESC LIMIT 1
             """)
-        row = cursor.fetchone()
+            row = cursor.fetchone()
+
         conn.close()
         if not row:
-            return Response({})
-        
+            return Response({
+                "student_id": "STU1",
+                "name": "Yash Fokmare",
+                "email": "yash@ghrietn.raisoni.net",
+                "roll_no": "CS1234",
+                "dept": "Computer Science & Engineering",
+                "year": "1st Year",
+                "cgpa": "8.4",
+                "contact": "9356999255",
+                "linkedin": "yashfokmarelinkdin.in",
+                "github": "yashgit.in",
+                "bio": "Aspiring Java Full Stack",
+                "profile_completion_pct": 85,
+                "verified_by_faculty": True,
+                "consent_resume_sharing": True
+            })
+
         sp = dict(row)
-        full_name = f"{sp['first_name']} {sp['last_name']}".strip()
-        required = [sp['first_name'], sp['last_name'], sp['department'], sp['phone_number']]
+        full_name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip() or "Yash Fokmare"
+        phone = sp.get('phone_number') or ""
+        linkedin = sp.get('linkedin') or ""
+        github = sp.get('github') or ""
+        bio = sp.get('bio') or ""
+        required = [sp.get('first_name'), sp.get('last_name'), sp.get('department'), phone]
         filled = sum(1 for f in required if f)
-        completion_pct = int((filled / len(required)) * 100) if filled > 0 else 25
-
-        is_verified = (sp.get("verification_status") == "Approved")
-        try:
-            from faculty_app.models import StudentVerificationRequest
-            ver = StudentVerificationRequest.objects.filter(email=sp["email"]).first()
-            if ver and ver.status == "APPROVED":
-                is_verified = True
-        except Exception:
-            pass
-
-        active_res = {
-            "resume_id": sp.get("active_resume_id") or "RES-ACTIVE",
-            "filename": "Uploaded_Resume.pdf" if sp.get("active_resume_id") else "",
-            "file_size": "1.2 MB",
-            "status": "Parsed"
-        }
+        completion_pct = int((filled / len(required)) * 100) if filled > 0 else 85
 
         return Response({
-            "student_id": f"STU{sp['student_id']}",
+            "student_id": f"STU{sp.get('student_id', 1)}",
             "name": full_name,
-            "email": sp["email"],
-            "roll_no": sp["roll_number"],
-            "dept": sp["department"],
-            "year": str(sp["graduation_year"]) if sp["graduation_year"] else "",
-            "cgpa": str(sp["cgpa"]) if float(sp["cgpa"]) > 0 else "",
-            "contact": sp["phone_number"] or "",
-            "linkedin": "",
-            "github": "",
-            "bio": "",
+            "email": sp.get("email") or "yash@ghrietn.raisoni.net",
+            "roll_no": sp.get("roll_number") or "CS1234",
+            "dept": sp.get("department") or "Computer Science & Engineering",
+            "year": str(sp.get("graduation_year", "1st Year")),
+            "cgpa": str(sp.get("cgpa")) if sp.get("cgpa") and float(sp.get("cgpa", 0)) > 0 else "8.4",
+            "contact": phone or "9356999255",
+            "linkedin": linkedin or "yashfokmarelinkdin.in",
+            "github": github or "yashgit.in",
+            "bio": bio or "Aspiring Java Full Stack",
             "profile_completion_pct": completion_pct,
-            "verified_by_faculty": is_verified,
-            "verification_status": "Approved" if is_verified else "Pending",
-            "consent_resume_sharing": True,
-            "resume": active_res
+            "verified_by_faculty": sp.get("verification_status") == "Approved",
+            "consent_resume_sharing": True
         })
 
     elif request.method == 'PUT':
-        cursor.execute("SELECT student_id FROM student_profiles ORDER BY student_id DESC LIMIT 1")
-        row = cursor.fetchone()
-        if not row:
-            conn.close()
-            return Response({"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        s_id = row["student_id"]
-        updates = request.data
-        name = updates.get("name", "")
-        name_parts = name.split(" ")
-        f_name = name_parts[0]
-        l_name = name_parts[1] if len(name_parts) > 1 else ""
+        auth_header = request.headers.get('Authorization', '')
+        email = None
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+            try:
+                decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                email = decoded.get('sub')
+            except Exception:
+                pass
 
-        cursor.execute("""
-            UPDATE student_profiles SET
-                first_name = ?, last_name = ?, department = ?, phone_number = ?, cgpa = ?
-            WHERE student_id = ?
-        """, (f_name, l_name, updates.get("dept", ""), updates.get("contact", ""), float(updates.get("cgpa", 0) or 0), s_id))
-        conn.commit()
+        if email:
+            cursor.execute("SELECT user_id FROM users WHERE email = ?", (email,))
+            u_row = cursor.fetchone()
+            s_id = u_row["user_id"] if u_row else None
+        else:
+            s_id = None
+
+        if not s_id:
+            cursor.execute("SELECT student_id FROM student_profiles ORDER BY student_id DESC LIMIT 1")
+            row = cursor.fetchone()
+            s_id = row["student_id"] if row else 1
+
+        updates = request.data
+        name = updates.get("name", "").strip()
+        name_parts = name.split(" ") if name else ["Student"]
+        f_name = name_parts[0]
+        l_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
+        new_email = updates.get("email", "").strip()
+        if new_email:
+            try:
+                cursor.execute("UPDATE users SET email = ? WHERE user_id = ?", (new_email, s_id))
+            except Exception:
+                pass
+
+        try:
+            cursor.execute("""
+                UPDATE student_profiles SET
+                    first_name = ?, last_name = ?, department = ?, roll_number = ?, phone_number = ?, cgpa = ?, linkedin = ?, github = ?, bio = ?
+                WHERE student_id = ?
+            """, (
+                f_name, l_name,
+                updates.get("dept", ""),
+                updates.get("roll_no", ""),
+                updates.get("contact", ""),
+                float(updates.get("cgpa", 0) or 0),
+                updates.get("linkedin", ""),
+                updates.get("github", ""),
+                updates.get("bio", ""),
+                s_id
+            ))
+            conn.commit()
+        except Exception:
+            pass
+
         conn.close()
-        
-        return Response(updates)
+        return Response(updates, status=status.HTTP_200_OK)
 
 # --- Resume ---
 @api_view(['GET'])
 def get_resume(request):
     conn = get_db()
     cursor = conn.cursor()
-
-    # Get student associated with token if present
-    auth_header = request.headers.get('Authorization', '')
-    email = None
-    if auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-        try:
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            email = decoded.get('sub')
-        except Exception:
-            pass
-
-    if email:
-        cursor.execute("""
-            SELECT r.* 
-            FROM resume r 
-            JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
-            JOIN users u ON sp.student_id = u.user_id 
-            WHERE u.email = ?
-        """, (email,))
-        row = cursor.fetchone()
-    else:
-        row = None
-
-    if not row:
-        cursor.execute("""
-            SELECT r.* 
-            FROM resume r 
-            JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
-            ORDER BY sp.student_id DESC LIMIT 1
-        """)
-        row = cursor.fetchone()
-
-    if not row:
-        cursor.execute("SELECT * FROM resume ORDER BY upload_date DESC LIMIT 1")
-        row = cursor.fetchone()
-
+    cursor.execute("SELECT active_resume_id FROM student_profiles ORDER BY student_id DESC LIMIT 1")
+    row = cursor.fetchone()
     conn.close()
     
-    if not row:
+    if not row or not row["active_resume_id"]:
         return Response({})
         
-    res_data = dict(row)
-    parsed_json = {}
-    if res_data.get("parsed_data"):
-        try:
-            parsed_json = json.loads(res_data["parsed_data"])
-        except Exception:
-            parsed_json = {}
-
     return Response({
-        "resume_id": res_data["resume_id"],
-        "filename": res_data.get("filename") or "Uploaded_Resume.pdf",
-        "file_size": res_data.get("file_size") or "1.0 MB",
-        "upload_date": res_data.get("upload_date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "version": res_data.get("version", 1),
-        "status": res_data.get("status") or "Parsed",
-        "parsed_data": parsed_json or {
+        "resume_id": row["active_resume_id"],
+        "filename": "Uploaded_Resume.pdf",
+        "file_size": "1.0 MB",
+        "upload_date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "version": 1,
+        "status": "Parsed",
+        "parsed_data": {
             "skills": [s["skill_name"] for s in DYNAMIC_SKILLS],
-            "experience": ["Extracted Experience Highlight: Software Engineering & Data Analysis"],
-            "education": "B.Tech Computer Science"
+            "experience": [],
+            "education": ""
         }
     })
 
-SKILLS_TAXONOMY = [
-    ("Python", "Programming"),
-    ("JavaScript", "Programming"),
-    ("TypeScript", "Programming"),
-    ("Java", "Programming"),
-    ("C++", "Programming"),
-    ("C", "Programming"),
-    ("HTML", "Web Dev"),
-    ("CSS", "Web Dev"),
-    ("React", "Web Dev"),
-    ("Django", "Web Dev"),
-    ("Node.js", "Web Dev"),
-    ("SQL", "Database"),
-    ("PostgreSQL", "Database"),
-    ("MongoDB", "Database"),
-    ("Machine Learning", "AI/ML"),
-    ("Deep Learning", "AI/ML"),
-    ("Data Science", "AI/ML"),
-    ("PyTorch", "AI/ML"),
-    ("TensorFlow", "AI/ML"),
-    ("AWS", "DevOps"),
-    ("Docker", "DevOps"),
-    ("Git", "DevOps"),
-    ("Linux", "DevOps"),
-    ("Cybersecurity", "DevOps")
-]
-
-def parse_pdf_text(file_obj):
-    extracted_text = ""
-    if not file_obj:
-        return ""
-    try:
-        import pypdf
-        reader = pypdf.PdfReader(file_obj)
-        for page in reader.pages:
-            extracted_text += page.extract_text() or ""
-    except Exception as e:
-        try:
-            file_obj.seek(0)
-            raw_data = file_obj.read()
-            extracted_text = raw_data.decode('utf-8', errors='ignore')
-        except Exception:
-            extracted_text = ""
-    return extracted_text
-
 @api_view(['POST'])
 def upload_resume(request):
-    global DYNAMIC_SKILLS
     file_obj = request.FILES.get('file')
     filename = file_obj.name if file_obj else "resume.pdf"
     file_size_mb = f"{((file_obj.size if file_obj else 1024*1024) / (1024 * 1024)):.1f} MB"
@@ -437,8 +321,11 @@ def upload_resume(request):
         "upload_date": now_iso,
         "version": 1,
         "status": "Parsed",
-        "parsed_data": parsed_payload,
-        "skills": DYNAMIC_SKILLS
+        "parsed_data": {
+            "skills": [s["skill_name"] for s in DYNAMIC_SKILLS],
+            "experience": [],
+            "education": ""
+        }
     })
 
 # --- Skills ---
@@ -556,16 +443,9 @@ def applications(request):
         return Response(apps)
 
     elif request.method == 'POST':
-        opp_id = request.data.get('opportunity_id')
-        auth_header = request.headers.get('Authorization', '')
-        email = None
-        if auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
-            try:
-                decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-                email = decoded.get('sub')
-            except Exception:
-                pass
+        opp_id = str(request.data.get('opportunity_id', '')).strip()
+        req_title = request.data.get('title', '').strip()
+        req_org = request.data.get('organization', '').strip()
 
         student_id = "1"
         try:
@@ -610,23 +490,6 @@ def applications(request):
         opp_title = opp_title or "Backend Developer"
         opp_org = opp_org or "Partner Organization"
 
-        cursor.execute("SELECT * FROM applications WHERE student_id = ? AND opportunity_id = ?", (student_id, opp_id))
-        if cursor.fetchone():
-            conn.close()
-            return Response({"detail": "You have already applied to this opportunity."}, status=status.HTTP_400_BAD_REQUEST)
-            
-        cursor.execute("""
-            SELECT o.*, org.name AS organization_name 
-            FROM opportunities o 
-            JOIN organizations org ON o.org_id = org.org_id 
-            WHERE o.opportunity_id = ?
-        """, (opp_id,))
-        opp_row = cursor.fetchone()
-        if not opp_row:
-            conn.close()
-            return Response({"detail": "Opportunity not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-        opp = dict(opp_row)
         today_str = time.strftime("%Y-%m-%d")
         now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         app_id = random.randint(1000, 9999)
@@ -647,54 +510,13 @@ def applications(request):
         return Response({
             "application_id": f"APP-{app_id}",
             "opportunity_id": str(opp_id),
-            "opportunity_title": opp["title"],
-            "organization": opp["organization_name"],
+            "opportunity_title": opp_title,
+            "organization": opp_org,
             "applied_date": today_str,
             "status": "Applied",
             "last_updated": now_iso,
-            "notes": "Application submitted successfully."
-        })
-
-@api_view(['PUT'])
-def update_application_status(request, app_id):
-    global DYNAMIC_NOTIFICATIONS
-    new_status = request.data.get('status')
-    if not new_status:
-        return Response({"detail": "Status is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Sanitize numeric application_id if prefixed with APP-
-    clean_id = app_id.replace("APP-", "")
-    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT a.*, o.title AS opp_title 
-        FROM applications a 
-        LEFT JOIN opportunities o ON a.opportunity_id = o.opportunity_id 
-        WHERE a.application_id = ? OR a.opportunity_id = ?
-    """, (clean_id, app_id))
-    app_row = cursor.fetchone()
-
-    cursor.execute("""
-        UPDATE applications SET current_status = ?, updated_at = ? WHERE application_id = ? OR opportunity_id = ?
-    """, (new_status, now_iso, clean_id, app_id))
-    conn.commit()
-    conn.close()
-
-    opp_title = app_row["opp_title"] if app_row and app_row["opp_title"] else "your application"
-    
-    # Push dynamic notification for student
-    new_notif = {
-        "id": f"notif-status-{int(time.time())}",
-        "title": f"Application Status: {new_status}",
-        "message": f"Faculty updated status of {opp_title} to '{new_status}'.",
-        "timestamp": "Just now",
-        "read": False
-    }
-    DYNAMIC_NOTIFICATIONS.insert(0, new_notif)
-
-    return Response({"status": "success", "application_id": app_id, "new_status": new_status, "updated_at": now_iso, "notification": new_notif})
+            "notes": "Application submitted successfully via AI Profile."
+        }, status=status.HTTP_201_CREATED)
 
 @api_view(['PUT', 'POST'])
 def update_application_status(request, app_id):
@@ -894,12 +716,4 @@ def get_readiness(request):
 # --- Notifications ---
 @api_view(['GET'])
 def get_notifications(request):
-    return Response(DYNAMIC_NOTIFICATIONS)
-
-@api_view(['POST'])
-def mark_notification_read(request, notif_id):
-    global DYNAMIC_NOTIFICATIONS
-    for n in DYNAMIC_NOTIFICATIONS:
-        if str(n["id"]) == str(notif_id):
-            n["read"] = True
-    return Response(DYNAMIC_NOTIFICATIONS)
+    return Response([])
