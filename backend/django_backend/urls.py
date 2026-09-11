@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from faculty_app.auth_views import FacultyLoginView, FacultyMFAVerifyView, FacultySignUpView
 from api.admin_views import AdminLoginView, AdminStatsView, AdminUserManagementView, AdminUserActionView, AdminOverridesView
 
@@ -36,5 +38,8 @@ urlpatterns = [
     # Student Dashboard API
     path('api/', include('api.urls')),
 ]
+
+if settings.MEDIA_URL:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

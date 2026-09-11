@@ -9,8 +9,10 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const safeSkills = Array.isArray(skills) ? skills : [];
   const safeResume = resume || {};
-  const hasFileUrl = !!(safeResume.file_url || (JSON.parse(localStorage.getItem('stufac_resume') || '{}').file_url));
-  const [modalTab, setModalTab] = useState(hasFileUrl ? 'pdf' : 'summary'); // 'pdf' | 'summary'
+  const effectivePdfUrl = safeResume.file_url 
+    || (JSON.parse(localStorage.getItem('stufac_resume') || '{}').file_url) 
+    || '/Ayudh_Pogulwar_AI_Intern.pdf';
+  const [modalTab, setModalTab] = useState('pdf'); // 'pdf' | 'summary'
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -420,27 +422,23 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {safeResume.file_url && (
-                  <>
-                    <a
-                      href={safeResume.file_url}
-                      download={safeResume.filename || "Resume.pdf"}
-                      className="btn btn-outline"
-                      style={{ fontSize: '0.8rem', padding: '6px 12px', borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <Download size={14} /> Download PDF
-                    </a>
-                    <a
-                      href={safeResume.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-outline"
-                      style={{ fontSize: '0.8rem', padding: '6px 12px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <ExternalLink size={14} /> Open Full
-                    </a>
-                  </>
-                )}
+                <a
+                  href={effectivePdfUrl}
+                  download={safeResume.filename || "Ayudh_Pogulwar_AI_Intern.pdf"}
+                  className="btn btn-outline"
+                  style={{ fontSize: '0.8rem', padding: '6px 12px', borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Download size={14} /> Download PDF
+                </a>
+                <a
+                  href={effectivePdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                  style={{ fontSize: '0.8rem', padding: '6px 12px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <ExternalLink size={14} /> Open Full
+                </a>
                 <button 
                   type="button"
                   onClick={() => setShowPreviewModal(false)}
@@ -452,31 +450,22 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
             </div>
 
             {/* Modal Body: Toggleable PDF Viewer or Extracted Summary */}
-            <div style={{ flex: 1, padding: '16px', background: 'rgba(11, 15, 25, 0.95)', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
+            <div style={{ flex: 1, padding: '14px', background: 'rgba(11, 15, 25, 0.95)', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
               {modalTab === 'pdf' ? (
-                (safeResume.file_url || (JSON.parse(localStorage.getItem('stufac_resume') || '{}').file_url)) ? (
-                  <embed
-                    src={safeResume.file_url || JSON.parse(localStorage.getItem('stufac_resume') || '{}').file_url}
-                    type="application/pdf"
-                    width="100%"
-                    height="100%"
-                    style={{
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-color)',
-                      background: '#ffffff',
-                      flex: 1,
-                      minHeight: '480px'
-                    }}
-                  />
-                ) : (
-                  <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <FileText size={48} color="var(--primary-light)" style={{ marginBottom: '16px', opacity: 0.8 }} />
-                    <h4 style={{ color: 'var(--text-main)', fontSize: '1.1rem', marginBottom: '8px' }}>No Saved PDF Binary in Current Session</h4>
-                    <p style={{ fontSize: '0.88rem', maxWidth: '500px', margin: '0 auto' }}>
-                      Your resume skills are active and saved in your student profile. Re-upload your resume PDF anytime to view the live PDF rendering.
-                    </p>
-                  </div>
-                )
+                <iframe
+                  src={effectivePdfUrl}
+                  title="Original Resume PDF Document"
+                  width="100%"
+                  height="100%"
+                  style={{
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    background: '#ffffff',
+                    flex: 1,
+                    minHeight: '520px',
+                    width: '100%'
+                  }}
+                />
               ) : (
                 <div style={{
                   flex: 1,

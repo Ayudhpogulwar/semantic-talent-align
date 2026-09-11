@@ -28,13 +28,20 @@ function StudentDashboardApp() {
   const [resume, setResume] = useState(() => {
     try {
       const saved = localStorage.getItem('stufac_resume');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!parsed.file_url) {
+          parsed.file_url = '/Ayudh_Pogulwar_AI_Intern.pdf';
+        }
+        return parsed;
+      }
     } catch (e) {}
     return {
       version: 1,
       status: "Parsed",
       filename: "Ayudh_Pogulwar_AI_Intern.pdf",
       file_size: "0.2 MB",
+      file_url: "/Ayudh_Pogulwar_AI_Intern.pdf",
       upload_date: new Date().toISOString(),
       parsed_data: {
         skills: ["Python", "Machine Learning", "Deep Learning", "React", "SQL", "Git", "REST APIs"],
@@ -79,6 +86,7 @@ function StudentDashboardApp() {
           status: "Parsed",
           filename: "Ayudh_Pogulwar_AI_Intern.pdf",
           file_size: "0.2 MB",
+          file_url: "/Ayudh_Pogulwar_AI_Intern.pdf",
           upload_date: new Date().toISOString(),
           parsed_data: {
             skills: ["Python", "Machine Learning", "Deep Learning", "React", "SQL", "Git", "REST APIs"],
@@ -88,6 +96,9 @@ function StudentDashboardApp() {
             ]
           }
         };
+      }
+      if (!activeResume.file_url) {
+        activeResume.file_url = "/Ayudh_Pogulwar_AI_Intern.pdf";
       }
       setResume(activeResume);
 
@@ -150,12 +161,12 @@ function StudentDashboardApp() {
 
   const handleUploadResume = async (file, fileUrl = null) => {
     try {
-      const url = fileUrl || (file instanceof File ? URL.createObjectURL(file) : null);
+      const fallbackUrl = fileUrl || (file instanceof File ? URL.createObjectURL(file) : '/Ayudh_Pogulwar_AI_Intern.pdf');
       const res = await apiService.uploadResumeFile(file);
       const fullResume = {
         ...res,
-        filename: file?.name || res.filename || "Uploaded_Resume.pdf",
-        file_url: url || res.file_url || null,
+        filename: file?.name || res.filename || "Ayudh_Pogulwar_AI_Intern.pdf",
+        file_url: res.file_url || fallbackUrl,
         file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
       };
       setResume(fullResume);
@@ -179,6 +190,7 @@ function StudentDashboardApp() {
       console.error("Upload resume error:", err);
     }
   };
+
 
   const handleAddSkill = async (skillName, category) => {
     try {

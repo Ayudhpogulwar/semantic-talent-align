@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+from django.conf import settings
 from api.db_helper import get_db
 
 TECH_SKILLS_TAXONOMY = [
@@ -278,6 +279,7 @@ def get_resume(request):
         "resume_id": row["active_resume_id"],
         "filename": "Ayudh_Pogulwar_AI_Intern.pdf",
         "file_size": "0.2 MB",
+        "file_url": "/media/resumes/Ayudh_Pogulwar_AI_Intern.pdf",
         "upload_date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "version": 1,
         "status": "Parsed",
@@ -300,6 +302,20 @@ def upload_resume(request):
     now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     
     resume_id = f"RES_{random.randint(1000, 9999)}"
+    file_url = f"/media/resumes/{filename}"
+
+    # Save uploaded file to media/resumes/
+    if file_obj:
+        try:
+            resumes_dir = os.path.join(settings.MEDIA_ROOT, 'resumes')
+            os.makedirs(resumes_dir, exist_ok=True)
+            save_path = os.path.join(resumes_dir, filename)
+            with open(save_path, 'wb+') as destination:
+                for chunk in file_obj.chunks():
+                    destination.write(chunk)
+            file_obj.seek(0)
+        except Exception as save_err:
+            print("Notice saving resume file:", save_err)
 
     # 1. Extract text from PDF via pypdf
     extracted_text = ""
@@ -391,6 +407,7 @@ def upload_resume(request):
         "resume_id": resume_id,
         "filename": filename,
         "file_size": file_size_mb,
+        "file_url": file_url,
         "upload_date": now_iso,
         "version": 1,
         "status": "Parsed",
