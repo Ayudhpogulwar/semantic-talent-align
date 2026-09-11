@@ -3,7 +3,7 @@ import django
 import uuid
 from datetime import datetime, timedelta
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "django_backend.settings")
 django.setup()
 
 from django.db import connection, transaction
