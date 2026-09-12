@@ -111,19 +111,19 @@ export default function AdminUserManagement() {
     <div className="admin-user-management animate-fade-in">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="alert alert-success d-flex align-items-center justify-content-between py-2 px-3 mb-3 shadow-lg border-success text-white bg-success bg-opacity-25" role="alert">
+        <div className="alert alert-success d-flex align-items-center justify-content-between py-2 px-3 mb-3 shadow border-success" role="alert">
           <span className="d-flex align-items-center gap-2">
             <CheckCircle2 size={18} className="text-success" /> {toastMessage}
           </span>
-          <button className="btn-close btn-close-white ms-3" onClick={() => setToastMessage(null)} />
+          <button className="btn-close ms-3" onClick={() => setToastMessage(null)} />
         </div>
       )}
 
       {/* Header Controls */}
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-          <h4 className="fw-bold text-white mb-0">Universal User Directory</h4>
-          <p className="text-secondary small mb-0">Manage both Student & Faculty user accounts</p>
+          <h4 className="fw-bold mb-0" style={{ color: "var(--text-main)" }}>Universal User Directory</h4>
+          <p className="small mb-0" style={{ color: "var(--text-muted)" }}>Manage both Student & Faculty user accounts</p>
         </div>
 
         <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -140,7 +140,7 @@ export default function AdminUserManagement() {
             <Search size={14} className="position-absolute text-muted" style={{ left: 10, top: 12 }} />
           </div>
 
-          {/* Role Toggle Tabs / Dropdown */}
+          {/* Role Toggle Tabs */}
           <div className="btn-group btn-group-sm" role="group" aria-label="Role Filter">
             <button
               type="button"
@@ -205,14 +205,14 @@ export default function AdminUserManagement() {
               filteredUsers.map((u) => (
                 <tr key={u.id}>
                   <td className="text-start ps-3 text-nowrap">
-                    <code className="px-2 py-1 bg-dark rounded text-info border border-secondary" style={{ fontSize: "0.8rem" }}>
+                    <code className="px-2 py-1 rounded text-info border" style={{ background: "var(--input-bg)", borderColor: "var(--border-color)", fontSize: "0.8rem" }}>
                       {u.user_id || `USR-${u.id}`}
                     </code>
                   </td>
-                  <td className="text-start fw-semibold text-white text-nowrap">
+                  <td className="text-start fw-semibold text-nowrap" style={{ color: "var(--text-main)" }}>
                     {u.name}
                   </td>
-                  <td className="text-start text-muted small text-nowrap">
+                  <td className="text-start small text-nowrap" style={{ color: "var(--text-muted)" }}>
                     {u.email}
                   </td>
                   <td className="text-center text-nowrap">
@@ -220,11 +220,11 @@ export default function AdminUserManagement() {
                       {u.role}
                     </span>
                   </td>
-                  <td className="text-center text-nowrap small text-secondary">
+                  <td className="text-center text-nowrap small" style={{ color: "var(--text-muted)" }}>
                     {u.department || "N/A"}
                   </td>
                   <td className="text-center text-nowrap">
-                    <span className={`badge ${u.status === "Active" ? "bg-success bg-opacity-25 text-success border border-success" : "bg-danger bg-opacity-25 text-danger border border-danger"}`}>
+                    <span className={`badge ${u.status === "Active" ? "bg-success bg-opacity-15 text-success border border-success" : "bg-danger bg-opacity-15 text-danger border border-danger"}`}>
                       {u.status}
                     </span>
                   </td>
