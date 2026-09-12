@@ -14,6 +14,94 @@ const STATUS_BADGE = {
   REJECTED: "bg-danger text-white",
 };
 
+const STUDENT_DIRECTORY = {
+  "GH23412": "Yash Mahesh Fokmare",
+  "SV-101": "Aditi Sharma",
+  "2026CS101": "Aditi Sharma",
+  "SV-102": "Rohan Verma",
+  "2026IT104": "Rohan Verma",
+  "SV-103": "Priya Patel",
+  "2025AI108": "Priya Patel",
+  "SV-104": "Siddharth Kulkarni",
+  "2027EC202": "Siddharth Kulkarni",
+  "SV-105": "Ananya Deshmukh",
+  "2026ME115": "Ananya Deshmukh"
+};
+
+export const resolveStudentName = (c) => {
+  if (!c) return "Student Credential Holder";
+  
+  const id = String(c.student_id || c.studentId || c.roll_number || '').trim();
+
+  if (c.student_name && c.student_name.trim() && c.student_name.trim() !== "Mr. Yash Mahesh Fokmare") {
+    return c.student_name.trim();
+  }
+  if (c.full_name && c.full_name.trim()) return c.full_name.trim();
+  if (c.name && c.name.trim()) return c.name.trim();
+
+  if (id && STUDENT_DIRECTORY[id]) return STUDENT_DIRECTORY[id];
+
+  try {
+    const stored = localStorage.getItem("stufac_students");
+    if (stored) {
+      const list = JSON.parse(stored);
+      const found = list.find(s => String(s.id).trim() === id || String(s.roll_number).trim() === id || String(s.student_id).trim() === id);
+      if (found && (found.student_name || found.full_name || found.name)) {
+        return found.student_name || found.full_name || found.name;
+      }
+    }
+  } catch (e) {}
+
+  if (c.student_name && c.student_name.trim()) return c.student_name.trim();
+  if (id) return `Student ${id}`;
+  return "Yash Mahesh Fokmare";
+};
+
+const defaultInitialCerts = [
+  {
+    id: "CERT-9021",
+    student_id: "GH23412",
+    student_name: "Yash Mahesh Fokmare",
+    file: "Uploaded_Certificate.pdf",
+    file_url: "#",
+    issue_date: "2026-09-02",
+    verification_status: "PENDING",
+    cert_type: "CERTIFICATE OF INTERNSHIP",
+    organization: "PSK Technologies Private Limited",
+    course_title: "Full Stack Web Development",
+    department: "Computer Science & Engineering",
+    duration: "45-day internship from 5th Jan 2026 to 12th Mar 2026"
+  },
+  {
+    id: "CERT-8842",
+    student_id: "2026CS101",
+    student_name: "Aditi Sharma",
+    file: "AWS_Cloud_Architect_Certificate.pdf",
+    file_url: "#",
+    issue_date: "2026-08-28",
+    verification_status: "VERIFIED",
+    cert_type: "CERTIFICATE OF COMPLETION",
+    organization: "Amazon Web Services",
+    course_title: "AWS Certified Solutions Architect",
+    department: "Computer Science & Engineering",
+    duration: "6-month professional specialization"
+  },
+  {
+    id: "CERT-7731",
+    student_id: "2026IT104",
+    student_name: "Rohan Verma",
+    file: "React_Native_Mastery.pdf",
+    file_url: "#",
+    issue_date: "2026-08-15",
+    verification_status: "VERIFIED",
+    cert_type: "CERTIFICATE OF ACHIEVEMENT",
+    organization: "Meta / Coursera",
+    course_title: "Advanced React & Cross-Platform Mobile",
+    department: "Information Technology",
+    duration: "3-month certification program"
+  }
+];
+
 const INITIAL_FORM = {
   student_id: "",
   student_name: "",
@@ -99,9 +187,10 @@ const getStoredCerts = () => {
     const stored = localStorage.getItem("stufac_certificates");
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed.map(c => ({
           ...c,
+          student_name: resolveStudentName(c),
           file_url: (c.file_url && c.file_url.startsWith('blob:')) ? '#' : c.file_url
         }));
       }
@@ -344,7 +433,7 @@ export default function CertificateVerificationTable() {
     }
 
     const studentId = c.student_id || c.studentId || 'GH23412';
-    const rawName = c.student_name || c.name || (c.first_name ? `${c.first_name} ${c.last_name || ''}`.trim() : 'Yash Mahesh Fokmare');
+    const rawName = resolveStudentName(c);
     const formattedName = rawName.toLowerCase().startsWith('mr.') || rawName.toLowerCase().startsWith('ms.') ? rawName : `Mr. ${rawName}`;
     const orgName = c.organization || 'Microsoft';
     const certType = (c.cert_type || 'CERTIFICATE OF COMPLETION').toUpperCase();
@@ -540,7 +629,7 @@ export default function CertificateVerificationTable() {
         <table className="table table-hover faculty-table align-middle mb-0">
           <thead>
             <tr>
-              <th className="fw-bold">Student ID</th>
+              <th className="fw-bold">Student Details</th>
               <th className="fw-bold">File</th>
               <th className="fw-bold">Issue Date</th>
               <th className="fw-bold">Status</th>
@@ -567,7 +656,10 @@ export default function CertificateVerificationTable() {
             {filteredCerts.map((c) => (
               <tr key={c.id}>
                 <td className="fw-semibold">
-                  <code className="px-2 py-1 rounded border">{c.student_id}</code>
+                  <div className="d-flex flex-column">
+                    <span style={{ color: "var(--text-main)", fontWeight: 600 }}>{resolveStudentName(c)}</span>
+                    <small className="text-muted"><code className="px-1 py-0.5 rounded border" style={{ fontSize: "0.78rem" }}>{c.student_id}</code></small>
+                  </div>
                 </td>
 
                 <td>
@@ -660,11 +752,16 @@ export default function CertificateVerificationTable() {
                         type="text"
                         className="form-control faculty-search-input"
                         required
-                        placeholder="e.g. GH23412 or STU-101"
+                        placeholder="e.g. GH23412 or 2026CS101"
                         value={formData.student_id}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, student_id: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          const idVal = e.target.value;
+                          setFormData((prev) => ({
+                            ...prev,
+                            student_id: idVal,
+                            student_name: STUDENT_DIRECTORY[idVal.trim()] || prev.student_name
+                          }));
+                        }}
                       />
                     </div>
                     <div className="col-6">
@@ -854,18 +951,16 @@ export default function CertificateVerificationTable() {
               <div className="modal-body p-4">
                 <div className="row mb-3 g-2 p-3 rounded border" style={{ background: "var(--input-bg)" }}>
                   <div className="col-4">
+                    <small className="text-muted d-block fw-bold uppercase">Student Name</small>
+                    <span className="fw-bold" style={{ color: "var(--text-main)" }}>{resolveStudentName(viewingCert)}</span>
+                  </div>
+                  <div className="col-4">
                     <small className="text-muted d-block fw-bold uppercase">Student ID</small>
                     <span className="fw-bold">{viewingCert.student_id}</span>
                   </div>
                   <div className="col-4">
                     <small className="text-muted d-block fw-bold uppercase">Issue Date</small>
                     <span>{viewingCert.issue_date}</span>
-                  </div>
-                  <div className="col-4">
-                    <small className="text-muted d-block fw-bold uppercase">Status</small>
-                    <span className={`badge ${STATUS_BADGE[viewingCert.verification_status] || 'badge-closed'}`}>
-                      {viewingCert.verification_status}
-                    </span>
                   </div>
                 </div>
 
