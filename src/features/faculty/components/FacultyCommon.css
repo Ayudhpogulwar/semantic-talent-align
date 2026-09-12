@@ -306,3 +306,27 @@
 [data-theme="light"] .faculty-modal-content .btn-close {
   filter: none !important;
 }
+
+/* Modal Backdrop & Overlay Mode Support */
+.faculty-modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(4px);
+}
+
+[data-theme="light"] .faculty-modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+/* Form Select Option Theme Alignment */
+.faculty-select-filter option,
+.faculty-search-input option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+/* Active Table Row Theme Support */
+.faculty-table tr.table-active td {
+  background-color: var(--bg-card-hover) !important;
+  color: var(--text-main) !important;
+}
+

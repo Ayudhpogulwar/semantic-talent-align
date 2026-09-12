@@ -531,7 +531,7 @@ export default function ReportsPanel() {
               <h6 className="fw-bold mb-2 small text-uppercase text-muted">Cohort Skill Gap Highlights</h6>
               <div className="d-flex flex-wrap gap-2">
                 {skillGaps.map((s, i) => (
-                  <span key={i} className="badge bg-light text-dark border p-2">
+                  <span key={i} className="badge p-2 border" style={{ background: "var(--bg-card-subtle)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
                     {s.skill}: <strong className="text-danger">{s.count} missing</strong>
                   </span>
                 ))}
@@ -688,7 +688,7 @@ export default function ReportsPanel() {
                         </div>
                       </div>
                     </td>
-                    <td><span className="badge bg-light text-dark border">{r.department}</span></td>
+                    <td><span className="badge border" style={{ background: "var(--input-bg)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>{r.department}</span></td>
                     <td className="text-muted small">{r.term}</td>
                     <td>
                       <span className={`badge ${r.format === "pdf" ? "bg-danger" : "bg-success"}`}>
@@ -742,58 +742,58 @@ export default function ReportsPanel() {
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content faculty-modal-content">
               <div className="modal-header border-bottom border-secondary">
-                <h5 className="modal-title fw-bold">
+                <h5 className="modal-title fw-bold" style={{ color: "var(--text-main)" }}>
                   {previewReport.format === "pdf" ? "📄" : "📊"} {previewReport.title}
                 </h5>
                 <button type="button" className="btn-close" onClick={() => setPreviewReport(null)}></button>
               </div>
               <div className="modal-body p-4">
-                <div className="row g-2 mb-3 p-3 rounded border" style={{ background: "var(--input-bg)" }}>
+                <div className="row g-2 mb-3 p-3 rounded border" style={{ background: "var(--input-bg)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
                   <div className="col-3">
-                    <small className="text-muted d-block fw-bold text-uppercase">Department</small>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Department</small>
                     <span className="fw-bold">{previewReport.department}</span>
                   </div>
                   <div className="col-3">
-                    <small className="text-muted d-block fw-bold text-uppercase">Term / Batch</small>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Term / Batch</small>
                     <span>{previewReport.term}</span>
                   </div>
                   <div className="col-3">
-                    <small className="text-muted d-block fw-bold text-uppercase">Date Generated</small>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Date Generated</small>
                     <span>{previewReport.generated_at}</span>
                   </div>
                   <div className="col-3">
-                    <small className="text-muted d-block fw-bold text-uppercase">Format</small>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Format</small>
                     <span className="badge bg-primary">{previewReport.format.toUpperCase()}</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded border my-3" style={{ background: "var(--bg-card-subtle)" }}>
+                <div className="p-4 rounded border my-3" style={{ background: "var(--bg-card-subtle)", borderColor: "var(--border-color)" }}>
                   <h6 className="fw-bold mb-3 text-primary">📊 Placement Summary & Audit Statistics (Live Database)</h6>
                   <div className="row text-center g-2">
-                    <div className="col-3 p-2 border rounded bg-white">
-                      <small className="text-muted d-block">Applications</small>
-                      <strong className="fs-5 text-dark">{previewReport.metrics?.applied ?? liveApplied}</strong>
+                    <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
+                      <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Applications</small>
+                      <strong className="fs-5 text-primary">{previewReport.metrics?.applied ?? liveApplied}</strong>
                     </div>
-                    <div className="col-3 p-2 border rounded bg-white">
-                      <small className="text-muted d-block">Under Review</small>
+                    <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
+                      <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Under Review</small>
                       <strong className="fs-5 text-info">{previewReport.metrics?.under_review ?? liveUnderReview}</strong>
                     </div>
-                    <div className="col-3 p-2 border rounded bg-white">
-                      <small className="text-muted d-block">Shortlisted</small>
+                    <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
+                      <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Shortlisted</small>
                       <strong className="fs-5 text-warning">{previewReport.metrics?.shortlisted ?? liveShortlisted}</strong>
                     </div>
-                    <div className="col-3 p-2 border rounded bg-white">
-                      <small className="text-muted d-block">Offered / Placed</small>
+                    <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
+                      <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Offered / Placed</small>
                       <strong className="fs-5 text-success">{previewReport.metrics?.offered ?? liveOffered}</strong>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 border rounded">
-                  <h6 className="fw-bold mb-2">Audited Skill Gaps & Training Needs</h6>
+                <div className="p-3 border rounded" style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}>
+                  <h6 className="fw-bold mb-2" style={{ color: "var(--text-main)" }}>Audited Skill Gaps & Training Needs</h6>
                   <div className="d-flex flex-wrap gap-2">
                     {skillGaps.map((s, i) => (
-                      <span key={i} className="badge bg-light text-dark border p-2">
+                      <span key={i} className="badge border p-2" style={{ background: "var(--bg-card)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
                         {s.skill}: <strong className="text-danger">{s.count} missing</strong>
                       </span>
                     ))}
