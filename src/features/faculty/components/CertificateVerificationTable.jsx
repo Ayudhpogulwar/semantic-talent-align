@@ -27,14 +27,84 @@ const INITIAL_FORM = {
   status: "PENDING"
 };
 
-const defaultInitialCerts = [];
+function convertCanvasToPdfBlob(canvas) {
+  const jpegUrl = canvas.toDataURL('image/jpeg', 0.95);
+  const base64Str = jpegUrl.split(',')[1];
+  const binaryStr = window.atob(base64Str);
+  const imgLen = binaryStr.length;
+
+  const imgBytes = new Uint8Array(imgLen);
+  for (let i = 0; i < imgLen; i++) {
+    imgBytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const w = 842;
+  const h = 595;
+
+  const encoder = new TextEncoder();
+  const header = encoder.encode('%PDF-1.4\n');
+  const body1 = encoder.encode(`1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`);
+  const body2 = encoder.encode(`2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`);
+  const body3 = encoder.encode(`3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /XObject << /Im1 4 0 R >> >> /MediaBox [0 0 ${w} ${h}] /Contents 5 0 R >>\nendobj\n`);
+  const body4Head = encoder.encode(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgLen} >>\nstream\n`);
+  const body4Tail = encoder.encode(`\nendstream\nendobj\n`);
+  const contentStreamStr = `q ${w} 0 0 ${h} 0 0 cm /Im1 Do Q`;
+  const body5 = encoder.encode(`5 0 obj\n<< /Length ${contentStreamStr.length} >>\nstream\n${contentStreamStr}\nendstream\nendobj\n`);
+
+  const offsets = [];
+  let currentOffset = header.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body1.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body2.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body3.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body4Head.length + imgBytes.length + body4Tail.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body5.length;
+
+  const xrefStart = currentOffset;
+  let xrefStr = `xref\n0 6\n0000000000 65535 f \n`;
+  for (const off of offsets) {
+    xrefStr += String(off).padStart(10, '0') + ` 00000 n \n`;
+  }
+  xrefStr += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  const xrefBuf = encoder.encode(xrefStr);
+
+  const totalLength = currentOffset + xrefBuf.length;
+  const pdfBytes = new Uint8Array(totalLength);
+
+  let pos = 0;
+  pdfBytes.set(header, pos); pos += header.length;
+  pdfBytes.set(body1, pos); pos += body1.length;
+  pdfBytes.set(body2, pos); pos += body2.length;
+  pdfBytes.set(body3, pos); pos += body3.length;
+  pdfBytes.set(body4Head, pos); pos += body4Head.length;
+  pdfBytes.set(imgBytes, pos); pos += imgBytes.length;
+  pdfBytes.set(body4Tail, pos); pos += body4Tail.length;
+  pdfBytes.set(body5, pos); pos += body5.length;
+  pdfBytes.set(xrefBuf, pos);
+
+  return new Blob([pdfBytes], { type: 'application/pdf' });
+}
 
 const getStoredCerts = () => {
   try {
     const stored = localStorage.getItem("stufac_certificates");
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed.map(c => ({
+          ...c,
+          file_url: (c.file_url && c.file_url.startsWith('blob:')) ? '#' : c.file_url
+        }));
+      }
     }
   } catch (e) {
     console.error(e);
@@ -176,79 +246,100 @@ export default function CertificateVerificationTable() {
 
     setSubmitting(true);
     const fileNameToUse = fileObject ? fileObject.name : ((formData.file_name || "").trim() || "Uploaded_Certificate.pdf");
-    const fileUrlToUse = fileObject ? URL.createObjectURL(fileObject) : "#";
-    const newRecord = {
-      id: `CERT-${Date.now().toString().slice(-4)}`,
-      student_id: (formData.student_id || "").trim(),
-      student_name: (formData.student_name || "").trim() || "Mr. Yash Mahesh Fokmare",
-      cert_type: formData.cert_type || "CERTIFICATE OF INTERNSHIP",
-      organization: (formData.organization || "").trim() || "PSK Technologies Private Limited",
-      course_title: (formData.course_title || "").trim() || "React JS & Fullstack Development",
-      department: (formData.department || "").trim() || "Development Department",
-      duration: (formData.duration || "").trim() || "45-day internship from 5th Jan 2026 to 12th Mar 2026",
-      file: fileNameToUse,
-      file_url: fileUrlToUse,
-      issue_date: formData.issue_date || new Date().toISOString().split("T")[0],
-      verification_status: (formData.status || "PENDING").toUpperCase()
+
+    const saveAndProceed = (fileUrlToUse) => {
+      const newRecord = {
+        id: `CERT-${Date.now().toString().slice(-4)}`,
+        student_id: (formData.student_id || "").trim(),
+        student_name: (formData.student_name || "").trim() || "Mr. Yash Mahesh Fokmare",
+        cert_type: formData.cert_type || "CERTIFICATE OF INTERNSHIP",
+        organization: (formData.organization || "").trim() || "PSK Technologies Private Limited",
+        course_title: (formData.course_title || "").trim() || "React JS & Fullstack Development",
+        department: (formData.department || "").trim() || "Development Department",
+        duration: (formData.duration || "").trim() || "45-day internship from 5th Jan 2026 to 12th Mar 2026",
+        file: fileNameToUse,
+        file_url: fileUrlToUse,
+        issue_date: formData.issue_date || new Date().toISOString().split("T")[0],
+        verification_status: (formData.status || "PENDING").toUpperCase()
+      };
+
+      // 1. Immediately update Local State & LocalStorage
+      setCerts(prev => {
+        const updatedCerts = [newRecord, ...prev];
+        try {
+          localStorage.setItem("stufac_certificates", JSON.stringify(updatedCerts));
+        } catch (err) {}
+        return updatedCerts;
+      });
+
+      // 2. Non-blocking API sync
+      Promise.race([
+        certificateApi.create({
+          student_id: newRecord.student_id,
+          file_name: newRecord.file,
+          issue_date: newRecord.issue_date,
+          status: newRecord.verification_status
+        }),
+        new Promise((res) => setTimeout(() => res(null), 1000))
+      ]).catch(() => {});
+
+      // 3. Immediately close modal & reset form
+      setSubmitting(false);
+      setShowAddModal(false);
+      setFormData(INITIAL_FORM);
+      setFileObject(null);
     };
 
-    // 1. Immediately update Local State & LocalStorage
-    setCerts(prev => {
-      const updatedCerts = [newRecord, ...prev];
-      try {
-        localStorage.setItem("stufac_certificates", JSON.stringify(updatedCerts));
-      } catch (err) {}
-      return updatedCerts;
-    });
-
-    // 2. Non-blocking API sync
-    Promise.race([
-      certificateApi.create({
-        student_id: newRecord.student_id,
-        file_name: newRecord.file,
-        issue_date: newRecord.issue_date,
-        status: newRecord.verification_status
-      }),
-      new Promise((res) => setTimeout(() => res(null), 1000))
-    ]).catch(() => {});
-
-    // 3. Immediately close modal & reset form
-    setSubmitting(false);
-    setShowAddModal(false);
-    setFormData(INITIAL_FORM);
-    setFileObject(null);
+    if (fileObject) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        saveAndProceed(event.target.result);
+      };
+      reader.onerror = () => {
+        saveAndProceed("#");
+      };
+      reader.readAsDataURL(fileObject);
+    } else {
+      saveAndProceed("#");
+    }
   };
 
   const handleDownloadCert = async (c) => {
     const fileName = c.file || c.file_name || 'Academic_Certificate.pdf';
     
+    // If c.file_url is a persistent data URL or remote http/https URL, download it directly
     if (c.file_url && c.file_url !== '#' && c.file_url !== '') {
-      try {
-        if (c.file_url.startsWith('blob:')) {
+      if (c.file_url.startsWith('data:') || c.file_url.startsWith('http://') || c.file_url.startsWith('https://')) {
+        const a = document.createElement('a');
+        a.href = c.file_url;
+        a.download = fileName;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      }
+
+      if (c.file_url.startsWith('blob:')) {
+        try {
           const resp = await fetch(c.file_url);
-          if (!resp.ok) throw new Error("Blob expired or inaccessible");
-          const blob = await resp.blob();
-          const downloadUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = downloadUrl;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-          return;
-        } else {
-          const a = document.createElement('a');
-          a.href = c.file_url;
-          a.download = fileName;
-          a.target = '_blank';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          return;
+          if (resp.ok) {
+            const blob = await resp.blob();
+            if (blob.size > 0) {
+              const downloadUrl = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn("Direct blob download failed, falling back to canvas PDF generation:", err);
         }
-      } catch (err) {
-        console.warn("Direct file URL download failed, falling back to canvas generation:", err);
       }
     }
 
@@ -393,14 +484,25 @@ export default function CertificateVerificationTable() {
     ctx.font = '15px sans-serif';
     ctx.fillText('Dean of Academic Affairs', 1200, 985);
 
-    const titleText = courseTitle.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
-    const image = canvas.toDataURL('image/png', 1.0);
-    const a = document.createElement('a');
-    a.href = image;
-    a.download = `${formattedName.replace(/[^a-zA-Z0-9]/g, '_')}_${titleText.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if (fileName.toLowerCase().endsWith('.pdf')) {
+      const pdfBlob = convertCanvasToPdfBlob(canvas);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 2000);
+    } else {
+      const image = canvas.toDataURL('image/png', 1.0);
+      const a = document.createElement('a');
+      a.href = image;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   return (
