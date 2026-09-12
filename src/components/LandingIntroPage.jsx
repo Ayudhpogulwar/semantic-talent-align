@@ -187,7 +187,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
               >
                 <div>
                   <h4 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
-                    <GraduationCap size={24} className="text-primary flex-shrink-0" /> Student Portal
+                    <GraduationCap size={26} className="text-primary" /> Student Portal
                   </h4>
                   <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Upload resumes, receive AI match recommendations, track skills gaps, and view real-time placement readiness scores.
@@ -213,7 +213,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
               >
                 <div>
                   <h4 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
-                    <ShieldCheck size={24} className="text-info flex-shrink-0" /> Faculty Portal
+                    <ShieldCheck size={26} className="text-info" /> Faculty Portal
                   </h4>
                   <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Verify student registrations, review certificates, approve corporate opportunities, and generate accreditation reports.
@@ -240,7 +240,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h4 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
-                      <Shield size={24} className="text-danger flex-shrink-0" /> Super Admin
+                      <Shield size={26} className="text-danger" /> Super Admin
                     </h4>
                     <span className="badge bg-danger text-white">TIER 3</span>
                   </div>
