@@ -186,10 +186,9 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
                 }}
               >
                 <div>
-                  <div className="p-3 rounded bg-primary bg-opacity-15 text-primary d-inline-flex mb-3">
-                    <GraduationCap size={28} />
-                  </div>
-                  <h4 className="fw-bold mb-2" style={{ color: "var(--text-main)" }}>Student Portal</h4>
+                  <h4 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
+                    <GraduationCap size={24} className="text-primary flex-shrink-0" /> Student Portal
+                  </h4>
                   <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Upload resumes, receive AI match recommendations, track skills gaps, and view real-time placement readiness scores.
                   </p>
@@ -213,10 +212,9 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
                 }}
               >
                 <div>
-                  <div className="p-3 rounded bg-info bg-opacity-15 text-info d-inline-flex mb-3">
-                    <ShieldCheck size={28} />
-                  </div>
-                  <h4 className="fw-bold mb-2" style={{ color: "var(--text-main)" }}>Faculty Portal</h4>
+                  <h4 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
+                    <ShieldCheck size={24} className="text-info flex-shrink-0" /> Faculty Portal
+                  </h4>
                   <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Verify student registrations, review certificates, approve corporate opportunities, and generate accreditation reports.
                   </p>
@@ -240,11 +238,10 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
                 }}
               >
                 <div>
-                  <div className="p-3 rounded bg-danger bg-opacity-15 text-danger d-inline-flex mb-3">
-                    <Shield size={28} />
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h4 className="fw-bold mb-0" style={{ color: "var(--text-main)" }}>Super Admin</h4>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h4 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
+                      <Shield size={24} className="text-danger flex-shrink-0" /> Super Admin
+                    </h4>
                     <span className="badge bg-danger text-white">TIER 3</span>
                   </div>
                   <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
