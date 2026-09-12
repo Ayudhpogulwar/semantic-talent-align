@@ -55,10 +55,11 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        background: theme === 'light' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(11, 15, 25, 0.88)',
+        background: 'var(--bg-card)',
         backdropFilter: 'blur(16px)',
         borderBottom: '1px solid var(--border-color)',
-        padding: '16px 32px'
+        padding: '16px 32px',
+        transition: 'background-color 0.3s ease, border-color 0.3s ease'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           
@@ -93,7 +94,7 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
                 width: '38px',
                 height: '38px',
                 borderRadius: '10px',
-                background: 'var(--bg-card)',
+                background: 'var(--input-bg)',
                 border: '1px solid var(--border-color)',
                 color: 'var(--text-main)',
                 display: 'flex',
@@ -154,7 +155,8 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
           fontWeight: 800,
           lineHeight: '1.2',
           maxWidth: '900px',
-          marginBottom: '16px'
+          marginBottom: '16px',
+          color: 'var(--text-main)'
         }}>
           Empowering Academia with <span className="gradient-text">Semantic AI Opportunity Alignment</span>
         </h1>
@@ -175,13 +177,20 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
             
             {/* 1. Student Portal Card */}
             <div className="col">
-              <div className="p-4 rounded-3 border border-secondary bg-dark h-100 d-flex flexDirection-column justify-content-between hover-border-primary" style={{ transition: "all 0.3s ease" }}>
+              <div
+                className="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between shadow-sm"
+                style={{
+                  background: "var(--bg-card)",
+                  borderColor: "var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
                 <div>
-                  <div className="p-3 rounded bg-primary bg-opacity-25 text-primary d-inline-flex mb-3">
+                  <div className="p-3 rounded bg-primary bg-opacity-15 text-primary d-inline-flex mb-3">
                     <GraduationCap size={28} />
                   </div>
-                  <h4 className="fw-bold text-white mb-2">Student Portal</h4>
-                  <p className="text-secondary small mb-4">
+                  <h4 className="fw-bold mb-2" style={{ color: "var(--text-main)" }}>Student Portal</h4>
+                  <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Upload resumes, receive AI match recommendations, track skills gaps, and view real-time placement readiness scores.
                   </p>
                 </div>
@@ -195,13 +204,20 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
 
             {/* 2. Faculty Portal Card */}
             <div className="col">
-              <div className="p-4 rounded-3 border border-secondary bg-dark h-100 d-flex flexDirection-column justify-content-between hover-border-primary" style={{ transition: "all 0.3s ease" }}>
+              <div
+                className="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between shadow-sm"
+                style={{
+                  background: "var(--bg-card)",
+                  borderColor: "var(--border-color)",
+                  transition: "all 0.3s ease"
+                }}
+              >
                 <div>
-                  <div className="p-3 rounded bg-info bg-opacity-25 text-info d-inline-flex mb-3">
+                  <div className="p-3 rounded bg-info bg-opacity-15 text-info d-inline-flex mb-3">
                     <ShieldCheck size={28} />
                   </div>
-                  <h4 className="fw-bold text-white mb-2">Faculty Portal</h4>
-                  <p className="text-secondary small mb-4">
+                  <h4 className="fw-bold mb-2" style={{ color: "var(--text-main)" }}>Faculty Portal</h4>
+                  <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Verify student registrations, review certificates, approve corporate opportunities, and generate accreditation reports.
                   </p>
                 </div>
@@ -213,18 +229,25 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
               </div>
             </div>
 
-            {/* 3. Super Admin Portal Card (Distinct Darker Styling) */}
+            {/* 3. Super Admin Portal Card */}
             <div className="col">
-              <div className="p-4 rounded-3 border border-danger bg-dark h-100 d-flex flexDirection-column justify-content-between" style={{ background: "linear-gradient(180deg, rgba(220, 38, 38, 0.1) 0%, #111827 100%)", boxShadow: "0 10px 30px rgba(220, 38, 38, 0.15)" }}>
+              <div
+                className="p-4 rounded-3 border border-danger h-100 d-flex flex-column justify-content-between shadow-sm"
+                style={{
+                  background: "linear-gradient(180deg, rgba(220, 38, 38, 0.08) 0%, var(--bg-card) 100%)",
+                  boxShadow: "0 10px 30px rgba(220, 38, 38, 0.12)",
+                  transition: "all 0.3s ease"
+                }}
+              >
                 <div>
-                  <div className="p-3 rounded bg-danger bg-opacity-25 text-danger d-inline-flex mb-3">
+                  <div className="p-3 rounded bg-danger bg-opacity-15 text-danger d-inline-flex mb-3">
                     <Shield size={28} />
                   </div>
                   <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h4 className="fw-bold text-white mb-0">Super Admin</h4>
+                    <h4 className="fw-bold mb-0" style={{ color: "var(--text-main)" }}>Super Admin</h4>
                     <span className="badge bg-danger text-white">TIER 3</span>
                   </div>
-                  <p className="text-secondary small mb-4">
+                  <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Platform command center. Cross-tier user management, system-wide overrides, live telemetry metrics, and RBAC controls.
                   </p>
                 </div>
