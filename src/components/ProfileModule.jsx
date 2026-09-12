@@ -84,16 +84,37 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     setShowUploadModal(false);
   };
 
-  const handleDownloadCert = (cert) => {
+  const handleDownloadCert = async (cert) => {
     const fileName = cert.file || cert.file_name || 'Academic_Certificate.pdf';
+    
     if (cert.file_url && cert.file_url !== '#' && cert.file_url !== '') {
-      const a = document.createElement('a');
-      a.href = cert.file_url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return;
+      try {
+        if (cert.file_url.startsWith('blob:')) {
+          const resp = await fetch(cert.file_url);
+          if (!resp.ok) throw new Error("Blob expired or inaccessible");
+          const blob = await resp.blob();
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+          return;
+        } else {
+          const a = document.createElement('a');
+          a.href = cert.file_url;
+          a.download = fileName;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          return;
+        }
+      } catch (err) {
+        console.warn("Direct file URL download failed, falling back to canvas generation:", err);
+      }
     }
 
     const studentId = cert.student_id || formData.roll_no || 'GH23412';
@@ -105,6 +126,7 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     const dept = cert.department || 'Technical Certification Department';
     const duration = cert.duration || 'professional course';
     const issueDate = cert.issue_date || '2026-08-31';
+    const status = (cert.verification_status || cert.status || 'PENDING').toUpperCase();
 
     const canvas = document.createElement('canvas');
     canvas.width = 1600;
@@ -170,7 +192,11 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(300, 470, 1000, 90, 16);
+    if (ctx.roundRect) {
+      ctx.roundRect(300, 470, 1000, 90, 16);
+    } else {
+      ctx.rect(300, 470, 1000, 90);
+    }
     ctx.fill(); ctx.stroke();
 
     ctx.fillStyle = '#4338ca';
@@ -182,9 +208,13 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     ctx.font = '20px "Helvetica Neue", sans-serif';
     ctx.fillText(`Issue Date: ${issueDate}   |   Verification ID: ${cert.id || 'CERT-2e84bb'}`, 800, 620);
 
-    ctx.fillStyle = status === 'VERIFIED' ? '#059669' : '#d97706';
+    ctx.fillStyle = status === 'VERIFIED' ? '#059669' : (status === 'REJECTED' ? '#dc2626' : '#d97706');
     ctx.beginPath();
-    ctx.roundRect(620, 660, 360, 50, 25);
+    if (ctx.roundRect) {
+      ctx.roundRect(620, 660, 360, 50, 25);
+    } else {
+      ctx.rect(620, 660, 360, 50);
+    }
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';

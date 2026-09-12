@@ -219,6 +219,190 @@ export default function CertificateVerificationTable() {
     setFileObject(null);
   };
 
+  const handleDownloadCert = async (c) => {
+    const fileName = c.file || c.file_name || 'Academic_Certificate.pdf';
+    
+    if (c.file_url && c.file_url !== '#' && c.file_url !== '') {
+      try {
+        if (c.file_url.startsWith('blob:')) {
+          const resp = await fetch(c.file_url);
+          if (!resp.ok) throw new Error("Blob expired or inaccessible");
+          const blob = await resp.blob();
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+          return;
+        } else {
+          const a = document.createElement('a');
+          a.href = c.file_url;
+          a.download = fileName;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          return;
+        }
+      } catch (err) {
+        console.warn("Direct file URL download failed, falling back to canvas generation:", err);
+      }
+    }
+
+    const studentId = c.student_id || c.studentId || 'GH23412';
+    const rawName = c.student_name || c.name || (c.first_name ? `${c.first_name} ${c.last_name || ''}`.trim() : 'Yash Mahesh Fokmare');
+    const formattedName = rawName.toLowerCase().startsWith('mr.') || rawName.toLowerCase().startsWith('ms.') ? rawName : `Mr. ${rawName}`;
+    const orgName = c.organization || 'Microsoft';
+    const certType = (c.cert_type || 'CERTIFICATE OF COMPLETION').toUpperCase();
+    const courseTitle = c.course_title || c.file?.replace(/\.[^/.]+$/, "").replace(/_/g, " ") || 'Git & Github';
+    const dept = c.department || 'Technical Certification Department';
+    const duration = c.duration || 'professional course';
+    const issueDate = c.issue_date || '2026-08-31';
+    const status = (c.verification_status || c.status || 'PENDING').toUpperCase();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1600;
+    canvas.height = 1131;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Subtle Ivory Linear Gradient Background
+    const bgGrad = ctx.createLinearGradient(0, 0, 1600, 1131);
+    bgGrad.addColorStop(0, '#ffffff');
+    bgGrad.addColorStop(0.5, '#fafaf9');
+    bgGrad.addColorStop(1, '#f5f5f4');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1600, 1131);
+
+    // 2. Decorative Double Border Frame & Corner Ribbons
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(30, 30, 1540, 1071);
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(48, 48, 1504, 1035);
+
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(60, 60, 1480, 1011);
+
+    ctx.fillStyle = '#1e3a8a';
+    ctx.beginPath(); ctx.moveTo(30, 30); ctx.lineTo(140, 30); ctx.lineTo(30, 140); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(1570, 30); ctx.lineTo(1460, 30); ctx.lineTo(1570, 140); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(30, 1101); ctx.lineTo(140, 1101); ctx.lineTo(30, 991); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(1570, 1101); ctx.lineTo(1460, 1101); ctx.lineTo(1570, 991); ctx.fill();
+
+    // 3. Organization Header & Certificate Title
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 22px "Georgia", serif';
+    ctx.fillText(orgName.toUpperCase(), 800, 130);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 48px "Georgia", serif';
+    ctx.fillText(certType, 800, 210);
+
+    ctx.fillStyle = '#d97706';
+    ctx.font = 'italic 24px "Georgia", serif';
+    ctx.fillText('This document officially certifies and validates the achievement of', 800, 270);
+
+    // 4. Student Full Name & Roll ID
+    ctx.fillStyle = '#1e3a8a';
+    ctx.font = '900 52px "Georgia", serif';
+    ctx.fillText(formattedName.replace(/^Mr\.\s+|^Ms\.\s+/i, ''), 800, 340);
+
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 22px "Georgia", serif';
+    ctx.fillText(`Student Roll / ID: ${studentId}`, 800, 390);
+
+    ctx.fillStyle = '#334155';
+    ctx.font = '22px "Helvetica Neue", sans-serif';
+    ctx.fillText('for successful submission & institutional verification of credential:', 800, 440);
+
+    // 5. Credential Highlight Box (Course Title)
+    ctx.fillStyle = '#f1f5f9';
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(300, 470, 1000, 90, 16);
+    } else {
+      ctx.rect(300, 470, 1000, 90);
+    }
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#4338ca';
+    ctx.font = 'bold 36px "Helvetica Neue", sans-serif';
+    ctx.fillText(courseTitle, 800, 528);
+
+    // 6. Verification Status & Details
+    ctx.fillStyle = '#475569';
+    ctx.font = '20px "Helvetica Neue", sans-serif';
+    ctx.fillText(`Issue Date: ${issueDate}   |   Verification ID: ${c.id || 'CERT-2e84bb'}`, 800, 620);
+
+    ctx.fillStyle = status === 'VERIFIED' ? '#059669' : (status === 'REJECTED' ? '#dc2626' : '#d97706');
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(620, 660, 360, 50, 25);
+    } else {
+      ctx.rect(620, 660, 360, 50);
+    }
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px "Helvetica Neue", sans-serif';
+    ctx.fillText(`STATUS: ${status}`, 800, 693);
+
+    // 7. Gold Official Verification Seal Stamp
+    ctx.save();
+    ctx.translate(800, 840);
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.arc(0, 0, 70, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('SAIOTAF', 0, -20);
+    ctx.fillText('VERIFIED', 0, 0);
+    ctx.fillText('SEAL', 0, 20);
+    ctx.restore();
+
+    // 8. Signatures
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(250, 930); ctx.lineTo(550, 930); ctx.stroke();
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 18px "Georgia", serif';
+    ctx.fillText('Dr. Aris Thorne', 400, 960);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '15px sans-serif';
+    ctx.fillText('Head of Placement & Verification', 400, 985);
+
+    ctx.beginPath(); ctx.moveTo(1050, 930); ctx.lineTo(1350, 930); ctx.stroke();
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 18px "Georgia", serif';
+    ctx.fillText('Prof. Elena Rostova', 1200, 960);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '15px sans-serif';
+    ctx.fillText('Dean of Academic Affairs', 1200, 985);
+
+    const titleText = courseTitle.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+    const image = canvas.toDataURL('image/png', 1.0);
+    const a = document.createElement('a');
+    a.href = image;
+    a.download = `${formattedName.replace(/[^a-zA-Z0-9]/g, '_')}_${titleText.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
     <div>
       {/* Top Header */}
@@ -313,159 +497,7 @@ export default function CertificateVerificationTable() {
 
                     <button
                       className="btn btn-action-custom btn-outline-info"
-                      onClick={() => {
-                        const fileName = c.file || c.file_name || 'Academic_Certificate.pdf';
-                        if (c.file_url && c.file_url !== '#' && c.file_url !== '') {
-                          const a = document.createElement('a');
-                          a.href = c.file_url;
-                          a.download = fileName;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          return;
-                        }
-
-                        const studentId = c.student_id || 'GH23412';
-                        const rawName = c.student_name || c.name || (c.first_name ? `${c.first_name} ${c.last_name || ''}`.trim() : 'Yash Mahesh Fokmare');
-                        const formattedName = rawName.toLowerCase().startsWith('mr.') || rawName.toLowerCase().startsWith('ms.') ? rawName : `Mr. ${rawName}`;
-                        const orgName = c.organization || 'Microsoft';
-                        const certType = (c.cert_type || 'CERTIFICATE OF COMPLETION').toUpperCase();
-                        const courseTitle = c.course_title || c.file?.replace(/\.[^/.]+$/, "").replace(/_/g, " ") || 'Git & Github';
-                        const dept = c.department || 'Technical Certification Department';
-                        const duration = c.duration || 'professional course';
-                        const issueDate = c.issue_date || '2026-08-31';
-
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 1600;
-                        canvas.height = 1131;
-                        const ctx = canvas.getContext('2d');
-
-                        // 1. Subtle Ivory Linear Gradient Background
-                        const bgGrad = ctx.createLinearGradient(0, 0, 1600, 1131);
-                        bgGrad.addColorStop(0, '#ffffff');
-                        bgGrad.addColorStop(0.5, '#fafaf9');
-                        bgGrad.addColorStop(1, '#f5f5f4');
-                        ctx.fillStyle = bgGrad;
-                        ctx.fillRect(0, 0, 1600, 1131);
-
-                        // 2. Decorative Double Border Frame & Corner Ribbons
-                        ctx.strokeStyle = '#1e3a8a';
-                        ctx.lineWidth = 14;
-                        ctx.strokeRect(30, 30, 1540, 1071);
-
-                        ctx.strokeStyle = '#d97706';
-                        ctx.lineWidth = 4;
-                        ctx.strokeRect(48, 48, 1504, 1035);
-
-                        ctx.strokeStyle = '#cbd5e1';
-                        ctx.lineWidth = 1;
-                        ctx.strokeRect(60, 60, 1480, 1011);
-
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.beginPath(); ctx.moveTo(30, 30); ctx.lineTo(140, 30); ctx.lineTo(30, 140); ctx.fill();
-                        ctx.beginPath(); ctx.moveTo(1570, 30); ctx.lineTo(1460, 30); ctx.lineTo(1570, 140); ctx.fill();
-                        ctx.beginPath(); ctx.moveTo(30, 1101); ctx.lineTo(140, 1101); ctx.lineTo(30, 991); ctx.fill();
-                        ctx.beginPath(); ctx.moveTo(1570, 1101); ctx.lineTo(1460, 1101); ctx.lineTo(1570, 991); ctx.fill();
-
-                        // 3. Organization Header & Certificate Title
-                        ctx.textAlign = 'center';
-                        ctx.fillStyle = '#475569';
-                        ctx.font = 'bold 22px "Georgia", serif';
-                        ctx.fillText(orgName.toUpperCase(), 800, 130);
-
-                        ctx.fillStyle = '#0f172a';
-                        ctx.font = '900 48px "Georgia", serif';
-                        ctx.fillText(certType, 800, 210);
-
-                        ctx.fillStyle = '#d97706';
-                        ctx.font = 'italic 24px "Georgia", serif';
-                        ctx.fillText('This document officially certifies and validates the achievement of', 800, 270);
-
-                        // 4. Student Full Name & Roll ID
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = '900 52px "Georgia", serif';
-                        ctx.fillText(formattedName.replace(/^Mr\.\s+|^Ms\.\s+/i, ''), 800, 340);
-
-                        ctx.fillStyle = '#475569';
-                        ctx.font = 'bold 22px "Georgia", serif';
-                        ctx.fillText(`Student Roll / ID: ${studentId}`, 800, 390);
-
-                        ctx.fillStyle = '#334155';
-                        ctx.font = '22px "Helvetica Neue", sans-serif';
-                        ctx.fillText('for successful submission & institutional verification of credential:', 800, 440);
-
-                        // 5. Credential Highlight Box (Course Title)
-                        ctx.fillStyle = '#f1f5f9';
-                        ctx.strokeStyle = '#6366f1';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.roundRect(300, 470, 1000, 90, 16);
-                        ctx.fill(); ctx.stroke();
-
-                        ctx.fillStyle = '#4338ca';
-                        ctx.font = 'bold 36px "Helvetica Neue", sans-serif';
-                        ctx.fillText(courseTitle, 800, 528);
-
-                        // 6. Verification Status & Details
-                        ctx.fillStyle = '#475569';
-                        ctx.font = '20px "Helvetica Neue", sans-serif';
-                        ctx.fillText(`Issue Date: ${issueDate}   |   Verification ID: ${c.id || 'CERT-2e84bb'}`, 800, 620);
-
-                        ctx.fillStyle = status === 'VERIFIED' ? '#059669' : '#d97706';
-                        ctx.beginPath();
-                        ctx.roundRect(620, 660, 360, 50, 25);
-                        ctx.fill();
-
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 22px "Helvetica Neue", sans-serif';
-                        ctx.fillText(`STATUS: ${status}`, 800, 693);
-
-                        // 7. Gold Official Verification Seal Stamp
-                        ctx.save();
-                        ctx.translate(800, 840);
-                        ctx.fillStyle = '#d97706';
-                        ctx.beginPath();
-                        ctx.arc(0, 0, 70, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.strokeStyle = '#b45309';
-                        ctx.lineWidth = 4;
-                        ctx.stroke();
-
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 14px sans-serif';
-                        ctx.fillText('SAIOTAF', 0, -20);
-                        ctx.fillText('VERIFIED', 0, 0);
-                        ctx.fillText('SEAL', 0, 20);
-                        ctx.restore();
-
-                        // 8. Signatures
-                        ctx.strokeStyle = '#1e293b';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath(); ctx.moveTo(250, 930); ctx.lineTo(550, 930); ctx.stroke();
-                        ctx.fillStyle = '#1e293b';
-                        ctx.font = 'bold 18px "Georgia", serif';
-                        ctx.fillText('Dr. Aris Thorne', 400, 960);
-                        ctx.fillStyle = '#64748b';
-                        ctx.font = '15px sans-serif';
-                        ctx.fillText('Head of Placement & Verification', 400, 985);
-
-                        ctx.beginPath(); ctx.moveTo(1050, 930); ctx.lineTo(1350, 930); ctx.stroke();
-                        ctx.fillStyle = '#1e293b';
-                        ctx.font = 'bold 18px "Georgia", serif';
-                        ctx.fillText('Prof. Elena Rostova', 1200, 960);
-                        ctx.fillStyle = '#64748b';
-                        ctx.font = '15px sans-serif';
-                        ctx.fillText('Dean of Academic Affairs', 1200, 985);
-
-                        const titleText = courseTitle.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
-                        const image = canvas.toDataURL('image/png', 1.0);
-                        const a = document.createElement('a');
-                        a.href = image;
-                        a.download = `${formattedName.replace(/[^a-zA-Z0-9]/g, '_')}_${titleText.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.png`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }}
+                      onClick={() => handleDownloadCert(c)}
                     >
                       Download
                     </button>
@@ -746,6 +778,13 @@ export default function CertificateVerificationTable() {
               </div>
               <div className="modal-footer border-top border-secondary justify-content-between">
                 <div>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-action-custom btn-outline-info me-2 fw-semibold"
+                    onClick={() => handleDownloadCert(viewingCert)}
+                  >
+                    Download
+                  </button>
                   {viewingCert.verification_status !== "VERIFIED" && (
                     <button
                       className="btn btn-sm btn-action-custom btn-outline-success me-2 fw-semibold"
