@@ -212,6 +212,11 @@
   outline: none;
 }
 
+.faculty-search-input::placeholder {
+  color: var(--text-dim, #94a3b8) !important;
+  opacity: 0.75 !important;
+}
+
 .faculty-select-filter {
   background-color: var(--input-bg) !important;
   color: var(--text-main) !important;
@@ -229,17 +234,104 @@
   outline: none;
 }
 
-/* Glassmorphic Modal Backdrop blur */
-.faculty-modal-backdrop {
-  background: rgba(11, 15, 25, 0.75) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
 .faculty-modal-content {
   background: var(--bg-card) !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
 }
+
+[data-theme="light"] .faculty-modal-content {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 20px 30px -5px rgba(15, 23, 42, 0.1), 0 10px 15px -3px rgba(15, 23, 42, 0.05) !important;
+}
+
+.faculty-modal-panel {
+  background-color: var(--bg-card-subtle, rgba(15, 23, 42, 0.6)) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--text-main) !important;
+  border-radius: 12px;
+}
+
+[data-theme="light"] .faculty-modal-panel {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.faculty-modal-stat-box {
+  background-color: var(--bg-card-hover, rgba(28, 40, 65, 0.95)) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  border-radius: 8px;
+}
+
+[data-theme="light"] .faculty-modal-stat-box {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.modal-label {
+  color: var(--text-dim, #94a3b8) !important;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="light"] .modal-label {
+  color: #475569 !important;
+}
+
+.modal-value {
+  color: var(--text-main, #f8fafc) !important;
+  font-weight: 700;
+}
+
+[data-theme="light"] .modal-value {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .modal-header,
+[data-theme="light"] .modal-footer {
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .btn-close {
+  filter: none !important;
+}
+
+[data-theme="dark"] .btn-close,
+.faculty-modal-content .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="light"] .faculty-modal-content .btn-close {
+  filter: none !important;
+}
+
+/* Modal Backdrop & Overlay Mode Support */
+.faculty-modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(4px);
+}
+
+[data-theme="light"] .faculty-modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+/* Form Select Option Theme Alignment */
+.faculty-select-filter option,
+.faculty-search-input option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+/* Active Table Row Theme Support */
+.faculty-table tr.table-active td {
+  background-color: var(--bg-card-hover) !important;
+  color: var(--text-main) !important;
+}
+

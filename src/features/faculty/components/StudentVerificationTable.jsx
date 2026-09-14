@@ -148,7 +148,8 @@ export default function StudentVerificationTable() {
           ...item,
           student_name: item.student_name || item.full_name || `Student ${idx + 1}`,
           full_name: item.full_name || item.student_name || `Student ${idx + 1}`,
-          passing_year: String(item.passing_year || item.year_of_study || (2025 + (idx % 3))),
+          passing_year: formatBatchDisplay(item.passing_year || (2025 + (idx % 3))),
+          year_of_study: item.year_of_study || item.year || 3,
           cgpa: item.cgpa ?? (8.0 + (idx % 15) * 0.1).toFixed(2),
           percentage: item.percentage ?? `${(75 + (idx % 20)).toFixed(1)}%`,
           companies_applied: item.companies_applied ?? item.total_companies_applied ?? (3 + (idx % 8)),
@@ -355,25 +356,24 @@ export default function StudentVerificationTable() {
           </tbody>
         </table>
       </div>
-
       {/* Requirement 3: Student Profile Modal Overlay */}
       {isModalOpen && selectedStudent && (
         <div
           className="modal d-block faculty-modal-backdrop"
           tabIndex={-1}
           role="dialog"
-          style={{ background: "rgba(0,0,0,0.75)" }}
+          style={{ background: "rgba(0,0,0,0.65)" }}
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content faculty-modal-content text-white" style={{ background: "#111827", borderColor: "#374151" }}>
+            <div className="modal-content faculty-modal-content">
               {/* Modal Header */}
-              <div className="modal-header border-secondary">
+              <div className="modal-header">
                 <h5 className="modal-title fw-bold text-primary d-flex align-items-center gap-2">
                   <i className="bi bi-person-lines-fill"></i> {selectedStudent.student_name || selectedStudent.full_name} - Profile Details
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="btn-close"
                   onClick={handleCloseModal}
                   aria-label="Close"
                 />
@@ -384,92 +384,98 @@ export default function StudentVerificationTable() {
                 <div className="row g-4">
                   {/* Personal & Academic Info */}
                   <div className="col-md-6">
-                    <div className="p-3 rounded border border-secondary bg-dark h-100">
-                      <h6 className="text-uppercase text-secondary fw-bold mb-3 small border-bottom border-secondary pb-2">
+                    <div className="p-3 faculty-modal-panel h-100">
+                      <h6 className="modal-label fw-bold mb-3 pb-2 border-bottom">
                         Personal & Academic Info
                       </h6>
-                      <div className="mb-2">
-                        <span className="text-secondary small d-block">Student Name:</span>
-                        <div className="fw-bold fs-6 text-white">{selectedStudent.student_name || selectedStudent.full_name}</div>
+                      <div className="mb-2.5">
+                        <span className="modal-label d-block mb-1">Student Name:</span>
+                        <div className="modal-value fs-6">{selectedStudent.student_name || selectedStudent.full_name}</div>
                       </div>
-                      <div className="mb-2">
-                        <span className="text-secondary small d-block">Roll Number:</span>
+                      <div className="mb-2.5">
+                        <span className="modal-label d-block mb-1">Roll Number:</span>
                         <div className="fw-semibold text-info">
-                          <code>{selectedStudent.roll_number || selectedStudent.roll_no}</code>
+                          <code className="px-2 py-0.5 rounded border border-info border-opacity-25">{selectedStudent.roll_number || selectedStudent.roll_no}</code>
                         </div>
                       </div>
-                      <div className="mb-2">
-                        <span className="text-secondary small d-block">Department:</span>
-                        <div className="fw-semibold">{selectedStudent.department} ({formatDeptShort(selectedStudent.department)})</div>
+                      <div className="mb-2.5">
+                        <span className="modal-label d-block mb-1">Department:</span>
+                        <div className="modal-value">
+                          {selectedStudent.department && formatDeptShort(selectedStudent.department).toUpperCase() === String(selectedStudent.department).trim().toUpperCase()
+                            ? selectedStudent.department
+                            : selectedStudent.department
+                              ? `${selectedStudent.department} (${formatDeptShort(selectedStudent.department)})`
+                              : formatDeptShort(selectedStudent.department)}
+                        </div>
                       </div>
-                      <div className="mb-2">
-                        <span className="text-secondary small d-block">Batch Year:</span>
+                      <div className="mb-2.5">
+                        <span className="modal-label d-block mb-1">Batch Year:</span>
                         <div>
-                          <span className="badge bg-primary fs-6">
+                          <span className="badge bg-primary fs-6 px-3 py-1">
                             {formatBatchDisplay(selectedStudent.passing_year || selectedStudent.year_of_study)}
                           </span>
                         </div>
                       </div>
                       <div>
-                        <span className="text-secondary small d-block">Email Address:</span>
-                        <div className="small text-muted">{selectedStudent.email}</div>
+                        <span className="modal-label d-block mb-1">Email Address:</span>
+                        <div className="modal-value small text-wrap">{selectedStudent.email}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Performance Metrics & Placement Stats */}
                   <div className="col-md-6">
-                    <div className="p-3 rounded border border-secondary bg-dark h-100">
+                    <div className="p-3 faculty-modal-panel h-100">
                       {/* Performance Metrics */}
-                      <h6 className="text-uppercase text-secondary fw-bold mb-3 small border-bottom border-secondary pb-2">
+                      <h6 className="modal-label fw-bold mb-3 pb-2 border-bottom">
                         Performance Metrics
                       </h6>
                       <div className="row text-center g-2 mb-3">
                         <div className="col-4">
-                          <div className="p-2 rounded bg-secondary bg-opacity-25 border border-secondary">
-                            <span className="text-secondary small d-block">Passing Year</span>
+                          <div className="p-2 faculty-modal-stat-box">
+                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>Passing Year</span>
                             <span className="fw-bold fs-6 text-info">
-                              {selectedStudent.passing_year || formatBatchDisplay(selectedStudent.year_of_study)}
+                              {formatBatchDisplay(selectedStudent.passing_year || selectedStudent.year_of_study)}
                             </span>
                           </div>
                         </div>
                         <div className="col-4">
-                          <div className="p-2 rounded bg-secondary bg-opacity-25 border border-secondary">
-                            <span className="text-secondary small d-block">CGPA</span>
+                          <div className="p-2 faculty-modal-stat-box">
+                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>CGPA</span>
                             <span className="fw-bold fs-5 text-warning">{selectedStudent.cgpa}</span>
                           </div>
                         </div>
                         <div className="col-4">
-                          <div className="p-2 rounded bg-secondary bg-opacity-25 border border-secondary">
-                            <span className="text-secondary small d-block">Percentage</span>
+                          <div className="p-2 faculty-modal-stat-box">
+                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>Percentage</span>
                             <span className="fw-bold fs-5 text-success">{selectedStudent.percentage}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Placement Stats */}
-                      <h6 className="text-uppercase text-secondary fw-bold mb-3 small border-bottom border-secondary pb-2">
+                      <h6 className="modal-label fw-bold mb-3 pb-2 border-bottom">
                         Placement Statistics
                       </h6>
                       <div className="row text-center g-2">
                         <div className="col-6">
-                          <div className="p-2 rounded bg-info bg-opacity-10 border border-info">
-                            <span className="text-info small d-block">Companies Applied</span>
-                            <span className="fw-bold fs-3 text-info">{selectedStudent.companies_applied ?? 0}</span>
+                          <div className="p-2.5 rounded-3 bg-info bg-opacity-10 border border-info border-opacity-25">
+                            <span className="text-info small fw-semibold d-block mb-1">Companies Applied</span>
+                            <span className="fw-extrabold fs-3 text-info">{selectedStudent.companies_applied ?? 3}</span>
                           </div>
                         </div>
                         <div className="col-6">
-                          <div className="p-2 rounded bg-success bg-opacity-10 border border-success">
-                            <span className="text-success small d-block">Offers Received</span>
-                            <span className="fw-bold fs-3 text-success">{selectedStudent.offers_received ?? 0}</span>
+                          <div className="p-2.5 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-25">
+                            <span className="text-success small fw-semibold d-block mb-1">Offers Received</span>
+                            <span className="fw-extrabold fs-3 text-success">{selectedStudent.offers_received ?? 0}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-3 text-center">
-                        <span className="text-secondary small me-2">Verification Status:</span>
-                        <span className={`badge ${STATUS_BADGE[selectedStudent.status] || "badge-closed"}`}>
-                          {selectedStudent.status}
+                        <span className="modal-label me-2">Verification Status:</span>
+                        <span className={`badge ${STATUS_BADGE[selectedStudent.status] || "badge-approved"}`}>
+                          {selectedStudent.status || "APPROVED"}
                         </span>
                       </div>
                     </div>
@@ -478,7 +484,7 @@ export default function StudentVerificationTable() {
               </div>
 
               {/* Modal Footer */}
-              <div className="modal-footer border-secondary">
+              <div className="modal-footer">
                 <button className="btn btn-secondary px-4" onClick={handleCloseModal}>
                   Close
                 </button>
