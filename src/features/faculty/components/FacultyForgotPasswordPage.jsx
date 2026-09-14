@@ -17,8 +17,15 @@ export default function FacultyForgotPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    const val = emailOrId.trim();
+    if (val.includes("@") && !val.toLowerCase().endsWith("@raisoni.net")) {
+      setError("Institutional email must end with @raisoni.net");
+      return;
+    }
+
+    setLoading(true);
 
     // Simulate API call for password reset request
     setTimeout(() => {
@@ -46,7 +53,7 @@ export default function FacultyForgotPasswordPage() {
                 Reset Password
               </h5>
               <p className="text-muted small text-start mb-4">
-                Enter your Employee ID or institutional email address. We'll send you a password reset link.
+                Enter your Employee ID or institutional email address (@raisoni.net). We'll send you a password reset link.
               </p>
 
               {error && <div className="alert alert-danger py-2 text-start mb-3">{error}</div>}
@@ -57,7 +64,7 @@ export default function FacultyForgotPasswordPage() {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g. EMP12345 or prof@university.edu"
+                    placeholder="e.g. EMP12345 or faculty@raisoni.net"
                     value={emailOrId}
                     onChange={(e) => setEmailOrId(e.target.value)}
                     required

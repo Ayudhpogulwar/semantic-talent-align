@@ -1,11 +1,18 @@
 from django.urls import path
 from api import views
+from api import admin_auth_views
 
 urlpatterns = [
+    # Admin Auth
+    path('admin/auth/login/', admin_auth_views.admin_login),
+    path('admin/auth/register/', admin_auth_views.admin_register),
+    path('admin/auth/reset-password/', admin_auth_views.admin_reset_password),
+
     # 14.1 Auth
     path('auth/login', views.login),
     path('auth/register', views.register),
     path('auth/reset-password', views.reset_password),
+    path('reset-password/', views.reset_password),
 
     # 14.2 Profile
     path('profile', views.profile),

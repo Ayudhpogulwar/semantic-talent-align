@@ -162,7 +162,14 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="text-center border-top border-secondary pt-3 mt-2">
+        <div className="text-center border-top border-secondary pt-3 mt-3">
+          <p className="small mb-2" style={{ color: "var(--text-muted, #94a3b8)" }}>
+            Don't have an admin account?{" "}
+            <Link to="/admin/signup" className="text-danger fw-semibold text-decoration-none">Sign Up</Link>
+          </p>
+          <p className="small mb-2" style={{ color: "var(--text-muted, #94a3b8)" }}>
+            <Link to="/admin/forgot-password" className="text-danger fw-semibold text-decoration-none">Forgot Password?</Link>
+          </p>
           <Link to="/" className="text-secondary small text-decoration-none d-inline-flex align-items-center gap-1">
             <ArrowLeft size={14} /> Return to Main Landing Page
           </Link>

@@ -29,8 +29,8 @@ def reset_password(request):
     email = request.data.get('email', '')
     new_password = request.data.get('new_password', '')
     
-    if not email.endswith("@ghrietn.raisoni.net"):
-        return Response({"detail": "Reset restricted to institutional email (@ghrietn.raisoni.net)."}, status=status.HTTP_400_BAD_REQUEST)
+    if not email.endswith("@raisoni.net"):
+        return Response({"detail": "Reset restricted to institutional email (@raisoni.net)."}, status=status.HTTP_400_BAD_REQUEST)
     
     if not new_password or len(new_password) < 4:
         return Response({"detail": "New password must be at least 4 characters."}, status=status.HTTP_400_BAD_REQUEST)
@@ -64,8 +64,8 @@ def login(request):
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    if not email.endswith("@ghrietn.raisoni.net"):
-        return Response({"detail": "Invalid institutional email. Must end with @ghrietn.raisoni.net"}, status=status.HTTP_400_BAD_REQUEST)
+    if not email.endswith("@raisoni.net"):
+        return Response({"detail": "Invalid institutional email. Must end with @raisoni.net"}, status=status.HTTP_400_BAD_REQUEST)
     
     conn = get_db()
     cursor = conn.cursor()
@@ -144,8 +144,8 @@ def register(request):
         roll_no = request.data.get('roll_no') or request.data.get('student_id', '')
         dept = request.data.get('dept') or request.data.get('department', 'Computer Science & Engineering')
 
-        if not email.endswith("@ghrietn.raisoni.net"):
-            return Response({"detail": "Registration restricted to college domain email (@ghrietn.raisoni.net)."}, status=status.HTTP_400_BAD_REQUEST)
+        if not email.endswith("@raisoni.net"):
+            return Response({"detail": "Registration restricted to college domain email (@raisoni.net)."}, status=status.HTTP_400_BAD_REQUEST)
         
         conn = get_db()
         cursor = conn.cursor()
