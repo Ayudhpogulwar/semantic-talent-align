@@ -12,6 +12,7 @@ import AIRecommendations from './components/AIRecommendations';
 import ReadinessScoreCard from './components/ReadinessScoreCard';
 import LandingIntroPage from './components/LandingIntroPage';
 import AuthModal from './components/AuthModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { apiService } from './services/api';
 
 // User's Pre-developed Faculty Module Components & Provider
@@ -275,70 +276,72 @@ function StudentDashboardApp() {
         padding: '32px 24px',
         flex: 1
       }}>
-        {activeTab === 'home' && (
-          <DashboardOverview
-            profile={profile}
-            resume={resume}
-            readiness={readiness}
-            applications={applications}
-            recommendations={recommendations}
-            setActiveTab={setActiveTab}
-          />
-        )}
+        <ErrorBoundary key={activeTab} onNavigateHome={() => setActiveTab('home')}>
+          {activeTab === 'home' && (
+            <DashboardOverview
+              profile={profile}
+              resume={resume}
+              readiness={readiness}
+              applications={applications}
+              recommendations={recommendations}
+              setActiveTab={setActiveTab}
+            />
+          )}
 
-        {activeTab === 'profile' && (
-          <ProfileModule
-            profile={profile}
-            resume={resume}
-            onUpdateProfile={handleUpdateProfile}
-            setActiveTab={setActiveTab}
-          />
-        )}
+          {activeTab === 'profile' && (
+            <ProfileModule
+              profile={profile}
+              resume={resume}
+              onUpdateProfile={handleUpdateProfile}
+              setActiveTab={setActiveTab}
+            />
+          )}
 
-        {activeTab === 'resume' && (
-          <ResumeSkillsModule
-            resume={resume}
-            skills={skills}
-            onUploadResume={handleUploadResume}
-            onAddSkill={handleAddSkill}
-            onRemoveSkill={handleRemoveSkill}
-            onDeleteResume={handleDeleteResume}
-          />
-        )}
+          {activeTab === 'resume' && (
+            <ResumeSkillsModule
+              resume={resume || {}}
+              skills={skills}
+              onUploadResume={handleUploadResume}
+              onAddSkill={handleAddSkill}
+              onRemoveSkill={handleRemoveSkill}
+              onDeleteResume={handleDeleteResume}
+            />
+          )}
 
-        {activeTab === 'opportunities' && (
-          <OpportunitiesModule
-            opportunities={opportunities}
-            applications={applications}
-            onApply={handleApplyToOpportunity}
-            resume={resume}
-            skills={skills}
-            recommendations={recommendations}
-            setActiveTab={setActiveTab}
-          />
-        )}
+          {activeTab === 'opportunities' && (
+            <OpportunitiesModule
+              opportunities={opportunities}
+              applications={applications}
+              onApply={handleApplyToOpportunity}
+              resume={resume}
+              skills={skills}
+              recommendations={recommendations}
+              setActiveTab={setActiveTab}
+            />
+          )}
 
-        {activeTab === 'tracker' && (
-          <ApplicationTracker
-            applications={applications}
-          />
-        )}
+          {activeTab === 'tracker' && (
+            <ApplicationTracker
+              applications={applications}
+            />
+          )}
 
-        {activeTab === 'recommendations' && (
-          <AIRecommendations
-            recommendations={recommendations}
-            onApply={handleApplyToOpportunity}
-            resume={resume}
-            opportunities={opportunities}
-            setActiveTab={setActiveTab}
-          />
-        )}
+          {activeTab === 'recommendations' && (
+            <AIRecommendations
+              recommendations={recommendations}
+              onApply={handleApplyToOpportunity}
+              resume={resume}
+              opportunities={opportunities}
+              setActiveTab={setActiveTab}
+            />
+          )}
 
-        {activeTab === 'readiness' && (
-          <ReadinessScoreCard
-            readiness={readiness}
-          />
-        )}
+          {activeTab === 'readiness' && (
+            <ReadinessScoreCard
+              readiness={readiness}
+            />
+          )}
+        </ErrorBoundary>
       </main>
 
       <footer style={{

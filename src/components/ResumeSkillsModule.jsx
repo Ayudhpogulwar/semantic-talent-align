@@ -10,8 +10,13 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
   const [confirmDelete, setConfirmDelete] = useState(false);
   const safeSkills = Array.isArray(skills) ? skills : [];
   const safeResume = resume || {};
+  let cachedFileUrl = null;
+  try {
+    const cached = JSON.parse(localStorage.getItem('stufac_resume') || '{}');
+    cachedFileUrl = cached?.file_url;
+  } catch (_) {}
   const effectivePdfUrl = safeResume.file_url 
-    || (JSON.parse(localStorage.getItem('stufac_resume') || '{}').file_url) 
+    || cachedFileUrl 
     || '/Ayudh_Pogulwar_AI_Intern.pdf';
   const [modalTab, setModalTab] = useState('pdf'); // 'pdf' | 'summary'
 
@@ -86,8 +91,10 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <span className="badge badge-cyan" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
-            Current Version: v{safeResume.version || 1} ({safeResume.status || 'Active'})
+          <span className={safeResume.filename ? "badge badge-cyan" : "badge"} style={{ fontSize: '0.8rem', padding: '6px 12px', background: safeResume.filename ? undefined : 'rgba(255,255,255,0.08)', color: safeResume.filename ? undefined : 'var(--text-muted)' }}>
+            {safeResume.filename 
+              ? `Current Version: v${safeResume.version || 1} (${safeResume.status || 'Active'})`
+              : 'Status: No Resume Uploaded'}
           </span>
         </div>
       </div>
@@ -244,10 +251,10 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
           )}
 
           {/* Extracted Education & Work History */}
-          {resume.parsed_data && (
+          {Array.isArray(safeResume?.parsed_data?.experience) && safeResume.parsed_data.experience.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
               <h4 style={{ fontSize: '0.88rem', color: 'var(--text-main)', fontWeight: 700 }}>Extracted Experience Highlights:</h4>
-              {resume.parsed_data.experience.map((exp, idx) => (
+              {safeResume.parsed_data.experience.map((exp, idx) => (
                 <div key={idx} style={{ fontSize: '0.82rem', padding: '10px 14px', background: 'var(--input-bg)', borderRadius: '8px', borderLeft: '3px solid var(--primary-light)', color: 'var(--text-main)', fontWeight: 500 }}>
                   {exp}
                 </div>
@@ -259,9 +266,11 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
         {/* Right Column: Skills & Interests Tagging (FR-4) */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {(() => {
+            const rawParsed = safeResume?.parsed_data?.skills;
+            const parsedCount = Array.isArray(rawParsed) ? rawParsed.length : 0;
             const displaySkillsCount = safeSkills.length > 0 
               ? safeSkills.length 
-              : (safeResume?.parsed_data?.skills || []).length;
+              : parsedCount;
             return (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -304,11 +313,13 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
           {/* Skill Tag Chips */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px', minHeight: '120px' }}>
             {(() => {
+              const rawSkills = safeResume?.parsed_data?.skills;
+              const parsedSkills = Array.isArray(rawSkills) ? rawSkills : [];
               const activeSkills = (safeSkills && safeSkills.length > 0)
                 ? safeSkills
-                : (safeResume?.parsed_data?.skills || []).map((s, idx) => ({
+                : parsedSkills.map((s, idx) => ({
                     skill_id: `parsed-${idx}`,
-                    skill_name: typeof s === 'string' ? s : s.skill_name,
+                    skill_name: typeof s === 'string' ? s : (s?.skill_name || 'Skill'),
                     category: 'Programming',
                     source: 'parsed'
                   }));
@@ -340,7 +351,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                   {skill.source === 'parsed' && <Sparkles size={12} color="var(--primary-light)" />}
                   <span>{skill.skill_name}</span>
                   <button
-                    onClick={() => onRemoveSkill(skill.skill_id)}
+                    onClick={() => onRemoveSkill && onRemoveSkill(skill.skill_id)}
                     style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     title="Remove skill"
                   >
@@ -359,7 +370,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
             borderRadius: '8px',
             border: '1px solid var(--border-color)'
           }}>
-            ℹ️ <strong style={{ color: 'var(--accent-cyan)' }}>Automated Extraction:</strong> Skills marked with <Sparkles size={11} inline /> were automatically detected from your resume. You can add or edit skills anytime.
+            ℹ️ <strong style={{ color: 'var(--accent-cyan)' }}>Automated Extraction:</strong> Skills marked with <Sparkles size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /> were automatically detected from your resume. You can add or edit skills anytime.
           </div>
         </div>
 
@@ -532,15 +543,21 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
 
                   <div>
                     {(() => {
+                      const rawParsed = safeResume?.parsed_data?.skills;
+                      const rawResumeSkills = safeResume?.skills;
                       const displaySkills = (safeSkills && safeSkills.length > 0) 
                         ? safeSkills 
-                        : (safeResume?.parsed_data?.skills || safeResume?.skills || [
-                            { skill_id: 'SK-1', skill_name: 'Python' },
-                            { skill_id: 'SK-2', skill_name: 'JavaScript' },
-                            { skill_id: 'SK-3', skill_name: 'React' },
-                            { skill_id: 'SK-4', skill_name: 'SQL' },
-                            { skill_id: 'SK-5', skill_name: 'Git' }
-                          ]);
+                        : (Array.isArray(rawParsed) && rawParsed.length > 0)
+                          ? rawParsed
+                          : (Array.isArray(rawResumeSkills) && rawResumeSkills.length > 0)
+                            ? rawResumeSkills
+                            : [
+                                { skill_id: 'SK-1', skill_name: 'Python' },
+                                { skill_id: 'SK-2', skill_name: 'JavaScript' },
+                                { skill_id: 'SK-3', skill_name: 'React' },
+                                { skill_id: 'SK-4', skill_name: 'SQL' },
+                                { skill_id: 'SK-5', skill_name: 'Git' }
+                              ];
                       return (
                         <>
                           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
@@ -549,7 +566,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {displaySkills.map((s, i) => (
                               <span key={s.skill_id || i} style={{ background: '#f1f5f9', color: '#334155', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, border: '1px solid #cbd5e1' }}>
-                                ✨ {typeof s === 'string' ? s : s.skill_name}
+                                ✨ {typeof s === 'string' ? s : (s?.skill_name || 'Skill')}
                               </span>
                             ))}
                           </div>
