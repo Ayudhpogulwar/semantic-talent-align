@@ -69,43 +69,12 @@ class RealApiService {
       const res = await fetch(`${API_BASE_URL}/profile`, { headers: this.getHeaders() });
       if (!res.ok) throw new Error("Failed to fetch profile");
       const data = await res.json();
-      if (!data.name) {
-        return {
-          student_id: "STU10234",
-          name: "Aditi Sharma",
-          email: "aditi.sharma@college.edu",
-          roll_no: "CS21B045",
-          dept: "Computer Science & Engineering",
-          year: "3rd Year",
-          cgpa: "8.8",
-          contact: "+91 9876543210",
-          linkedin: "linkedin.com/in/aditisharma",
-          github: "github.com/aditisharma",
-          bio: "Passionate CS student focusing on Data Science, ML & Fullstack Web Dev.",
-          profile_completion_pct: 85,
-          verified_by_faculty: true,
-          consent_resume_sharing: true
-        };
-      }
+      // Return whatever the server sends — even if some fields are empty
       return data;
     } catch (e) {
-      console.error(e);
-      return {
-        student_id: "STU10234",
-        name: "Aditi Sharma",
-        email: "aditi.sharma@college.edu",
-        roll_no: "CS21B045",
-        dept: "Computer Science & Engineering",
-        year: "3rd Year",
-        cgpa: "8.8",
-        contact: "+91 9876543210",
-        linkedin: "linkedin.com/in/aditisharma",
-        github: "github.com/aditisharma",
-        bio: "Passionate CS student focusing on Data Science, ML & Fullstack Web Dev.",
-        profile_completion_pct: 85,
-        verified_by_faculty: true,
-        consent_resume_sharing: true
-      };
+      console.error('getProfile error:', e);
+      // Minimal fallback with no fake names — shows empty state
+      return { name: '', email: '', dept: '', profile_completion_pct: 0 };
     }
   }
 
@@ -181,50 +150,18 @@ class RealApiService {
 
   // 14.5 Opportunities & Applications
   async getOpportunities(filters = {}) {
-    let data = [];
     try {
       let url = `${API_BASE_URL}/opportunities?`;
       if (filters.domain) url += `domain=${encodeURIComponent(filters.domain)}&`;
       if (filters.search) url += `search=${encodeURIComponent(filters.search)}&`;
       const res = await fetch(url, { headers: this.getHeaders() });
       if (res.ok) {
-        data = await res.json();
+        return await res.json();
       }
     } catch (e) {
-      console.error(e);
+      console.error("Error fetching opportunities:", e);
     }
-
-    try {
-      const stored = localStorage.getItem("stufac_opportunities");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          parsed.forEach((item) => {
-            if (
-              (item.status === "APPROVED" || item.status === "ACTIVE" || item.status === "Active" || item.status === "Approved") &&
-              !data.some((d) => String(d.id) === String(item.id) || d.title.toLowerCase() === item.title.toLowerCase())
-            ) {
-              data.unshift({
-                id: item.id,
-                title: item.title,
-                organization: item.organization_name || item.organization || "Partner Organization",
-                domain: item.opportunity_type === "NGO" ? "Environment & Community" : "Engineering & AI",
-                work_mode: item.work_mode || "Remote",
-                location: item.location || "Remote",
-                duration: item.duration_weeks ? `${item.duration_weeks} Weeks` : "6 Months",
-                deadline: item.application_deadline ? String(item.application_deadline).split("T")[0] : "2026-10-30",
-                required_skills: item.required_skills || ["Python", "JavaScript", "REST APIs"],
-                description: item.description || `${item.title} opportunity.`
-              });
-            }
-          });
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
-    return data;
+    return [];
   }
 
   async getApplications() {

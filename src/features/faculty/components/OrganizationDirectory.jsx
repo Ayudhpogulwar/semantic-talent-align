@@ -9,10 +9,10 @@ import { organizationApi } from "../api/facultyApi";
 import AddOrganizationForm from "./AddOrganizationForm";
 
 const STATUS_BADGE = {
-  PENDING: "bg-warning text-dark",
-  VERIFIED: "bg-success text-white",
-  REJECTED: "bg-danger text-white",
-  SUSPENDED: "bg-dark text-white",
+  PENDING: "badge-pill-custom badge-pending",
+  VERIFIED: "badge-pill-custom badge-verified",
+  REJECTED: "badge-pill-custom badge-rejected",
+  SUSPENDED: "badge-pill-custom badge-suspended",
 };
 
 const defaultInitialOrgs = [
@@ -216,7 +216,7 @@ export default function OrganizationDirectory() {
                 {!loading &&
                   filteredOrgs.map((org) => (
                     <tr key={org.id}>
-                      <td className="fw-semibold text-white">
+                      <td className="fw-semibold" style={{ color: "var(--text-main)" }}>
                         {org.name}
                         {org.website && (
                           <>
@@ -284,23 +284,23 @@ export default function OrganizationDirectory() {
           style={{ background: "rgba(0,0,0,0.75)" }}
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content faculty-modal-content text-white" style={{ background: "#111827", borderColor: "#374151" }}>
-              <div className="modal-header border-secondary">
+            <div className="modal-content faculty-modal-content">
+              <div className="modal-header border-bottom" style={{ borderColor: "var(--border-color)" }}>
                 <h5 className="modal-title fw-bold text-primary d-flex align-items-center gap-2">
                   <i className="bi bi-building"></i> Company / Organization Details
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="btn-close"
                   onClick={() => setSelectedOrgDetails(null)}
                   aria-label="Close"
                 />
               </div>
               <div className="modal-body py-4">
-                <div className="mb-4 p-3 rounded border border-secondary bg-dark">
+                <div className="mb-4 p-3 rounded faculty-modal-panel">
                   <div className="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
                     <div>
-                      <h4 className="fw-bold text-white mb-1">{selectedOrgDetails.name}</h4>
+                      <h4 className="fw-bold mb-1" style={{ color: "var(--text-main)" }}>{selectedOrgDetails.name}</h4>
                       <div className="text-info small fw-semibold">
                         <i className="bi bi-geo-alt-fill me-1"></i> Location: {selectedOrgDetails.location || "Nagpur, Maharashtra, India"}
                       </div>
@@ -315,7 +315,7 @@ export default function OrganizationDirectory() {
 
                   {selectedOrgDetails.website && (
                     <div className="mb-2">
-                      <span className="text-secondary small">Official Website: </span>
+                      <span className="small text-muted">Official Website: </span>
                       <a href={selectedOrgDetails.website} target="_blank" rel="noreferrer" className="text-primary text-decoration-none">
                         {selectedOrgDetails.website} ↗
                       </a>
@@ -324,33 +324,33 @@ export default function OrganizationDirectory() {
                 </div>
 
                 {/* Company Description */}
-                <div className="mb-4 p-3 rounded border border-secondary bg-dark">
-                  <h6 className="text-uppercase text-secondary fw-bold mb-2 small">Full Company Description & Overview</h6>
-                  <p className="text-light leading-relaxed mb-0" style={{ whiteSpace: "pre-line", fontSize: "0.95rem" }}>
+                <div className="mb-4 p-3 rounded faculty-modal-panel">
+                  <h6 className="text-uppercase fw-bold mb-2 small" style={{ color: "var(--primary-light, #818cf8)" }}>Full Company Description & Overview</h6>
+                  <p className="leading-relaxed mb-0" style={{ color: "var(--text-main)", whiteSpace: "pre-line", fontSize: "0.95rem" }}>
                     {selectedOrgDetails.description || selectedOrgDetails.about || "No detailed description available."}
                   </p>
                 </div>
 
                 {/* Contact Information */}
-                <div className="p-3 rounded border border-secondary bg-dark">
-                  <h6 className="text-uppercase text-secondary fw-bold mb-3 small">Contact Information</h6>
+                <div className="p-3 rounded faculty-modal-panel">
+                  <h6 className="text-uppercase fw-bold mb-3 small" style={{ color: "var(--primary-light, #818cf8)" }}>Contact Information</h6>
                   <div className="row g-3">
                     <div className="col-md-4">
-                      <span className="text-secondary small d-block">Contact Person</span>
-                      <span className="fw-semibold text-white">{selectedOrgDetails.contact_name || "N/A"}</span>
+                      <span className="small d-block text-muted">Contact Person</span>
+                      <span className="fw-semibold" style={{ color: "var(--text-main)" }}>{selectedOrgDetails.contact_name || "N/A"}</span>
                     </div>
                     <div className="col-md-4">
-                      <span className="text-secondary small d-block">Contact Email</span>
+                      <span className="small d-block text-muted">Contact Email</span>
                       <span className="fw-semibold text-info">{selectedOrgDetails.contact_email || "N/A"}</span>
                     </div>
                     <div className="col-md-4">
-                      <span className="text-secondary small d-block">Phone Number</span>
-                      <span className="fw-semibold text-white">{selectedOrgDetails.contact_phone || "N/A"}</span>
+                      <span className="small d-block text-muted">Phone Number</span>
+                      <span className="fw-semibold" style={{ color: "var(--text-main)" }}>{selectedOrgDetails.contact_phone || "N/A"}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer border-secondary">
+              <div className="modal-footer border-top" style={{ borderColor: "var(--border-color)" }}>
                 <button className="btn btn-secondary px-4" onClick={() => setSelectedOrgDetails(null)}>
                   Close
                 </button>

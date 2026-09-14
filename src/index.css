@@ -258,7 +258,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Input & Select */
-.form-control {
+.form-control,
+.form-select {
   width: 100%;
   padding: 10px 14px;
   background: var(--input-bg);
@@ -270,20 +271,39 @@ h1, h2, h3, h4, h5, h6 {
   transition: border-color 0.2s, background-color 0.2s;
 }
 
-[data-theme="light"] .form-control {
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select {
   background: #ffffff;
   color: #0f172a;
   border: 1px solid #cbd5e1;
 }
 
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
+select option {
+  background-color: #121a2b;
+  color: #f8fafc;
+}
+
+[data-theme="light"] select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.form-control::placeholder {
+  color: var(--text-dim) !important;
+  opacity: 0.75;
+}
+
 .form-control:disabled,
 .form-control[disabled],
-.form-control[readonly] {
+.form-control[readonly],
+.form-select:disabled,
+.form-select[disabled] {
   background: var(--input-bg) !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border-color) !important;
@@ -293,10 +313,21 @@ h1, h2, h3, h4, h5, h6 {
 
 [data-theme="light"] .form-control:disabled,
 [data-theme="light"] .form-control[disabled],
-[data-theme="light"] .form-control[readonly] {
+[data-theme="light"] .form-control[readonly],
+[data-theme="light"] .form-select:disabled,
+[data-theme="light"] .form-select[disabled] {
   background: #f1f5f9 !important;
   color: #334155 !important;
   border-color: #cbd5e1 !important;
+}
+
+/* Global High Contrast Text Utilities */
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.text-secondary {
+  color: var(--text-dim) !important;
 }
 
 /* Animations */

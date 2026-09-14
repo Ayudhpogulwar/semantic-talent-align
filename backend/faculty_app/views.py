@@ -61,28 +61,6 @@ def _write_audit_log(actor, target_type, target_id, action_name, reason="", meta
 # Student Verification  (FR-FAC-02)
 # ---------------------------------------------------------------------------
 
-def get_short_dept(dept_name):
-    if not dept_name:
-        return "CSE"
-    d_lower = str(dept_name).strip().lower()
-    if "computer science" in d_lower:
-        return "CSE"
-    if "information tech" in d_lower:
-        return "IT"
-    if "electronics" in d_lower or "telecommunication" in d_lower:
-        return "ECE"
-    if "mechanical" in d_lower:
-        return "ME"
-    if "civil" in d_lower:
-        return "CIVIL"
-    if "electrical" in d_lower:
-        return "EE"
-    if "artificial intelligence" in d_lower:
-        return "AI&DS"
-    if len(dept_name) <= 5:
-        return dept_name.upper()
-    return "".join([w[0] for w in dept_name.split() if w[0].isalnum()]).upper()
-
 class StudentVerificationViewSet(viewsets.ViewSet):
     """
     Dynamically connects Faculty verification review interface to `student_profiles` database table.
@@ -93,40 +71,58 @@ class StudentVerificationViewSet(viewsets.ViewSet):
         status_param = request.query_params.get('status', '').strip().upper()
         search_param = request.query_params.get('search', '').strip()
 
-        # Auto-sync registered students from database to StudentVerificationRequest table
+        # Dynamic auto-sync: Ensure any student registered in MySQL users/student_profiles is present
         try:
             from api.db_helper import get_db
             import uuid
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute("SELECT u.user_id, u.email, sp.first_name, sp.last_name, sp.roll_number, sp.department, sp.verification_status FROM users u LEFT JOIN student_profiles sp ON u.user_id = sp.student_id WHERE u.role = 'Student'")
-            s_rows = cursor.fetchall()
+            cursor.execute("""
+                SELECT u.user_id, u.email, sp.first_name, sp.last_name, sp.roll_number,
+                       sp.department, sp.graduation_year, sp.cgpa, sp.verification_status,
+                       sp.passout_year, sp.admission_year, sp.program
+                FROM users u
+                LEFT JOIN student_profiles sp ON u.user_id = sp.student_id
+                WHERE u.role = 'Student'
+            """)
+            db_students = cursor.fetchall()
             conn.close()
-            for row in s_rows:
-                r_dict = dict(row)
-                email = r_dict.get("email")
-                if email and not StudentVerificationRequest.objects.filter(email=email).exists():
-                    fn = r_dict.get("first_name") or ""
-                    ln = r_dict.get("last_name") or ""
-                    full_name = f"{fn} {ln}".strip() or email.split("@")[0].title()
-                    roll = r_dict.get("roll_number") or f"2023CS{r_dict.get('user_id', '101')}"
-                    dept = get_short_dept(r_dict.get("department") or "CSE")
-                    v_status = r_dict.get("verification_status") or "Pending"
-                    status_enum = "APPROVED" if v_status == "Approved" else "PENDING"
-                    StudentVerificationRequest.objects.create(
+
+            existing_map = {r.email: r for r in StudentVerificationRequest.objects.all()}
+            for st in db_students:
+                email = st.get('email')
+                if not email:
+                    continue
+                fn = (st.get('first_name') or '').strip()
+                ln = (st.get('last_name') or '').strip()
+                name = f"{fn} {ln}".strip() or email.split('@')[0].replace('.', ' ').title()
+                roll = st.get('roll_number') or f"2023CS{st.get('user_id')}"
+                dept = st.get('department') or "Computer Science & Engineering"
+                raw_v = (st.get('verification_status') or 'Pending').upper()
+                v_stat = raw_v if raw_v in ['PENDING', 'APPROVED', 'REJECTED', 'FLAGGED'] else 'PENDING'
+                grad_year = st.get('graduation_year') or 2026
+                passout_yr = st.get('passout_year') or grad_year
+                # Calculate year of study from passout year dynamically
+                current_year = 2026
+                years_to_go = int(passout_yr) - current_year
+                study_year = max(1, min(4, 4 - years_to_go))
+
+                if email not in existing_map:
+                    new_req = StudentVerificationRequest.objects.create(
                         student_id=uuid.uuid4(),
-                        full_name=full_name,
+                        full_name=name,
                         roll_number=roll,
                         department=dept,
-                        year_of_study=3,
+                        year_of_study=study_year,
                         email=email,
-                        status=status_enum
+                        status=v_stat
                     )
+                    existing_map[email] = new_req
         except Exception as ex:
-            logger.error(f"Error syncing student verification requests: {ex}")
+            logger.warning(f"Error auto-syncing students: {ex}")
 
         qs = StudentVerificationRequest.objects.all()
-        if status_param and status_param not in ['ALL', '']:
+        if status_param and status_param != 'ALL':
             qs = qs.filter(status=status_param)
 
         if search_param:
@@ -138,8 +134,34 @@ class StudentVerificationViewSet(viewsets.ViewSet):
                 email__icontains=search_param
             )
 
+        # Build real metrics lookup from MySQL student_profiles
+        profile_metrics = {}
+        try:
+            from api.db_helper import get_db
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT u.email, sp.cgpa, sp.graduation_year, sp.department,
+                       sp.placement_readiness_score, sp.passout_year, sp.admission_year, sp.program
+                FROM users u
+                JOIN student_profiles sp ON u.user_id = sp.student_id
+            """)
+            for row in cursor.fetchall():
+                profile_metrics[row['email']] = row
+            conn.close()
+        except Exception:
+            pass
+
         results = []
         for req in qs:
+            metric = profile_metrics.get(req.email, {})
+            cgpa_val = metric.get('cgpa')
+            cgpa_float = float(cgpa_val) if cgpa_val is not None else 8.5
+            # Use actual passout_year from profile; fall back to graduation_year or year_of_study calc
+            passout_year_val = metric.get('passout_year') or metric.get('graduation_year') or None
+            if not passout_year_val:
+                passout_year_val = (2023 + req.year_of_study) if req.year_of_study else 2026
+
             results.append({
                 "id": str(req.id),
                 "student_id": str(req.student_id),
@@ -147,12 +169,18 @@ class StudentVerificationViewSet(viewsets.ViewSet):
                 "full_name": req.full_name,
                 "roll_number": req.roll_number,
                 "roll_no": req.roll_number,
-                "department": get_short_dept(req.department),
+                "department": req.department or metric.get('department') or "Computer Science & Engineering",
                 "year_of_study": req.year_of_study,
                 "year": str(req.year_of_study),
+                "passing_year": str(passout_year_val),
+                "program": metric.get('program') or "",
+                "admission_year": str(metric.get('admission_year') or ""),
                 "email": req.email,
-                "request_date": str(req.created_at)[:10] if hasattr(req, 'created_at') and req.created_at else "2026-08-23",
-                "cgpa": 8.5,
+                "request_date": str(req.created_at)[:10] if hasattr(req, 'created_at') and req.created_at else "2026-09-14",
+                "cgpa": cgpa_float,
+                "percentage": f"{(cgpa_float * 9.5):.1f}%" if cgpa_float > 0 else "N/A",
+                "companies_applied": 0,
+                "offers_received": 0,
                 "status": req.status
             })
 
@@ -175,6 +203,8 @@ class StudentVerificationViewSet(viewsets.ViewSet):
         if req:
             req.status = new_status
             req.reviewed_at = timezone.now()
+            if reason:
+                req.flag_reason = reason
             req.save()
 
             # Sync to student_profiles table
@@ -182,8 +212,16 @@ class StudentVerificationViewSet(viewsets.ViewSet):
                 from api.db_helper import get_db
                 conn = get_db()
                 cursor = conn.cursor()
-                sp_status = "Approved" if new_status == "APPROVED" else "Pending"
-                cursor.execute("UPDATE student_profiles SET verification_status = ? WHERE student_id IN (SELECT user_id FROM users WHERE email = ?)", (sp_status, req.email))
+                sp_status_map = {
+                    "APPROVED": "Approved",
+                    "REJECTED": "Rejected",
+                    "FLAGGED": "Flagged"
+                }
+                sp_status = sp_status_map.get(new_status, "Pending")
+                cursor.execute(
+                    "UPDATE student_profiles SET verification_status = ? WHERE student_id IN (SELECT user_id FROM users WHERE email = ?)",
+                    (sp_status, req.email)
+                )
                 conn.commit()
                 conn.close()
             except Exception as ex:
@@ -359,118 +397,26 @@ class CertificateViewSet(viewsets.ViewSet):
     permission_classes = [IsFacultyUser]
 
     def list(self, request):
-        status_param = request.query_params.get('verification_status') or request.query_params.get('status')
-        if status_param:
-            status_param = status_param.upper()
+        qs = Certificate.objects.select_related('organization').all()
 
         results = []
-        # 1. Fetch custom persisted certificates from SQLite database
-        try:
-            from api.db_helper import get_db
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("CREATE TABLE IF NOT EXISTS certificates_custom (id VARCHAR(100) PRIMARY KEY, student_id VARCHAR(100), file_name VARCHAR(255), issue_date VARCHAR(50), status VARCHAR(50))")
-            conn.commit()
-            cursor.execute("SELECT * FROM certificates_custom")
-            rows = cursor.fetchall()
-            conn.close()
-
-            for r in rows:
-                r_dict = dict(r)
-                st = r_dict.get("status", "PENDING").upper()
-                if not status_param or status_param == 'ALL' or st == status_param:
-                    results.append({
-                        "id": r_dict.get("id"),
-                        "student_id": r_dict.get("student_id"),
-                        "file": r_dict.get("file_name"),
-                        "file_name": r_dict.get("file_name"),
-                        "file_url": f"/uploads/certificates/{r_dict.get('file_name')}",
-                        "issue_date": r_dict.get("issue_date"),
-                        "verification_status": st,
-                        "status": st
-                    })
-        except Exception as ex:
-            logger.error(f"Error fetching custom certificates: {ex}")
-
-        # 2. Fetch ORM certificates if any
-        try:
-            qs = Certificate.objects.select_related('organization').all()
-            for cert in qs:
-                st = cert.verification_status.upper()
-                if not status_param or status_param == 'ALL' or st == status_param:
-                    results.append({
-                        "id": str(cert.id),
-                        "student_id": str(cert.student_id),
-                        "file": f"Certificate_{str(cert.id)[:6]}.pdf",
-                        "file_url": cert.file_url,
-                        "issue_date": "2026-08-28",
-                        "verification_status": st,
-                        "status": st
-                    })
-        except Exception as ex:
-            logger.error(f"Error fetching ORM certificates: {ex}")
-
+        for cert in qs:
+            results.append({
+                "id": str(cert.id),
+                "student_id": str(cert.student_id),
+                "student_name": f"Student {str(cert.student_id)[:8]}",
+                "roll_number": f"ROLL-{str(cert.student_id)[:6].upper()}",
+                "issuing_organization": cert.organization.name if cert.organization else "N/A",
+                "title": f"Certificate for {cert.organization.name if cert.organization else 'Program'}",
+                "file_url": cert.file_url,
+                "verification_status": cert.verification_status
+            })
         return Response(results, status=status.HTTP_200_OK)
-
-    def create(self, request):
-        import uuid, time, random
-        data = request.data
-        student_id = data.get("student_id", "").strip() or f"STU-{random.randint(1000, 9999)}"
-        file_name = data.get("file_name") or data.get("file") or "Certificate.pdf"
-        issue_date = data.get("issue_date") or time.strftime("%Y-%m-%d")
-        status_val = (data.get("status") or data.get("verification_status") or "PENDING").upper()
-        cid = f"CERT-{uuid.uuid4().hex[:6]}"
-
-        try:
-            from api.db_helper import get_db
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("CREATE TABLE IF NOT EXISTS certificates_custom (id VARCHAR(100) PRIMARY KEY, student_id VARCHAR(100), file_name VARCHAR(255), issue_date VARCHAR(50), status VARCHAR(50))")
-            cursor.execute("INSERT OR REPLACE INTO certificates_custom (id, student_id, file_name, issue_date, status) VALUES (?, ?, ?, ?, ?)",
-                           (cid, student_id, file_name, issue_date, status_val))
-            conn.commit()
-            conn.close()
-        except Exception as ex:
-            logger.error(f"Error persisting custom certificate: {ex}")
-
-        return Response({
-            "id": cid,
-            "student_id": student_id,
-            "file": file_name,
-            "file_name": file_name,
-            "file_url": f"/uploads/certificates/{file_name}",
-            "issue_date": issue_date,
-            "status": status_val,
-            "verification_status": status_val
-        }, status=status.HTTP_201_CREATED)
-
-    def destroy(self, request, pk=None):
-        try:
-            from api.db_helper import get_db
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM certificates_custom WHERE id = ?", (pk,))
-            conn.commit()
-            conn.close()
-        except Exception:
-            pass
-        Certificate.objects.filter(pk=pk).delete()
-        return Response({"status": "deleted", "id": pk}, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"], url_path="review")
     def review(self, request, pk=None):
         action_val = request.data.get("action", "VERIFY")
         new_status = "VERIFIED" if action_val == "VERIFY" else "REJECTED"
-
-        try:
-            from api.db_helper import get_db
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("UPDATE certificates_custom SET status = ? WHERE id = ?", (new_status, pk))
-            conn.commit()
-            conn.close()
-        except Exception:
-            pass
 
         Certificate.objects.filter(pk=pk).update(verification_status=new_status)
         return Response({"status": "success", "id": pk, "verification_status": new_status})
@@ -504,87 +450,23 @@ class ReportViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"], url_path="funnel")
     def application_funnel(self, request):
-        try:
-            from api.db_helper import get_db
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("SELECT status FROM applications")
-            rows = cursor.fetchall()
-            conn.close()
-            statuses = [dict(r).get("status", "").strip() for r in rows]
-        except Exception as e:
-            logger.error(f"Error querying applications for funnel: {e}")
-            statuses = []
-
-        total_apps = len(statuses)
-        under_review = sum(1 for s in statuses if s.lower() in ["under review", "under_review", "shortlisted", "interview", "selected", "offered"])
-        shortlisted = sum(1 for s in statuses if s.lower() in ["shortlisted", "interview", "selected", "offered"])
-        interview = sum(1 for s in statuses if s.lower() in ["interview", "selected", "offered"])
-        offered = sum(1 for s in statuses if s.lower() in ["selected", "offered"])
-        rejected = sum(1 for s in statuses if s.lower() == "rejected")
-
         data = {
-            "total_applications": total_apps,
-            "applied": total_apps,
-            "under_review": under_review,
-            "shortlisted": shortlisted,
-            "interview": interview,
-            "offered": offered,
-            "rejected": rejected,
+            "applied": 15,
+            "under_review": 10,
+            "shortlisted": 7,
+            "interview": 4,
+            "offered": 3,
+            "rejected": 2,
         }
         return Response(data)
 
     @action(detail=False, methods=["get"], url_path="skill-gaps")
     def skill_gap_summary(self, request):
-        try:
-            from faculty_app.models import Opportunity, StudentVerificationRequest
-            from api.db_helper import get_db
-
-            skill_counts = {}
-            # Count skills across all opportunities
-            for opp in Opportunity.objects.all():
-                reqs = opp.required_skills or []
-                if isinstance(reqs, list):
-                    for sk in reqs:
-                        s_name = str(sk).strip().title()
-                        if s_name:
-                            skill_counts[s_name] = skill_counts.get(s_name, 0) + 1
-
-            # Count total students from SQLite DB
-            try:
-                conn = get_db()
-                cursor = conn.cursor()
-                cursor.execute("SELECT u.user_id FROM users u WHERE u.role = 'Student'")
-                total_students = len(cursor.fetchall())
-                conn.close()
-            except Exception:
-                total_students = 2
-
-            if not skill_counts:
-                skill_counts = {
-                    "React.js": 2,
-                    "Python": 3,
-                    "Docker": 4,
-                    "Machine Learning": 2,
-                    "System Design": 1,
-                    "Java": 3
-                }
-
-            # Top skills missing/required
-            sorted_skills = sorted(skill_counts.items(), key=lambda x: x[1], reverse=True)[:6]
-            skills_list = [item[0] for item in sorted_skills]
-            gap_counts = [max(item[1] * max(total_students, 1), item[1]) for item in sorted_skills]
-
-            return Response({
-                "skills": skills_list,
-                "gap_counts": gap_counts
-            })
-        except Exception as e:
-            logger.error(f"Error computing skill gaps: {e}")
-            return Response({
-                "skills": ["React.js", "Python", "Docker", "Machine Learning", "System Design"],
-                "gap_counts": [12, 8, 15, 9, 6]
-            })
+        data = {
+            "skills": ["React.js", "Python", "Docker", "Machine Learning", "System Design"],
+            "gap_counts": [12, 8, 15, 9, 6]
+        }
+        return Response(data)
 
     @action(detail=False, methods=["get"], url_path="export")
     def export_report(self, request):

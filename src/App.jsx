@@ -25,33 +25,8 @@ function StudentDashboardApp() {
   const [activeTab, setActiveTab] = useState('home');
 
   const [profile, setProfile] = useState(null);
-  const [resume, setResume] = useState(() => {
-    try {
-      const saved = localStorage.getItem('stufac_resume');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (!parsed.file_url) {
-          parsed.file_url = '/Ayudh_Pogulwar_AI_Intern.pdf';
-        }
-        return parsed;
-      }
-    } catch (e) {}
-    return {
-      version: 1,
-      status: "Parsed",
-      filename: "Ayudh_Pogulwar_AI_Intern.pdf",
-      file_size: "0.2 MB",
-      file_url: "/Ayudh_Pogulwar_AI_Intern.pdf",
-      upload_date: new Date().toISOString(),
-      parsed_data: {
-        skills: ["Python", "Machine Learning", "Deep Learning", "React", "SQL", "Git", "REST APIs"],
-        experience: [
-          "AI/ML Research & Project Development in Deep Learning & NLP Models",
-          "Fullstack Software Engineering with React, REST APIs & Python Backend"
-        ]
-      }
-    };
-  });
+  // Resume starts as null — only set from server data or after user uploads
+  const [resume, setResume] = useState(null);
   const [skills, setSkills] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -73,34 +48,13 @@ function StudentDashboardApp() {
       ]);
 
       setProfile(p || {});
-      let activeResume = (r && r.filename) ? r : null;
-      if (!activeResume) {
-        try {
-          const saved = localStorage.getItem('stufac_resume');
-          if (saved) activeResume = JSON.parse(saved);
-        } catch (e) {}
-      }
-      if (!activeResume) {
-        activeResume = {
-          version: 1,
-          status: "Parsed",
-          filename: "Ayudh_Pogulwar_AI_Intern.pdf",
-          file_size: "0.2 MB",
-          file_url: "/Ayudh_Pogulwar_AI_Intern.pdf",
-          upload_date: new Date().toISOString(),
-          parsed_data: {
-            skills: ["Python", "Machine Learning", "Deep Learning", "React", "SQL", "Git", "REST APIs"],
-            experience: [
-              "AI/ML Research & Project Development in Deep Learning & NLP Models",
-              "Fullstack Software Engineering with React, REST APIs & Python Backend"
-            ]
-          }
-        };
-      }
-      if (!activeResume.file_url) {
-        activeResume.file_url = "/Ayudh_Pogulwar_AI_Intern.pdf";
-      }
+      // Only accept real resume data — must have a real filename from server
+      const activeResume = (r && r.filename) ? r : null;
       setResume(activeResume);
+      // Clear any stale cached dummy resume from localStorage
+      if (!activeResume) {
+        localStorage.removeItem('stufac_resume');
+      }
 
       let activeSkills = Array.isArray(s) && s.length > 0 ? s : [];
       if (activeSkills.length === 0 && activeResume?.parsed_data?.skills?.length > 0) {
@@ -145,7 +99,10 @@ function StudentDashboardApp() {
 
   const handleLogout = () => {
     localStorage.removeItem("stufac_token");
+    localStorage.removeItem("stufac_resume");
     setIsAuthenticated(false);
+    setResume(null);
+    setProfile(null);
     setShowAuthModal(false);
   };
 
@@ -165,7 +122,7 @@ function StudentDashboardApp() {
       const res = await apiService.uploadResumeFile(file);
       const fullResume = {
         ...res,
-        filename: file?.name || res.filename || "Ayudh_Pogulwar_AI_Intern.pdf",
+        filename: file?.name || res.filename || "resume.pdf",
         file_url: res.file_url || fallbackUrl,
         file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
       };
@@ -189,6 +146,23 @@ function StudentDashboardApp() {
     } catch (err) {
       console.error("Upload resume error:", err);
     }
+  };
+
+  const handleDeleteResume = async () => {
+    try {
+      // Clear from backend if API supports it (best-effort)
+      const token = localStorage.getItem("stufac_token");
+      if (token) {
+        await fetch('http://localhost:8000/api/resume', {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).catch(() => {});
+      }
+    } catch (_) {}
+    // Always clear locally
+    setResume(null);
+    setSkills([]);
+    try { localStorage.removeItem('stufac_resume'); } catch (_) {}
   };
 
 
@@ -215,14 +189,25 @@ function StudentDashboardApp() {
   const handleApplyToOpportunity = async (oppId) => {
     try {
       const opp = opportunities.find(o => String(o.id) === String(oppId) || String(o.opportunity_id) === String(oppId));
-      await apiService.applyToOpportunity(oppId, opp);
+      const res = await apiService.applyToOpportunity(oppId, opp);
+      if (res) {
+        setApplications(prev => {
+          const list = Array.isArray(prev) ? prev : [];
+          if (list.some(a => String(a.opportunity_id) === String(oppId))) return list;
+          return [res, ...list];
+        });
+      }
       const apps = await apiService.getApplications();
-      setApplications(Array.isArray(apps) ? apps : []);
+      if (Array.isArray(apps) && apps.length > 0) {
+        setApplications(apps);
+      }
       const notifs = await apiService.getNotifications();
       setNotifications(Array.isArray(notifs) ? notifs : []);
       refreshRecsAndReadiness();
+      return res;
     } catch (err) {
       console.error("Apply error:", err);
+      throw err;
     }
   };
 
@@ -264,7 +249,7 @@ function StudentDashboardApp() {
     );
   }
 
-  if (!profile || !readiness) {
+  if (!profile) {
     return (
       <div style={{ color: '#fff', textAlign: 'center', padding: '100px', fontSize: '1.2rem' }}>
         Loading Student Dashboard...
@@ -317,6 +302,7 @@ function StudentDashboardApp() {
             onUploadResume={handleUploadResume}
             onAddSkill={handleAddSkill}
             onRemoveSkill={handleRemoveSkill}
+            onDeleteResume={handleDeleteResume}
           />
         )}
 
@@ -325,6 +311,10 @@ function StudentDashboardApp() {
             opportunities={opportunities}
             applications={applications}
             onApply={handleApplyToOpportunity}
+            resume={resume}
+            skills={skills}
+            recommendations={recommendations}
+            setActiveTab={setActiveTab}
           />
         )}
 
@@ -338,6 +328,9 @@ function StudentDashboardApp() {
           <AIRecommendations
             recommendations={recommendations}
             onApply={handleApplyToOpportunity}
+            resume={resume}
+            opportunities={opportunities}
+            setActiveTab={setActiveTab}
           />
         )}
 

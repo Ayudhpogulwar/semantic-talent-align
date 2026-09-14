@@ -67,12 +67,12 @@ export default function FacultySignUpPage() {
           {/* Logo Section */}
           <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
             <GraduationCap size={28} className="text-primary" />
-            <h3 className="mb-0 fw-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>TalentAlign</h3>
+            <h3 className="mb-0 fw-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>TalentAlign</h3>
             <span className="badge bg-primary ms-1 px-2 py-1" style={{ fontSize: "0.7rem", verticalAlign: "middle" }}>AI PORTAL</span>
           </div>
 
-          <p className="text-secondary text-center small mb-4">Semantic Opportunity Alignment System</p>
-          <h5 className="mb-3 text-white" style={{ fontFamily: "var(--font-heading)" }}>Faculty Registration</h5>
+          <p className="text-muted text-center small mb-4">Semantic Opportunity Alignment System</p>
+          <h5 className="mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>Faculty Registration</h5>
 
           {(localError || error) && (
             <div className="alert alert-danger py-2 mb-3">
@@ -200,7 +200,7 @@ export default function FacultySignUpPage() {
             </button>
 
             <div className="text-center small">
-              <span className="text-secondary">Already have an account? </span>
+              <span className="text-muted">Already have an account? </span>
               <Link to="/faculty/login" className="text-primary fw-medium text-decoration-none">Sign In</Link>
             </div>
           </form>

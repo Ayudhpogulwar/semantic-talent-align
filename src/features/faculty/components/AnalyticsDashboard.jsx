@@ -18,6 +18,22 @@ export default function AnalyticsDashboard() {
   const [rawFunnel, setRawFunnel] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
+
+  useEffect(() => {
+    const handleTheme = () => setTheme(localStorage.getItem("theme") || "dark");
+    window.addEventListener("themeChange", handleTheme);
+    window.addEventListener("storage", handleTheme);
+    return () => {
+      window.removeEventListener("themeChange", handleTheme);
+      window.removeEventListener("storage", handleTheme);
+    };
+  }, []);
+
+  const isDark = theme !== "light";
+  const axisColor = isDark ? "#94a3b8" : "#475569";
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.1)";
+  const labelColor = isDark ? "#f8fafc" : "#0f172a";
 
   useEffect(() => {
     async function load() {
@@ -94,9 +110,9 @@ export default function AnalyticsDashboard() {
           </div>
         </div>
         <div className="col-md-3">
-          <div className="card border-0 shadow-sm bg-warning text-dark p-3 rounded-3">
-            <div className="small text-dark-50 uppercase fw-bold">Shortlisted / Interview</div>
-            <div className="fs-3 fw-bold mt-1">{(rawFunnel.shortlisted ?? 0) + (rawFunnel.interview ?? 0)}</div>
+          <div className="card border-0 shadow-sm p-3 rounded-3" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#ffffff" }}>
+            <div className="small uppercase fw-bold" style={{ opacity: 0.9 }}>Shortlisted / Interview</div>
+            <div className="fs-3 fw-bold mt-1 text-white">{(rawFunnel.shortlisted ?? 0) + (rawFunnel.interview ?? 0)}</div>
           </div>
         </div>
         <div className="col-md-3">
@@ -116,9 +132,19 @@ export default function AnalyticsDashboard() {
               <p className="text-muted small">Live student progression through application evaluation stages.</p>
               <ResponsiveContainer width="100%" height={300}>
                 <FunnelChart>
-                  <Tooltip formatter={(value, name, props) => [props.payload.raw, "Applications"]} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: isDark ? "#121a2b" : "#ffffff",
+                      borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "#cbd5e1",
+                      color: isDark ? "#f8fafc" : "#0f172a",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+                    }}
+                    itemStyle={{ color: isDark ? "#f8fafc" : "#0f172a" }}
+                    formatter={(value, name, props) => [props.payload.raw, "Applications"]}
+                  />
                   <Funnel dataKey="value" data={funnelData} isAnimationActive>
-                    <LabelList position="right" dataKey="name" fill="var(--text-muted)" stroke="none" fontWeight={600} />
+                    <LabelList position="right" dataKey="name" fill={labelColor} stroke="none" fontWeight={600} />
                   </Funnel>
                 </FunnelChart>
               </ResponsiveContainer>
@@ -134,11 +160,20 @@ export default function AnalyticsDashboard() {
               <p className="text-muted small">Required skills across active opportunities vs student cohort coverage.</p>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={skillGapData} layout="vertical" margin={{ left: 24 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                  <XAxis type="number" allowDecimals={false} stroke="var(--text-muted)" />
-                  <YAxis type="category" dataKey="skill" width={110} stroke="var(--text-muted)" />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                  <XAxis type="number" allowDecimals={false} stroke={axisColor} tick={{ fill: axisColor }} />
+                  <YAxis type="category" dataKey="skill" width={110} stroke={axisColor} tick={{ fill: axisColor }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: isDark ? "#121a2b" : "#ffffff",
+                      borderColor: isDark ? "rgba(255, 255, 255, 0.15)" : "#cbd5e1",
+                      color: isDark ? "#f8fafc" : "#0f172a",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+                    }}
+                    itemStyle={{ color: isDark ? "#f8fafc" : "#0f172a" }}
+                  />
+                  <Legend wrapperStyle={{ color: axisColor }} />
                   <Bar dataKey="gapCount" name="Students Missing Skill" fill="#e0533d" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>

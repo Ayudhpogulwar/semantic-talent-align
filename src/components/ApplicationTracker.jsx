@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, Clock, FileText, AlertTriangle, ShieldCheck, Filter, ChevronRight, ExternalLink } from 'lucide-react';
+import { CheckCircle, Clock, FileText, AlertTriangle, ShieldCheck, Filter, ChevronRight, ExternalLink, Building } from 'lucide-react';
 
 export default function ApplicationTracker({ applications }) {
   const [statusFilter, setStatusFilter] = useState('All');
@@ -78,8 +78,16 @@ export default function ApplicationTracker({ applications }) {
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700 }}>ID: {app.application_id}</span>
                       {getStatusBadge(app.status)}
                     </div>
-                    <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 700 }}>{app.opportunity_title}</h3>
-                    <div style={{ fontSize: '0.88rem', color: 'var(--primary-light)', fontWeight: 600 }}>{app.organization}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700 }}>Role:</span>
+                        <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 700, margin: 0 }}>{app.opportunity_title}</h3>
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--primary-light)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
+                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700 }}>Organization:</span>
+                        <Building size={14} color="var(--accent-cyan)" /> {app.organization}
+                      </div>
+                    </div>
                   </div>
 
                   <div style={{ textAlign: 'right', fontSize: '0.78rem', color: 'var(--text-muted)' }}>

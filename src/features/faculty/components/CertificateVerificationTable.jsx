@@ -9,9 +9,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { certificateApi } from "../api/facultyApi";
 
 const STATUS_BADGE = {
-  PENDING: "bg-warning text-dark",
-  VERIFIED: "bg-success text-white",
-  REJECTED: "bg-danger text-white",
+  PENDING: "badge-pill-custom badge-pending",
+  VERIFIED: "badge-pill-custom badge-verified",
+  REJECTED: "badge-pill-custom badge-rejected",
 };
 
 const INITIAL_FORM = {
@@ -223,7 +223,7 @@ export default function CertificateVerificationTable() {
     <div>
       {/* Top Header */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="mb-0 fw-bold">Certificates</h4>
+        <h4 className="mb-0 fw-bold" style={{ color: "var(--text-main)" }}>Certificates</h4>
 
         <div className="d-flex align-items-center gap-2">
           <select

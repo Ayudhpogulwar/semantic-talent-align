@@ -86,8 +86,9 @@ client.interceptors.response.use(
 // --- Auth ---------------------------------------------------------------
 
 export const authApi = {
+  // Backend LoginSerializer expects `employee_id` (accepts username, email, or employee ID)
   login: (usernameOrEmail, password) =>
-    client.post("/faculty/auth/login/", { username_or_email: usernameOrEmail, email: usernameOrEmail, password }),
+    client.post("/faculty/auth/login/", { employee_id: usernameOrEmail, password }),
   verifyMfa: (mfaToken, otpCode) =>
     client.post("/faculty/auth/mfa/verify/", { mfa_token: mfaToken, otp_code: otpCode }),
   signup: (payload) =>

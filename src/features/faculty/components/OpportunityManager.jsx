@@ -10,12 +10,12 @@ import { opportunityApi } from "../api/facultyApi";
 import UploadOpportunityForm from "./UploadOpportunityForm";
 
 const STATUS_BADGE = {
-  DRAFT: "bg-light text-dark",
-  PENDING_APPROVAL: "bg-warning text-dark",
-  APPROVED: "bg-success",
-  REJECTED: "bg-danger",
-  CLOSED: "bg-secondary",
-  EXPIRED: "bg-dark",
+  DRAFT: "badge-pill-custom badge-closed",
+  PENDING_APPROVAL: "badge-pill-custom badge-pending",
+  APPROVED: "badge-pill-custom badge-approved",
+  REJECTED: "badge-pill-custom badge-rejected",
+  CLOSED: "badge-pill-custom badge-closed",
+  EXPIRED: "badge-pill-custom badge-expired",
 };
 
 const defaultInitialOpportunities = [];

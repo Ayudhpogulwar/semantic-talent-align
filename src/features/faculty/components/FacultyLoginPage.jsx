@@ -70,19 +70,19 @@ export default function FacultyLoginPage() {
           {/* Logo Section */}
           <Link to="/" className="d-flex align-items-center justify-content-center gap-2 mb-2 text-decoration-none" title="Go to Main Landing Page">
             <GraduationCap size={28} className="text-primary" />
-            <h3 className="mb-0 fw-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>TalentAlign</h3>
+            <h3 className="mb-0 fw-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>TalentAlign</h3>
             <span className="badge bg-primary ms-1 px-2 py-1" style={{ fontSize: "0.7rem", verticalAlign: "middle" }}>AI PORTAL</span>
           </Link>
           
-          <p className="text-secondary small mb-4">Semantic Opportunity Alignment System • Faculty Portal</p>
-          <h5 className="text-start mb-3 text-white" style={{ fontFamily: "var(--font-heading)" }}>Faculty Sign In</h5>
+          <p className="text-muted small mb-4">Semantic Opportunity Alignment System • Faculty Portal</p>
+          <h5 className="text-start mb-3" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>Faculty Sign In</h5>
 
           {error && <div className="alert alert-danger py-2 text-start mb-3" style={{ fontSize: '0.85rem' }}>{error}</div>}
 
           {!mfaPending ? (
             <form onSubmit={handleCredentialsSubmit} className="text-start">
               <div className="mb-3">
-                <label className="form-label text-secondary small">Username or Institutional Email</label>
+                <label className="form-label text-muted small">Username or Institutional Email</label>
                 <input
                   type="text"
                   className={`form-control ${validationError ? "is-invalid" : ""}`}
@@ -101,7 +101,7 @@ export default function FacultyLoginPage() {
                 )}
               </div>
               <div className="mb-3">
-                <label className="form-label text-secondary small">Password</label>
+                <label className="form-label text-muted small">Password</label>
                 <input
                   type="password"
                   className="form-control"
@@ -114,7 +114,7 @@ export default function FacultyLoginPage() {
 
               {/* Quick Fill Buttons */}
               <div className="mb-3">
-                <div className="text-secondary small mb-1" style={{ fontSize: '0.75rem' }}>Quick Demo Fill:</div>
+                <div className="text-muted small mb-1" style={{ fontSize: '0.75rem' }}>Quick Demo Fill:</div>
                 <div className="d-flex gap-2 flex-wrap">
                   <button type="button" onClick={() => fillQuickLogin('omi', 'password123')} className="btn btn-outline-primary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>omi</button>
                   <button type="button" onClick={() => fillQuickLogin('FAC101', 'password123')} className="btn btn-outline-secondary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>FAC101</button>
@@ -128,7 +128,7 @@ export default function FacultyLoginPage() {
             </form>
           ) : (
             <form onSubmit={handleMfaSubmit} className="text-start">
-              <p className="text-secondary small">Enter the 6-digit code from your authenticator app.</p>
+              <p className="text-muted small">Enter the 6-digit code from your authenticator app.</p>
               <div className="mb-3">
                 <input
                   type="text"
@@ -152,11 +152,11 @@ export default function FacultyLoginPage() {
           )}
 
           <div className="mt-3 text-center border-top border-secondary pt-3">
-            <p className="text-secondary small mb-1">
+            <p className="text-muted small mb-1">
               Don't have a faculty account? <Link to="/faculty/signup" className="text-primary text-decoration-none fw-semibold">Sign Up</Link>
             </p>
-            <p className="text-secondary small mb-0">
-              <Link to="/" className="text-secondary text-decoration-none">← Return to Main Portal</Link>
+            <p className="text-muted small mb-0">
+              <Link to="/" className="text-muted text-decoration-none">← Return to Main Portal</Link>
             </p>
           </div>
         </div>

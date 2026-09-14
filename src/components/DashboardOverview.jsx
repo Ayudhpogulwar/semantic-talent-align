@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   BrainCircuit,
   Target,
-  User
+  User,
+  Building
 } from 'lucide-react';
 
 export default function DashboardOverview({ profile, resume, readiness, applications, recommendations, setActiveTab }) {
@@ -199,9 +200,17 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
                     <span className="badge badge-primary">{opp.match_score}% Match</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{opp.domain}</span>
                   </div>
-                  <h4 style={{ fontSize: '0.98rem', color: 'var(--text-main)', fontWeight: 700 }}>{opp.title}</h4>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{opp.organization} • {opp.stipend}</div>
-                  <div style={{ fontSize: '0.74rem', color: '#34d399', marginTop: '6px', fontStyle: 'italic' }}>
+                  <div style={{ margin: '3px 0' }}>
+                    <div style={{ fontSize: '0.98rem', color: 'var(--text-main)', fontWeight: 700 }}>
+                      <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginRight: '6px' }}>Role:</span>
+                      {opp.title}
+                    </div>
+                    <div style={{ fontSize: '0.84rem', color: 'var(--primary-light)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 700, marginRight: '4px' }}>Org:</span>
+                      <Building size={13} color="var(--accent-cyan)" /> {opp.organization} • <span style={{ color: 'var(--text-muted)' }}>{opp.stipend}</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.74rem', color: '#34d399', marginTop: '4px', fontStyle: 'italic' }}>
                     "{opp.explanation}"
                   </div>
                 </div>

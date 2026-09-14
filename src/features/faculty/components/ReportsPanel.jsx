@@ -37,7 +37,7 @@ export default function ReportsPanel() {
 
   return (
     <div>
-      <h4 className="mb-3 fw-bold">Generate Placement Report</h4>
+      <h4 className="mb-3 fw-bold" style={{ color: "var(--text-main)" }}>Generate Placement Report</h4>
 
       <div className="faculty-card border-0">
         <div className="card-body p-0">

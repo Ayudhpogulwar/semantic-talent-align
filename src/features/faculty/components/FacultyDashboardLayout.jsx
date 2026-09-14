@@ -107,10 +107,12 @@ export default function FacultyDashboardLayout() {
     if (storedUserStr) {
       try {
         const u = JSON.parse(storedUserStr);
-        let name = u.first_name || u.username || "Faculty";
-        // Get just the first word (e.g., "sumit" from "sumit la")
-        name = name.split(" ")[0];
-        setUserName(`${name} Sir`);
+        // Build full name: first_name + last_name, fallback to username, then "Faculty"
+        const firstName = (u.first_name || "").trim();
+        const lastName = (u.last_name || "").trim();
+        const fullName = [firstName, lastName].filter(Boolean).join(" ");
+        const displayName = fullName || u.username || "Faculty";
+        setUserName(displayName);
         return;
       } catch (e) { /* fallback to token */ }
     }
@@ -119,9 +121,11 @@ export default function FacultyDashboardLayout() {
     if (token) {
       const decoded = decodeJwt(token);
       if (decoded) {
-        let name = decoded.first_name || decoded.username || "Faculty";
-        name = name.split(" ")[0];
-        setUserName(`${name} Sir`);
+        const firstName = (decoded.first_name || "").trim();
+        const lastName = (decoded.last_name || "").trim();
+        const fullName = [firstName, lastName].filter(Boolean).join(" ");
+        const displayName = fullName || decoded.username || "Faculty";
+        setUserName(displayName);
       }
     }
   }, []);
@@ -137,7 +141,7 @@ export default function FacultyDashboardLayout() {
       <aside className={`faculty-sidebar ${sidebarOpen ? "" : "faculty-sidebar--collapsed"}`}>
         <Link to="/" className="faculty-sidebar__brand d-flex align-items-center gap-2 px-3 py-3 text-decoration-none" title="Go to Main Landing Page">
           <GraduationCap size={24} className="text-primary" />
-          <span className="fw-bold text-white fs-5">TalentAlign</span>
+          <span className="fw-bold fs-5" style={{ color: "var(--text-main)" }}>TalentAlign</span>
           <span className="badge bg-primary ms-1" style={{ fontSize: "0.65rem" }}>Faculty</span>
         </Link>
 

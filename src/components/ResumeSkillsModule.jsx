@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { FileText, Upload, Sparkles, Plus, Trash2, CheckCircle, RefreshCw, AlertCircle, FileCode, Eye, Download, X, ExternalLink } from 'lucide-react';
 
-export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadResume, onAddSkill, onRemoveSkill }) {
+export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadResume, onAddSkill, onRemoveSkill, onDeleteResume }) {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [categoryInput, setCategoryInput] = useState('Programming');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const safeSkills = Array.isArray(skills) ? skills : [];
   const safeResume = resume || {};
   const effectivePdfUrl = safeResume.file_url 
@@ -157,7 +158,6 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
           {/* Interactive Green File Metadata Card */}
           {safeResume.filename && (
             <div 
-              onClick={() => setShowPreviewModal(true)}
               style={{
                 padding: '14px 16px',
                 borderRadius: '12px',
@@ -166,11 +166,9 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
               }}
-              title="Click to view & inspect uploaded resume"
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <CheckCircle size={22} color="#34d399" />
@@ -184,7 +182,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setShowPreviewModal(true)}
@@ -202,6 +200,44 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                 >
                   <Eye size={13} /> View
                 </button>
+                {!confirmDelete ? (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    style={{
+                      fontSize: '0.76rem',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(244, 63, 94, 0.5)',
+                      background: 'rgba(244, 63, 94, 0.08)',
+                      color: '#f87171',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Trash2 size={13} /> Delete
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', color: '#f87171' }}>Confirm?</span>
+                    <button
+                      type="button"
+                      onClick={() => { setConfirmDelete(false); onDeleteResume && onDeleteResume(); }}
+                      style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '5px', border: '1px solid #f87171', background: '#f87171', color: '#fff', cursor: 'pointer' }}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(false)}
+                      style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
                 <span className="badge badge-emerald">Parsed</span>
               </div>
             </div>

@@ -35,17 +35,17 @@ export default function FacultyForgotPasswordPage() {
           {/* Logo Section */}
           <Link to="/" className="d-flex align-items-center justify-content-center gap-2 mb-2 text-decoration-none" title="Go to Main Landing Page">
             <GraduationCap size={28} className="text-primary" />
-            <h3 className="mb-0 fw-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>TalentAlign</h3>
+            <h3 className="mb-0 fw-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>TalentAlign</h3>
           </Link>
           
-          <p className="text-secondary small mb-4">Faculty & Moderator Portal</p>
+          <p className="text-muted small mb-4">Faculty & Moderator Portal</p>
 
           {!submitted ? (
             <>
-              <h5 className="text-start mb-2 text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              <h5 className="text-start mb-2" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>
                 Reset Password
               </h5>
-              <p className="text-secondary small text-start mb-4">
+              <p className="text-muted small text-start mb-4">
                 Enter your Employee ID or institutional email address. We'll send you a password reset link.
               </p>
 
@@ -78,11 +78,11 @@ export default function FacultyForgotPasswordPage() {
               <div className="mb-3 text-success">
                 <CheckCircle2 size={48} className="mx-auto" />
               </div>
-              <h5 className="text-white mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+              <h5 className="mb-2" style={{ fontFamily: "var(--font-heading)", color: "var(--text-main)" }}>
                 Reset Link Sent
               </h5>
-              <p className="text-secondary small mb-4">
-                If an account exists for <strong className="text-light">{emailOrId}</strong>, you will receive password reset instructions shortly.
+              <p className="text-muted small mb-4">
+                If an account exists for <strong style={{ color: "var(--text-main)" }}>{emailOrId}</strong>, you will receive password reset instructions shortly.
               </p>
               <button
                 type="button"

@@ -325,6 +325,22 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
             </div>
 
             <div>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Program *</label>
+              <select name="program" className="form-control" value={formData.program || ''} onChange={handleChange}>
+                <option value="">-- Select Program --</option>
+                <option value="B.Tech">B.Tech</option>
+                <option value="B.E.">B.E.</option>
+                <option value="M.Tech">M.Tech</option>
+                <option value="MCA">MCA</option>
+                <option value="MBA">MBA</option>
+                <option value="BCA">BCA</option>
+                <option value="B.Sc">B.Sc</option>
+                <option value="M.Sc">M.Sc</option>
+                <option value="Diploma">Diploma</option>
+              </select>
+            </div>
+
+            <div>
               <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Academic Year *</label>
               <select name="year" className="form-control" value={formData.year || ''} onChange={handleChange}>
                 <option value="1st Year">1st Year</option>
@@ -333,6 +349,34 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
                 <option value="4th Year">4th Year</option>
                 <option value="Postgraduate">Postgraduate</option>
               </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Admission Year</label>
+              <input
+                type="number"
+                name="admission_year"
+                className="form-control"
+                placeholder="e.g. 2022"
+                min="2000"
+                max="2030"
+                value={formData.admission_year || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Passout / Graduation Year</label>
+              <input
+                type="number"
+                name="passout_year"
+                className="form-control"
+                placeholder="e.g. 2026"
+                min="2020"
+                max="2035"
+                value={formData.passout_year || ''}
+                onChange={handleChange}
+              />
             </div>
 
             <div>
