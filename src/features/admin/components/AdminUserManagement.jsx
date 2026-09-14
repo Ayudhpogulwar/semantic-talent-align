@@ -216,7 +216,7 @@ export default function AdminUserManagement() {
                     {u.email}
                   </td>
                   <td className="text-center text-nowrap">
-                    <span className={`badge ${u.role === "Faculty" ? "bg-info text-dark" : "bg-primary"}`}>
+                    <span className="badge px-2.5 py-1" style={u.role === "Faculty" ? { background: "rgba(6, 182, 212, 0.15)", color: "#22d3ee", border: "1px solid rgba(6, 182, 212, 0.3)" } : { background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
                       {u.role}
                     </span>
                   </td>
@@ -224,7 +224,7 @@ export default function AdminUserManagement() {
                     {u.department || "N/A"}
                   </td>
                   <td className="text-center text-nowrap">
-                    <span className={`badge ${u.status === "Active" ? "bg-success bg-opacity-15 text-success border border-success" : "bg-danger bg-opacity-15 text-danger border border-danger"}`}>
+                    <span className="badge px-2.5 py-1" style={u.status === "Active" ? { background: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.3)" } : { background: "rgba(244, 63, 94, 0.15)", color: "#fb7185", border: "1px solid rgba(244, 63, 94, 0.3)" }}>
                       {u.status}
                     </span>
                   </td>

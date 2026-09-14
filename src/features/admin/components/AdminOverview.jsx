@@ -54,7 +54,7 @@ export default function AdminOverview() {
           </p>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <span className="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fs-7 d-inline-flex align-items-center gap-1.5 fw-semibold">
+          <span className="badge px-3 py-2 fs-7 d-inline-flex align-items-center gap-2 fw-semibold rounded-pill" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
             <span className="spinner-grow spinner-grow-sm text-success" role="status" style={{ width: 8, height: 8 }} />
             System Health: {s.system_health || "Optimal (100% Uptime)"}
           </span>
@@ -80,11 +80,14 @@ export default function AdminOverview() {
                   {s.total_students?.toLocaleString() ?? "1,248"}
                 </h2>
               </div>
-              <div className="p-2.5 rounded-3 bg-primary bg-opacity-15 text-primary flex-shrink-0">
-                <GraduationCap size={24} />
+              <div
+                className="d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{ width: 44, height: 44, background: "rgba(99, 102, 241, 0.15)", border: "1px solid rgba(99, 102, 241, 0.3)", borderRadius: "12px" }}
+              >
+                <GraduationCap size={22} color="#818cf8" />
               </div>
             </div>
-            <div className="small text-success d-flex align-items-center gap-1 fw-medium">
+            <div className="small d-flex align-items-center gap-1 fw-medium" style={{ color: "#34d399" }}>
               <TrendingUp size={14} /> <span>+12.4% from last academic term</span>
             </div>
           </div>
@@ -105,11 +108,14 @@ export default function AdminOverview() {
                   {s.total_faculty?.toLocaleString() ?? "86"}
                 </h2>
               </div>
-              <div className="p-2.5 rounded-3 bg-info bg-opacity-15 text-info flex-shrink-0">
-                <Users size={24} />
+              <div
+                className="d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{ width: 44, height: 44, background: "rgba(6, 182, 212, 0.15)", border: "1px solid rgba(6, 182, 212, 0.3)", borderRadius: "12px" }}
+              >
+                <Users size={22} color="#22d3ee" />
               </div>
             </div>
-            <div className="small text-info d-flex align-items-center gap-1 fw-medium">
+            <div className="small d-flex align-items-center gap-1 fw-medium" style={{ color: "#22d3ee" }}>
               <CheckCircle size={14} /> <span>Across 6 Academic Depts</span>
             </div>
           </div>
@@ -130,11 +136,14 @@ export default function AdminOverview() {
                   {s.total_opportunities?.toLocaleString() ?? "142"}
                 </h2>
               </div>
-              <div className="p-2.5 rounded-3 bg-warning bg-opacity-15 text-warning flex-shrink-0">
-                <Briefcase size={24} />
+              <div
+                className="d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{ width: 44, height: 44, background: "rgba(245, 158, 11, 0.15)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: "12px" }}
+              >
+                <Briefcase size={22} color="#fbbf24" />
               </div>
             </div>
-            <div className="small text-warning d-flex align-items-center gap-1 fw-medium">
+            <div className="small d-flex align-items-center gap-1 fw-medium" style={{ color: "#fbbf24" }}>
               <Activity size={14} /> <span>{s.active_applications?.toLocaleString() ?? "3,410"} Total Applications</span>
             </div>
           </div>
@@ -151,18 +160,21 @@ export default function AdminOverview() {
                 <span className="text-uppercase small fw-semibold tracking-wider d-block mb-1" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
                   Overall Placement Rate
                 </span>
-                <h2 className="fw-extrabold text-success mb-0">{placementRate}%</h2>
+                <h2 className="fw-extrabold mb-0" style={{ color: "#34d399" }}>{placementRate}%</h2>
               </div>
-              <div className="p-2.5 rounded-3 bg-success bg-opacity-15 text-success flex-shrink-0">
-                <Award size={24} />
+              <div
+                className="d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{ width: 44, height: 44, background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "12px" }}
+              >
+                <Award size={22} color="#34d399" />
               </div>
             </div>
             <div className="mt-2">
               <div className="progress" style={{ height: "8px", background: "var(--input-bg)" }}>
                 <div
-                  className="progress-bar bg-success rounded-pill"
+                  className="progress-bar rounded-pill"
                   role="progressbar"
-                  style={{ width: `${placementRate}%` }}
+                  style={{ width: `${placementRate}%`, background: "linear-gradient(90deg, #10b981 0%, #34d399 100%)" }}
                   aria-valuenow={placementRate}
                   aria-valuemin="0"
                   aria-valuemax="100"
@@ -194,7 +206,7 @@ export default function AdminOverview() {
                     style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}
                   >
                     <span className="small d-block mb-1 fw-semibold" style={{ color: "var(--text-muted)" }}>Student Profiles</span>
-                    <span className="fw-extrabold fs-5 text-info">100% Synced</span>
+                    <span className="fw-extrabold fs-5" style={{ color: "#22d3ee" }}>100% Synced</span>
                   </div>
                 </div>
                 <div className="col-12 col-sm-4">
@@ -203,7 +215,7 @@ export default function AdminOverview() {
                     style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}
                   >
                     <span className="small d-block mb-1 fw-semibold" style={{ color: "var(--text-muted)" }}>Faculty Officers</span>
-                    <span className="fw-extrabold fs-5 text-success">86 Active</span>
+                    <span className="fw-extrabold fs-5" style={{ color: "#34d399" }}>86 Active</span>
                   </div>
                 </div>
                 <div className="col-12 col-sm-4">
@@ -212,7 +224,7 @@ export default function AdminOverview() {
                     style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}
                   >
                     <span className="small d-block mb-1 fw-semibold" style={{ color: "var(--text-muted)" }}>Pending Overrides</span>
-                    <span className="fw-extrabold fs-5 text-warning">{s.pending_verifications ?? 19}</span>
+                    <span className="fw-extrabold fs-5" style={{ color: "#fbbf24" }}>{s.pending_verifications ?? 19} Pending</span>
                   </div>
                 </div>
               </div>
@@ -248,35 +260,41 @@ export default function AdminOverview() {
                   style={{ background: "transparent", borderColor: "var(--border-color)", color: "var(--text-main)" }}
                 >
                   <span className="small fw-semibold" style={{ color: "var(--text-muted)" }}>RBAC Security Layer:</span>
-                  <span className="badge bg-success bg-opacity-15 text-success border border-success px-2 py-1">ACTIVE</span>
+                  <span className="badge px-3 py-1 rounded-pill" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.3)", fontSize: "0.75rem", fontWeight: 700 }}>
+                    <CheckCircle size={12} className="me-1" /> Active (Role Enforced)
+                  </span>
                 </li>
                 <li
                   className="list-group-item px-0 py-2.5 d-flex justify-content-between align-items-center border-bottom"
                   style={{ background: "transparent", borderColor: "var(--border-color)", color: "var(--text-main)" }}
                 >
                   <span className="small fw-semibold" style={{ color: "var(--text-muted)" }}>Token Refresh Interval:</span>
-                  <span className="small fw-bold" style={{ color: "var(--text-main)" }}>24 Hours</span>
+                  <span className="small fw-bold px-2.5 py-1 rounded" style={{ background: "var(--input-bg)", color: "var(--text-main)", border: "1px solid var(--border-color)" }}>24 Hours</span>
                 </li>
                 <li
                   className="list-group-item px-0 py-2.5 d-flex justify-content-between align-items-center border-bottom"
                   style={{ background: "transparent", borderColor: "var(--border-color)", color: "var(--text-main)" }}
                 >
                   <span className="small fw-semibold" style={{ color: "var(--text-muted)" }}>Domain Security Enforcement:</span>
-                  <span className="text-info small fw-bold">@raisoni.net</span>
+                  <span className="badge px-3 py-1 rounded-pill" style={{ background: "rgba(6, 182, 212, 0.15)", color: "#22d3ee", border: "1px solid rgba(6, 182, 212, 0.3)", fontSize: "0.75rem", fontWeight: 700 }}>@raisoni.net (Strict)</span>
                 </li>
                 <li
                   className="list-group-item px-0 py-2.5 d-flex justify-content-between align-items-center border-bottom"
                   style={{ background: "transparent", borderColor: "var(--border-color)", color: "var(--text-main)" }}
                 >
                   <span className="small fw-semibold" style={{ color: "var(--text-muted)" }}>Secret Key Auth:</span>
-                  <span className="badge bg-danger bg-opacity-15 text-danger border border-danger px-2 py-1">ENFORCED</span>
+                  <span className="badge px-3 py-1 rounded-pill" style={{ background: "rgba(244, 63, 94, 0.15)", color: "#fb7185", border: "1px solid rgba(244, 63, 94, 0.3)", fontSize: "0.75rem", fontWeight: 700 }}>
+                    <ShieldAlert size={12} className="me-1" /> Enforced
+                  </span>
                 </li>
                 <li
                   className="list-group-item px-0 py-2.5 d-flex justify-content-between align-items-center border-0"
                   style={{ background: "transparent", color: "var(--text-main)" }}
                 >
                   <span className="small fw-semibold" style={{ color: "var(--text-muted)" }}>Super Admin Scope:</span>
-                  <span className="badge bg-primary bg-opacity-15 text-primary border border-primary px-2 py-1">FULL SYSTEM OVERRIDE</span>
+                  <span className="badge px-3 py-1 rounded-pill" style={{ background: "rgba(99, 102, 241, 0.15)", color: "#818cf8", border: "1px solid rgba(99, 102, 241, 0.3)", fontSize: "0.75rem", fontWeight: 700 }}>
+                    Full System Override
+                  </span>
                 </li>
               </ul>
             </div>

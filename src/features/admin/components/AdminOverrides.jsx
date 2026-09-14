@@ -56,7 +56,7 @@ export default function AdminOverrides() {
             Bypass Faculty / Moderator decisions & enforce administrative overrides
           </p>
         </div>
-        <span className="badge bg-warning bg-opacity-15 text-warning border border-warning px-3 py-2 fw-semibold">
+        <span className="badge px-3 py-2 fw-semibold" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: "20px" }}>
           <ShieldAlert size={14} className="me-1" /> Super Admin Special Powers Active
         </span>
       </div>
@@ -106,7 +106,7 @@ export default function AdminOverrides() {
                       <strong style={{ color: "var(--text-main)" }}>{item.target_name}</strong>
                       <span className="small ms-2" style={{ color: "var(--text-muted)" }}>({item.target_id})</span>
                     </div>
-                    <span className="badge bg-warning bg-opacity-15 text-warning border border-warning">
+                    <span className="badge px-2.5 py-1" style={{ background: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
                       {item.current_status}
                     </span>
                   </div>

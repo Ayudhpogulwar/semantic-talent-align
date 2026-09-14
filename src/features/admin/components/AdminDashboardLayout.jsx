@@ -57,7 +57,7 @@ export default function AdminDashboardLayout() {
               TalentAlign <span className="text-primary fs-6">SUPER ADMIN</span>
             </h4>
           </div>
-          <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2.5 py-1.5 small fw-bold">
+          <span className="badge px-3 py-1.5 small fw-bold" style={{ background: "rgba(244, 63, 94, 0.15)", color: "#fb7185", border: "1px solid rgba(244, 63, 94, 0.35)", borderRadius: "20px" }}>
             TIER 3 ACCESS
           </span>
         </div>

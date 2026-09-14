@@ -79,8 +79,17 @@ export default function AdminLogin() {
     <div className="d-flex align-items-center justify-content-center min-vh-100 py-5" style={{ background: "var(--bg-dark, #0b0f19)" }}>
       <div className="glass-panel p-4" style={{ maxWidth: 440, width: "100%", borderRadius: "16px", boxShadow: "0 20px 50px rgba(0,0,0,0.6)" }}>
         <div className="text-center mb-4">
-          <div className="p-3 bg-danger bg-opacity-25 border border-danger rounded-circle d-inline-flex mb-2">
-            <ShieldCheck size={36} className="text-danger" />
+          <div
+            className="p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+            style={{
+              width: 68,
+              height: 68,
+              background: "rgba(244, 63, 94, 0.15)",
+              border: "1px solid rgba(244, 63, 94, 0.35)",
+              boxShadow: "0 0 20px rgba(244, 63, 94, 0.2)"
+            }}
+          >
+            <ShieldCheck size={34} color="#f43f5e" />
           </div>
           <h3 className="fw-bold text-white mb-1">Super Admin Login</h3>
           <p className="text-secondary small mb-0">SAIOTAF Framework • Platform Command Center</p>
@@ -129,7 +138,7 @@ export default function AdminLogin() {
           <div className="mb-4">
             <label className="form-label text-secondary small fw-semibold d-flex align-items-center justify-content-between">
               <span>Secret Access Key</span>
-              <span className="badge bg-danger bg-opacity-25 text-danger border border-danger px-2" style={{ fontSize: "0.7rem" }}>8 Chars Required</span>
+              <span className="badge px-2.5 py-1 fw-bold rounded-pill" style={{ background: "rgba(244, 63, 94, 0.15)", color: "#fb7185", border: "1px solid rgba(244, 63, 94, 0.35)", fontSize: "0.7rem" }}>8 Chars Required</span>
             </label>
             <div className="position-relative">
               <input

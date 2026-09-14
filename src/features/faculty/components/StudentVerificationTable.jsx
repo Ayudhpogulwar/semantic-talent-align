@@ -148,7 +148,8 @@ export default function StudentVerificationTable() {
           ...item,
           student_name: item.student_name || item.full_name || `Student ${idx + 1}`,
           full_name: item.full_name || item.student_name || `Student ${idx + 1}`,
-          passing_year: String(item.passing_year || item.year_of_study || (2025 + (idx % 3))),
+          passing_year: formatBatchDisplay(item.passing_year || (2025 + (idx % 3))),
+          year_of_study: item.year_of_study || item.year || 3,
           cgpa: item.cgpa ?? (8.0 + (idx % 15) * 0.1).toFixed(2),
           percentage: item.percentage ?? `${(75 + (idx % 20)).toFixed(1)}%`,
           companies_applied: item.companies_applied ?? item.total_companies_applied ?? (3 + (idx % 8)),
@@ -399,7 +400,13 @@ export default function StudentVerificationTable() {
                       </div>
                       <div className="mb-2.5">
                         <span className="modal-label d-block mb-1">Department:</span>
-                        <div className="modal-value">{selectedStudent.department} ({formatDeptShort(selectedStudent.department)})</div>
+                        <div className="modal-value">
+                          {selectedStudent.department && formatDeptShort(selectedStudent.department).toUpperCase() === String(selectedStudent.department).trim().toUpperCase()
+                            ? selectedStudent.department
+                            : selectedStudent.department
+                              ? `${selectedStudent.department} (${formatDeptShort(selectedStudent.department)})`
+                              : formatDeptShort(selectedStudent.department)}
+                        </div>
                       </div>
                       <div className="mb-2.5">
                         <span className="modal-label d-block mb-1">Batch Year:</span>
@@ -428,7 +435,7 @@ export default function StudentVerificationTable() {
                           <div className="p-2 faculty-modal-stat-box">
                             <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>Passing Year</span>
                             <span className="fw-bold fs-6 text-info">
-                              {selectedStudent.passing_year || formatBatchDisplay(selectedStudent.year_of_study)}
+                              {formatBatchDisplay(selectedStudent.passing_year || selectedStudent.year_of_study)}
                             </span>
                           </div>
                         </div>

@@ -212,6 +212,11 @@
   outline: none;
 }
 
+.faculty-search-input::placeholder {
+  color: var(--text-dim, #94a3b8) !important;
+  opacity: 0.75 !important;
+}
+
 .faculty-select-filter {
   background-color: var(--input-bg) !important;
   color: var(--text-main) !important;
