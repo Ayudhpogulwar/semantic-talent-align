@@ -358,6 +358,7 @@ function StudentDashboardApp() {
 // Super Admin Module Components
 import AdminRoutes from './features/admin/routes/AdminRoutes';
 import AdminLogin from './components/AdminLogin';
+import StudentForgotPasswordPage from './features/student/components/StudentForgotPasswordPage';
 
 export default function App() {
   return (
@@ -366,6 +367,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<StudentDashboardApp />} />
           <Route path="/student/*" element={<StudentDashboardApp />} />
+          <Route path="/forgot-password" element={<StudentForgotPasswordPage />} />
           <Route path="/faculty/*" element={<FacultyRoutes />} />
           <Route path="/login/admin" element={<AdminLogin />} />
           <Route path="/admin/*" element={<AdminRoutes />} />

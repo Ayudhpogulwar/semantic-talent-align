@@ -19,39 +19,7 @@
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06) !important;
 }
 
-/* Global Faculty Text & Label Visibility in Light and Dark Themes */
-.faculty-shell .text-muted,
-.faculty-modal-content .text-muted,
-.faculty-card .text-muted,
-.faculty-table-container .text-muted {
-  color: var(--text-muted) !important;
-}
-
-.faculty-shell .text-secondary,
-.faculty-modal-content .text-secondary,
-.faculty-card .text-secondary {
-  color: var(--text-dim) !important;
-}
-
-[data-theme="light"] .faculty-shell .text-muted,
-[data-theme="light"] .faculty-modal-content .text-muted,
-[data-theme="light"] .faculty-card .text-muted,
-[data-theme="light"] .faculty-table-container .text-muted {
-  color: var(--text-muted) !important;
-}
-
-[data-theme="light"] .faculty-shell .text-secondary,
-[data-theme="light"] .faculty-modal-content .text-secondary,
-[data-theme="light"] .faculty-card .text-secondary {
-  color: var(--text-dim) !important;
-}
-
-.faculty-shell label,
-.faculty-modal-content label {
-  color: var(--text-muted);
-}
-
-/* Modern Pill Badges - Vibrant & Clear in Both Themes */
+/* Modern Pill Badges - Vibrant & Clear */
 .badge-pill-custom {
   font-weight: 700 !important;
   font-size: 0.75rem;
@@ -65,9 +33,9 @@
 }
 
 .badge-pending {
-  background-color: rgba(245, 158, 11, 0.18) !important;
-  color: #fbbf24 !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
 }
 [data-theme="light"] .badge-pending {
   background-color: #fef3c7 !important;
@@ -76,9 +44,9 @@
 }
 
 .badge-approved, .badge-verified {
-  background-color: rgba(16, 185, 129, 0.18) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
 }
 [data-theme="light"] .badge-approved, [data-theme="light"] .badge-verified {
   background-color: #dcfce7 !important;
@@ -87,9 +55,9 @@
 }
 
 .badge-rejected {
-  background-color: rgba(244, 63, 94, 0.18) !important;
-  color: #fb7185 !important;
-  border: 1px solid rgba(244, 63, 94, 0.4) !important;
+  background-color: rgba(244, 63, 94, 0.15) !important;
+  color: #f43f5e !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
 }
 [data-theme="light"] .badge-rejected {
   background-color: #fee2e2 !important;
@@ -98,9 +66,9 @@
 }
 
 .badge-flagged, .badge-suspended {
-  background-color: rgba(249, 115, 22, 0.18) !important;
-  color: #fb923c !important;
-  border: 1px solid rgba(249, 115, 22, 0.4) !important;
+  background-color: rgba(249, 115, 22, 0.15) !important;
+  color: #f97316 !important;
+  border: 1px solid rgba(249, 115, 22, 0.35) !important;
 }
 [data-theme="light"] .badge-flagged, [data-theme="light"] .badge-suspended {
   background-color: #ffedd5 !important;
@@ -111,55 +79,6 @@
 .badge-closed, .badge-expired {
   background-color: rgba(148, 163, 184, 0.15) !important;
   color: var(--text-dim) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-/* Fallback Overrides for Bootstrap Badges inside Faculty Shell */
-.faculty-shell .badge.bg-warning,
-.faculty-shell .badge.bg-warning.text-dark,
-.faculty-table .badge.bg-warning,
-.faculty-table .badge.bg-warning.text-dark {
-  background-color: rgba(245, 158, 11, 0.22) !important;
-  color: #fbbf24 !important;
-  border: 1px solid rgba(245, 158, 11, 0.45) !important;
-}
-[data-theme="light"] .faculty-shell .badge.bg-warning,
-[data-theme="light"] .faculty-shell .badge.bg-warning.text-dark,
-[data-theme="light"] .faculty-table .badge.bg-warning,
-[data-theme="light"] .faculty-table .badge.bg-warning.text-dark {
-  background-color: #fef3c7 !important;
-  color: #b45309 !important;
-  border: 1px solid #fde68a !important;
-}
-
-.faculty-shell .badge.bg-light,
-.faculty-shell .badge.bg-light.text-dark,
-.faculty-table .badge.bg-light,
-.faculty-table .badge.bg-light.text-dark {
-  background-color: rgba(148, 163, 184, 0.15) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--border-color) !important;
-}
-[data-theme="light"] .faculty-shell .badge.bg-light,
-[data-theme="light"] .faculty-shell .badge.bg-light.text-dark,
-[data-theme="light"] .faculty-table .badge.bg-light,
-[data-theme="light"] .faculty-table .badge.bg-light.text-dark {
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
-  border: 1px solid #cbd5e1 !important;
-}
-
-.faculty-shell .badge.bg-secondary,
-.faculty-table .badge.bg-secondary {
-  background-color: rgba(148, 163, 184, 0.2) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.faculty-shell .badge.bg-dark,
-.faculty-table .badge.bg-dark {
-  background-color: rgba(15, 23, 42, 0.6) !important;
-  color: var(--text-muted) !important;
   border: 1px solid var(--border-color) !important;
 }
 
@@ -219,22 +138,12 @@
   background-color: var(--bg-card-hover) !important;
 }
 
-/* Code Pills in Faculty Tables and Modals */
-.faculty-shell code,
-.faculty-table code,
-.faculty-modal-content code {
-  background-color: var(--input-bg) !important;
-  color: var(--accent-cyan, #06b6d4) !important;
-  border: 1px solid var(--border-color) !important;
-  font-family: monospace;
+.faculty-table .text-dark {
+  color: var(--text-main) !important;
 }
 
-[data-theme="light"] .faculty-shell code,
-[data-theme="light"] .faculty-table code,
-[data-theme="light"] .faculty-modal-content code {
-  background-color: #f1f5f9 !important;
-  color: #0284c7 !important;
-  border-color: #cbd5e1 !important;
+.faculty-table .text-muted {
+  color: var(--text-muted) !important;
 }
 
 .faculty-table tr:last-child td {
@@ -274,16 +183,6 @@
   background-color: #f43f5e !important;
 }
 
-.btn-action-custom.btn-outline-info {
-  color: var(--accent-cyan, #06b6d4) !important;
-  border-color: var(--accent-cyan, #06b6d4) !important;
-  background-color: rgba(6, 182, 212, 0.1) !important;
-}
-.btn-action-custom.btn-outline-info:hover:not(:disabled) {
-  color: #ffffff !important;
-  background-color: var(--accent-cyan, #06b6d4) !important;
-}
-
 .btn-action-custom.btn-outline-secondary,
 .btn-action-custom.btn-outline-dark {
   color: var(--text-muted) !important;
@@ -296,7 +195,7 @@
   background-color: var(--bg-card-hover) !important;
 }
 
-/* Modern Form Controls & Select Options */
+/* Modern Form Controls */
 .faculty-search-input {
   background-color: var(--input-bg) !important;
   color: var(--text-main) !important;
@@ -307,19 +206,18 @@
   transition: all 0.2s;
 }
 
-.faculty-search-input::placeholder {
-  color: var(--text-dim) !important;
-  opacity: 0.75;
-}
-
 .faculty-search-input:focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
   outline: none;
 }
 
-.faculty-select-filter,
-.faculty-shell select.form-select {
+.faculty-search-input::placeholder {
+  color: var(--text-dim, #94a3b8) !important;
+  opacity: 0.75 !important;
+}
+
+.faculty-select-filter {
   background-color: var(--input-bg) !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border-color) !important;
@@ -330,52 +228,110 @@
   transition: all 0.2s;
 }
 
-.faculty-select-filter:focus,
-.faculty-shell select.form-select:focus {
+.faculty-select-filter:focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
   outline: none;
-}
-
-/* Ensure Native Option Dropdowns are Clear and High Contrast in Both Themes */
-.faculty-select-filter option,
-.faculty-shell select option,
-.form-select option {
-  background-color: #121a2b !important;
-  color: #f8fafc !important;
-}
-
-[data-theme="light"] .faculty-select-filter option,
-[data-theme="light"] .faculty-shell select option,
-[data-theme="light"] .form-select option {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-}
-
-/* Glassmorphic Modal Backdrop & Content */
-.faculty-modal-backdrop {
-  background: rgba(11, 15, 25, 0.75) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .faculty-modal-content {
   background: var(--bg-card) !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border-color) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Themed modal sub-panels */
+[data-theme="light"] .faculty-modal-content {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 20px 30px -5px rgba(15, 23, 42, 0.1), 0 10px 15px -3px rgba(15, 23, 42, 0.05) !important;
+}
+
 .faculty-modal-panel {
-  background: var(--bg-card-subtle) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: 10px;
+  background-color: var(--bg-card-subtle, rgba(15, 23, 42, 0.6)) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)) !important;
   color: var(--text-main) !important;
+  border-radius: 12px;
 }
 
 [data-theme="light"] .faculty-modal-panel {
-  background: #f8fafc !important;
-  border: 1px solid #cbd5e1 !important;
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
+
+.faculty-modal-stat-box {
+  background-color: var(--bg-card-hover, rgba(28, 40, 65, 0.95)) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+  border-radius: 8px;
+}
+
+[data-theme="light"] .faculty-modal-stat-box {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.modal-label {
+  color: var(--text-dim, #94a3b8) !important;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="light"] .modal-label {
+  color: #475569 !important;
+}
+
+.modal-value {
+  color: var(--text-main, #f8fafc) !important;
+  font-weight: 700;
+}
+
+[data-theme="light"] .modal-value {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .modal-header,
+[data-theme="light"] .modal-footer {
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .btn-close {
+  filter: none !important;
+}
+
+[data-theme="dark"] .btn-close,
+.faculty-modal-content .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="light"] .faculty-modal-content .btn-close {
+  filter: none !important;
+}
+
+/* Modal Backdrop & Overlay Mode Support */
+.faculty-modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(4px);
+}
+
+[data-theme="light"] .faculty-modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+/* Form Select Option Theme Alignment */
+.faculty-select-filter option,
+.faculty-search-input option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+/* Active Table Row Theme Support */
+.faculty-table tr.table-active td {
+  background-color: var(--bg-card-hover) !important;
+  color: var(--text-main) !important;
+}
+

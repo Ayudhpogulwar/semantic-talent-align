@@ -10,12 +10,16 @@ import AdminOverview from "../components/AdminOverview";
 import AdminUserManagement from "../components/AdminUserManagement";
 import AdminOverrides from "../components/AdminOverrides";
 import AdminLoginPage from "../components/AdminLoginPage";
+import AdminSignUpPage from "../components/AdminSignUpPage";
+import AdminForgotPasswordPage from "../components/AdminForgotPasswordPage";
 import RequireAdminAuth from "../components/RequireAdminAuth";
 
 export default function AdminRoutes() {
   return (
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />
+      <Route path="signup" element={<AdminSignUpPage />} />
+      <Route path="forgot-password" element={<AdminForgotPasswordPage />} />
 
       <Route
         element={

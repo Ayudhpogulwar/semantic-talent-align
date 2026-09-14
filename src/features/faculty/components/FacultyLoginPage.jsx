@@ -155,6 +155,9 @@ export default function FacultyLoginPage() {
             <p className="text-muted small mb-1">
               Don't have a faculty account? <Link to="/faculty/signup" className="text-primary text-decoration-none fw-semibold">Sign Up</Link>
             </p>
+            <p className="text-muted small mb-1">
+              <Link to="/faculty/forgot-password" className="text-primary text-decoration-none fw-semibold">Forgot Password?</Link>
+            </p>
             <p className="text-muted small mb-0">
               <Link to="/" className="text-muted text-decoration-none">← Return to Main Portal</Link>
             </p>

@@ -281,7 +281,7 @@ export default function OrganizationDirectory() {
           className="modal d-block faculty-modal-backdrop"
           tabIndex={-1}
           role="dialog"
-          style={{ background: "rgba(0,0,0,0.75)" }}
+          style={{ background: "rgba(0,0,0,0.65)" }}
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content faculty-modal-content">
@@ -325,7 +325,7 @@ export default function OrganizationDirectory() {
 
                 {/* Company Description */}
                 <div className="mb-4 p-3 rounded faculty-modal-panel">
-                  <h6 className="text-uppercase fw-bold mb-2 small" style={{ color: "var(--primary-light, #818cf8)" }}>Full Company Description & Overview</h6>
+                  <h6 className="text-uppercase fw-bold mb-2 small" style={{ color: "var(--primary-light, #818cf8)" }}>Full Company Description &amp; Overview</h6>
                   <p className="leading-relaxed mb-0" style={{ color: "var(--text-main)", whiteSpace: "pre-line", fontSize: "0.95rem" }}>
                     {selectedOrgDetails.description || selectedOrgDetails.about || "No detailed description available."}
                   </p>
@@ -362,4 +362,3 @@ export default function OrganizationDirectory() {
     </div>
   );
 }
-

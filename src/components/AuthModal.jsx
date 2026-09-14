@@ -23,12 +23,12 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
     try {
       if (isRegister) {
         if (!isValidDomain(email)) {
-          throw new Error('Institutional email validation failed! Must be a valid college domain email (e.g. @ghrietn.raisoni.net).');
+          throw new Error('Institutional email validation failed! Must be a valid @raisoni.net email.');
         }
         await onLoginSuccess({ type: 'register', data: { name, email, password, roll_no: rollNo } });
       } else {
         if (!isValidDomain(email)) {
-          throw new Error('Please login using your verified institutional student email (e.g. @ghrietn.raisoni.net).');
+          throw new Error('Please login using your verified institutional student email (@raisoni.net).');
         }
         await onLoginSuccess({ type: 'login', email, password });
       }
@@ -192,13 +192,13 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
 
           <div>
             <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-              Institutional Email (@ghrietn.raisoni.net)
+              Institutional Email (@raisoni.net)
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 type="email"
                 className="form-control"
-                placeholder="student@ghrietn.raisoni.net"
+                placeholder="student@raisoni.net"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -236,7 +236,12 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
         </form>
 
         <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-          🔒 Restricted to verified institutional students with `@ghrietn.raisoni.net` domain.
+          🔒 Restricted to verified institutional students with <code>@raisoni.net</code> domain.
+          {!isRegister && (
+            <div style={{ marginTop: '8px' }}>
+              <a href="/forgot-password" style={{ color: 'var(--primary)', fontSize: '0.75rem', textDecoration: 'none' }}>Forgot Password?</a>
+            </div>
+          )}
         </div>
       </div>
     </div>

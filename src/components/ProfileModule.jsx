@@ -1,4 +1,71 @@
 import React, { useState } from 'react';
+
+function convertCanvasToPdfBlob(canvas) {
+  const jpegUrl = canvas.toDataURL('image/jpeg', 0.95);
+  const base64Str = jpegUrl.split(',')[1];
+  const binaryStr = window.atob(base64Str);
+  const imgLen = binaryStr.length;
+
+  const imgBytes = new Uint8Array(imgLen);
+  for (let i = 0; i < imgLen; i++) {
+    imgBytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const w = 842;
+  const h = 595;
+
+  const encoder = new TextEncoder();
+  const header = encoder.encode('%PDF-1.4\n');
+  const body1 = encoder.encode(`1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`);
+  const body2 = encoder.encode(`2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`);
+  const body3 = encoder.encode(`3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /XObject << /Im1 4 0 R >> >> /MediaBox [0 0 ${w} ${h}] /Contents 5 0 R >>\nendobj\n`);
+  const body4Head = encoder.encode(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgLen} >>\nstream\n`);
+  const body4Tail = encoder.encode(`\nendstream\nendobj\n`);
+  const contentStreamStr = `q ${w} 0 0 ${h} 0 0 cm /Im1 Do Q`;
+  const body5 = encoder.encode(`5 0 obj\n<< /Length ${contentStreamStr.length} >>\nstream\n${contentStreamStr}\nendstream\nendobj\n`);
+
+  const offsets = [];
+  let currentOffset = header.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body1.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body2.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body3.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body4Head.length + imgBytes.length + body4Tail.length;
+
+  offsets.push(currentOffset);
+  currentOffset += body5.length;
+
+  const xrefStart = currentOffset;
+  let xrefStr = `xref\n0 6\n0000000000 65535 f \n`;
+  for (const off of offsets) {
+    xrefStr += String(off).padStart(10, '0') + ` 00000 n \n`;
+  }
+  xrefStr += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  const xrefBuf = encoder.encode(xrefStr);
+
+  const totalLength = currentOffset + xrefBuf.length;
+  const pdfBytes = new Uint8Array(totalLength);
+
+  let pos = 0;
+  pdfBytes.set(header, pos); pos += header.length;
+  pdfBytes.set(body1, pos); pos += body1.length;
+  pdfBytes.set(body2, pos); pos += body2.length;
+  pdfBytes.set(body3, pos); pos += body3.length;
+  pdfBytes.set(body4Head, pos); pos += body4Head.length;
+  pdfBytes.set(imgBytes, pos); pos += imgBytes.length;
+  pdfBytes.set(body4Tail, pos); pos += body4Tail.length;
+  pdfBytes.set(body5, pos); pos += body5.length;
+  pdfBytes.set(xrefBuf, pos);
+
+  return new Blob([pdfBytes], { type: 'application/pdf' });
+}
 import { User, Mail, Hash, BookOpen, Calendar, Award, Phone, Globe, Code, Save, ShieldCheck, Check } from 'lucide-react';
 
 export default function ProfileModule({ profile, onUpdateProfile }) {
@@ -84,16 +151,37 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     setShowUploadModal(false);
   };
 
-  const handleDownloadCert = (cert) => {
+  const handleDownloadCert = async (cert) => {
     const fileName = cert.file || cert.file_name || 'Academic_Certificate.pdf';
+    
     if (cert.file_url && cert.file_url !== '#' && cert.file_url !== '') {
-      const a = document.createElement('a');
-      a.href = cert.file_url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return;
+      try {
+        if (cert.file_url.startsWith('blob:')) {
+          const resp = await fetch(cert.file_url);
+          if (!resp.ok) throw new Error("Blob expired or inaccessible");
+          const blob = await resp.blob();
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+          return;
+        } else {
+          const a = document.createElement('a');
+          a.href = cert.file_url;
+          a.download = fileName;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          return;
+        }
+      } catch (err) {
+        console.warn("Direct file URL download failed, falling back to canvas generation:", err);
+      }
     }
 
     const studentId = cert.student_id || formData.roll_no || 'GH23412';
@@ -105,6 +193,7 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     const dept = cert.department || 'Technical Certification Department';
     const duration = cert.duration || 'professional course';
     const issueDate = cert.issue_date || '2026-08-31';
+    const status = (cert.verification_status || cert.status || 'PENDING').toUpperCase();
 
     const canvas = document.createElement('canvas');
     canvas.width = 1600;
@@ -170,7 +259,11 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(300, 470, 1000, 90, 16);
+    if (ctx.roundRect) {
+      ctx.roundRect(300, 470, 1000, 90, 16);
+    } else {
+      ctx.rect(300, 470, 1000, 90);
+    }
     ctx.fill(); ctx.stroke();
 
     ctx.fillStyle = '#4338ca';
@@ -182,9 +275,13 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     ctx.font = '20px "Helvetica Neue", sans-serif';
     ctx.fillText(`Issue Date: ${issueDate}   |   Verification ID: ${cert.id || 'CERT-2e84bb'}`, 800, 620);
 
-    ctx.fillStyle = status === 'VERIFIED' ? '#059669' : '#d97706';
+    ctx.fillStyle = status === 'VERIFIED' ? '#059669' : (status === 'REJECTED' ? '#dc2626' : '#d97706');
     ctx.beginPath();
-    ctx.roundRect(620, 660, 360, 50, 25);
+    if (ctx.roundRect) {
+      ctx.roundRect(620, 660, 360, 50, 25);
+    } else {
+      ctx.rect(620, 660, 360, 50);
+    }
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
@@ -228,14 +325,25 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     ctx.font = '15px sans-serif';
     ctx.fillText('Dean of Academic Affairs', 1200, 985);
 
-    const titleText = courseTitle.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
-    const image = canvas.toDataURL('image/png', 1.0);
-    const a = document.createElement('a');
-    a.href = image;
-    a.download = `${formattedName.replace(/[^a-zA-Z0-9]/g, '_')}_${titleText.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if (fileName.toLowerCase().endsWith('.pdf')) {
+      const pdfBlob = convertCanvasToPdfBlob(canvas);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 2000);
+    } else {
+      const image = canvas.toDataURL('image/png', 1.0);
+      const a = document.createElement('a');
+      a.href = image;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const getBadgeStyle = (status) => {

@@ -19,12 +19,14 @@ import ReportsPanel from "../components/ReportsPanel";
 import FacultyLoginPage from "../components/FacultyLoginPage";
 import FacultySignUpPage from "../components/FacultySignUpPage";
 import RequireFacultyAuth from "../components/RequireFacultyAuth";
+import FacultyForgotPasswordPage from "../components/FacultyForgotPasswordPage";
 
 export default function FacultyRoutes() {
   return (
     <Routes>
       <Route path="login" element={<FacultyLoginPage />} />
       <Route path="signup" element={<FacultySignUpPage />} />
+      <Route path="forgot-password" element={<FacultyForgotPasswordPage />} />
 
       <Route
         element={
