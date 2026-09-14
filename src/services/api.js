@@ -117,6 +117,20 @@ class RealApiService {
     return await res.json();
   }
 
+  async deleteResume() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/resume`, {
+        method: "DELETE",
+        headers: this.getHeaders()
+      });
+      if (!res.ok) throw new Error("Failed to delete resume");
+      return await res.json();
+    } catch (e) {
+      console.error("deleteResume error:", e);
+      return {};
+    }
+  }
+
   // 14.4 Skills
   async getSkills() {
     try {

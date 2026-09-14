@@ -49,11 +49,14 @@ function StudentDashboardApp() {
       ]);
 
       setProfile(p || {});
-      // Only accept real resume data — must have a real filename from server
-      const activeResume = (r && r.filename) ? r : null;
+      // Only accept real resume data — must have a real filename or ID from server
+      const activeResume = (r && (r.filename || r.resume_id)) ? r : null;
       setResume(activeResume);
-      // Clear any stale cached dummy resume from localStorage
-      if (!activeResume) {
+      if (activeResume) {
+        try {
+          localStorage.setItem('stufac_resume', JSON.stringify(activeResume));
+        } catch (_) {}
+      } else {
         localStorage.removeItem('stufac_resume');
       }
 
@@ -119,12 +122,12 @@ function StudentDashboardApp() {
 
   const handleUploadResume = async (file, fileUrl = null) => {
     try {
-      const fallbackUrl = fileUrl || (file instanceof File ? URL.createObjectURL(file) : '/Ayudh_Pogulwar_AI_Intern.pdf');
       const res = await apiService.uploadResumeFile(file);
+      const persistentUrl = res.file_url || (file instanceof File ? URL.createObjectURL(file) : fileUrl);
       const fullResume = {
         ...res,
         filename: file?.name || res.filename || "resume.pdf",
-        file_url: res.file_url || fallbackUrl,
+        file_url: persistentUrl,
         file_size: file?.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : (res.file_size || "0.2 MB")
       };
       setResume(fullResume);
@@ -151,19 +154,13 @@ function StudentDashboardApp() {
 
   const handleDeleteResume = async () => {
     try {
-      // Clear from backend if API supports it (best-effort)
-      const token = localStorage.getItem("stufac_token");
-      if (token) {
-        await fetch('http://localhost:8000/api/resume', {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        }).catch(() => {});
-      }
+      await apiService.deleteResume();
     } catch (_) {}
-    // Always clear locally
+    // Clear locally
     setResume(null);
     setSkills([]);
     try { localStorage.removeItem('stufac_resume'); } catch (_) {}
+    await refreshRecsAndReadiness();
   };
 
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Upload, Sparkles, Plus, Trash2, CheckCircle, RefreshCw, AlertCircle, FileCode, Eye, Download, X, ExternalLink } from 'lucide-react';
 
 export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadResume, onAddSkill, onRemoveSkill, onDeleteResume }) {
@@ -17,7 +17,37 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
   } catch (_) {}
   const effectivePdfUrl = safeResume.file_url 
     || cachedFileUrl 
-    || '/Ayudh_Pogulwar_AI_Intern.pdf';
+    || '';
+  const [blobPdfUrl, setBlobPdfUrl] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = null;
+    if (effectivePdfUrl && effectivePdfUrl.startsWith('http')) {
+      fetch(effectivePdfUrl)
+        .then(res => {
+          if (!res.ok) throw new Error("Could not fetch PDF");
+          return res.blob();
+        })
+        .then(blob => {
+          if (active) {
+            objectUrl = URL.createObjectURL(blob);
+            setBlobPdfUrl(objectUrl);
+          }
+        })
+        .catch(err => {
+          console.warn("Could not load PDF as blob:", err);
+          if (active) setBlobPdfUrl(null);
+        });
+    } else {
+      setBlobPdfUrl(null);
+    }
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [effectivePdfUrl]);
+
   const [modalTab, setModalTab] = useState('pdf'); // 'pdf' | 'summary'
 
   const handleDrag = (e) => {
@@ -470,15 +500,15 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <a
-                  href={effectivePdfUrl}
-                  download={safeResume.filename || "Ayudh_Pogulwar_AI_Intern.pdf"}
+                  href={effectivePdfUrl || '#'}
+                  download={safeResume.filename || "Resume.pdf"}
                   className="btn btn-outline"
                   style={{ fontSize: '0.8rem', padding: '6px 12px', borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
                   <Download size={14} /> Download PDF
                 </a>
                 <a
-                  href={effectivePdfUrl}
+                  href={effectivePdfUrl || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-outline"
@@ -499,20 +529,36 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
             {/* Modal Body: Toggleable PDF Viewer or Extracted Summary */}
             <div style={{ flex: 1, padding: '14px', background: 'rgba(11, 15, 25, 0.95)', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
               {modalTab === 'pdf' ? (
-                <iframe
-                  src={effectivePdfUrl}
-                  title="Original Resume PDF Document"
-                  width="100%"
-                  height="100%"
-                  style={{
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    background: '#ffffff',
+                effectivePdfUrl ? (
+                  <iframe
+                    src={blobPdfUrl || effectivePdfUrl}
+                    title="Original Resume PDF Document"
+                    width="100%"
+                    height="100%"
+                    style={{
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      background: '#ffffff',
+                      flex: 1,
+                      minHeight: '520px',
+                      width: '100%'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     flex: 1,
-                    minHeight: '520px',
-                    width: '100%'
-                  }}
-                />
+                    minHeight: '400px',
+                    color: 'var(--text-muted)'
+                  }}>
+                    <FileText size={48} color="#6366f1" style={{ marginBottom: '16px' }} />
+                    <p style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 600 }}>No PDF preview file available</p>
+                    <p style={{ fontSize: '0.85rem' }}>Switch to the &quot;Extracted Summary&quot; tab above to view parsed information.</p>
+                  </div>
+                )
               ) : (
                 <div style={{
                   flex: 1,
