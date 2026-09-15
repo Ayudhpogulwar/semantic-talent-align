@@ -739,44 +739,75 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
           alignItems: 'center',
           justifyContent: 'center',
           background: 'rgba(11, 15, 25, 0.85)',
-          backdropFilter: 'blur(10px)'
+          backdropFilter: 'blur(10px)',
+          padding: '16px'
         }}>
-          <div className="glass-panel" style={{ maxWidth: '520px', width: '100%', padding: '28px', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📜</div>
-            <h4 style={{ color: 'var(--text-main)', fontWeight: 800 }}>{viewingCert.file}</h4>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-              Institutional Verified Certificate Document for Student ID <strong>{viewingCert.student_id}</strong>
-            </p>
+          <div className="glass-panel" style={{ maxWidth: '780px', width: '100%', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h4 style={{ color: 'var(--text-main)', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.1rem' }}>
+                📜 {viewingCert.file || "Academic Certificate"}
+              </h4>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setViewingCert(null)}
+                style={{ filter: 'invert(1)' }}
+              ></button>
+            </div>
 
-            <div style={{
-              margin: '20px 0',
-              padding: '16px',
-              borderRadius: '10px',
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid var(--border-color)',
-              display: 'flex',
-              justify: 'space-around',
-              fontSize: '0.84rem'
-            }}>
-              <div>
-                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Issue Date</span>
-                <strong>{viewingCert.issue_date}</strong>
+            {/* Document Render Card */}
+            <div 
+              className="p-4 rounded-3 position-relative shadow-lg text-center my-2"
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #fafaf9 50%, #f5f5f4 100%)",
+                color: "#0f172a",
+                border: "10px solid #1e3a8a",
+                outline: "3px solid #d97706",
+                outlineOffset: "-6px"
+              }}
+            >
+              <p className="text-uppercase tracking-wider fw-bold mb-1" style={{ color: "#475569", fontFamily: "Georgia, serif", fontSize: "0.8rem", letterSpacing: "2px" }}>
+                {viewingCert.organization || "PSK Technologies Private Limited"}
+              </p>
+              <h3 className="fw-extrabold mb-1 text-uppercase" style={{ color: "#0f172a", fontFamily: "Georgia, serif", fontSize: "1.5rem" }}>
+                {(viewingCert.cert_type || "CERTIFICATE OF INTERNSHIP").toUpperCase()}
+              </h3>
+              <p className="fst-italic mb-2 text-muted" style={{ fontFamily: "Georgia, serif", fontSize: "0.85rem" }}>
+                This document officially certifies and validates the achievement of
+              </p>
+
+              <h2 className="fw-black my-2" style={{ color: "#1e3a8a", fontFamily: "Georgia, serif", fontSize: "1.8rem" }}>
+                {viewingCert.student_name || profile.name || "Mr. Yash Mahesh Fokmare"}
+              </h2>
+              <p className="fw-semibold text-secondary mb-2" style={{ fontSize: "0.8rem" }}>
+                Student Roll / ID: <code className="bg-light px-2 py-0.5 rounded text-dark border">{viewingCert.student_id || formData.roll_no || "2023CS2963"}</code>
+              </p>
+
+              <div 
+                className="d-inline-block px-3 py-1.5 rounded-3 my-2"
+                style={{ background: "#f1f5f9", border: "2px solid #6366f1" }}
+              >
+                <h5 className="fw-bold mb-0" style={{ color: "#4338ca", fontSize: "1.05rem" }}>
+                  {viewingCert.course_title || viewingCert.file?.replace(/\.[^/.]+$/, "").replace(/_/g, " ") || "Full Stack Web Development"}
+                </h5>
               </div>
-              <div>
-                <span style={{ color: 'var(--text-muted)', display: 'block' }}>Verification Status</span>
-                <strong style={{ color: viewingCert.verification_status === 'VERIFIED' ? '#34d399' : '#fbbf24' }}>
-                  {viewingCert.verification_status}
-                </strong>
+
+              <div className="d-flex align-items-center justify-content-center gap-2 my-2 flex-wrap" style={{ fontSize: "0.78rem" }}>
+                <span className="text-muted">Issue Date: <strong>{viewingCert.issue_date || '2026-08-31'}</strong></span>
+                <span className="text-muted">•</span>
+                <span className={`badge px-2.5 py-1 fw-bold ${viewingCert.verification_status === 'VERIFIED' ? 'bg-success' : 'bg-warning text-dark'}`}>
+                  STATUS: {(viewingCert.verification_status || 'PENDING').toUpperCase()}
+                </span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={() => handleDownloadCert(viewingCert)}
               >
-                📥 Download Certificate
+                📥 Download Certificate / PDF
               </button>
               <button
                 type="button"
@@ -789,6 +820,7 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }

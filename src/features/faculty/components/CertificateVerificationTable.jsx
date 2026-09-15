@@ -201,6 +201,136 @@ const getStoredCerts = () => {
   return defaultInitialCerts;
 };
 
+function CertificateDocumentPreview({ cert }) {
+  if (!cert) return null;
+
+  const rawName = resolveStudentName(cert);
+  const formattedName = rawName.toLowerCase().startsWith('mr.') || rawName.toLowerCase().startsWith('ms.') ? rawName : `Mr. ${rawName}`;
+  const orgName = cert.organization || "PSK Technologies Private Limited";
+  const certType = (cert.cert_type || "CERTIFICATE OF INTERNSHIP").toUpperCase();
+  const courseTitle = cert.course_title || cert.file?.replace(/\.[^/.]+$/, "").replace(/_/g, " ") || "Full Stack Web Development";
+  const issueDate = cert.issue_date || "2026-09-12";
+  const status = (cert.verification_status || cert.status || "PENDING").toUpperCase();
+  const studentId = cert.student_id || cert.studentId || "2023CS2963";
+
+  const isDirectImage = cert.file_url && cert.file_url.startsWith('data:image');
+  const isDirectPdf = cert.file_url && cert.file_url.startsWith('data:application/pdf');
+
+  if (isDirectImage) {
+    return (
+      <div className="text-center p-2 bg-dark rounded border my-2">
+        <img src={cert.file_url} alt="Certificate Document" style={{ maxWidth: '100%', maxHeight: '520px', objectFit: 'contain', borderRadius: '8px' }} />
+      </div>
+    );
+  }
+
+  if (isDirectPdf) {
+    return (
+      <div className="rounded border overflow-hidden my-2" style={{ height: '520px' }}>
+        <iframe src={cert.file_url} title="Certificate PDF Document" width="100%" height="100%" style={{ border: 'none' }} />
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="p-4 p-md-5 rounded-3 position-relative shadow-lg overflow-hidden text-center my-1"
+      style={{
+        background: "linear-gradient(135deg, #ffffff 0%, #fafaf9 50%, #f5f5f4 100%)",
+        color: "#0f172a",
+        border: "12px solid #1e3a8a",
+        outline: "3px solid #d97706",
+        outlineOffset: "-8px",
+        minHeight: "440px",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+      }}
+    >
+      {/* Corner Ribbon Accents */}
+      <div style={{ position: "absolute", top: 0, left: 0, width: 50, height: 50, background: "#1e3a8a", clipPath: "polygon(0 0, 100% 0, 0 100%)" }} />
+      <div style={{ position: "absolute", top: 0, right: 0, width: 50, height: 50, background: "#1e3a8a", clipPath: "polygon(0 0, 100% 0, 100% 100%)" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, width: 50, height: 50, background: "#1e3a8a", clipPath: "polygon(0 0, 100% 100%, 0 100%)" }} />
+      <div style={{ position: "absolute", bottom: 0, right: 0, width: 50, height: 50, background: "#1e3a8a", clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
+
+      {/* Organization Header */}
+      <p className="text-uppercase tracking-wider fw-bold mb-1" style={{ color: "#475569", fontFamily: "Georgia, serif", fontSize: "0.82rem", letterSpacing: "2px" }}>
+        {orgName}
+      </p>
+      <h3 className="fw-extrabold mb-1 text-uppercase" style={{ color: "#0f172a", fontFamily: "Georgia, serif", fontSize: "1.6rem", letterSpacing: "1px" }}>
+        {certType}
+      </h3>
+      <p className="fst-italic mb-2 text-muted" style={{ fontFamily: "Georgia, serif", fontSize: "0.88rem" }}>
+        This document officially certifies and validates the achievement of
+      </p>
+
+      {/* Student Name */}
+      <h2 className="fw-black my-2" style={{ color: "#1e3a8a", fontFamily: "Georgia, serif", fontSize: "1.95rem" }}>
+        {formattedName}
+      </h2>
+      <p className="fw-semibold text-secondary mb-2" style={{ fontSize: "0.82rem" }}>
+        Student Roll / ID: <code className="bg-light px-2 py-0.5 rounded text-dark border">{studentId}</code>
+      </p>
+
+      <p className="text-secondary small mb-2" style={{ fontSize: "0.8rem" }}>
+        for successful completion and institutional verification of credential:
+      </p>
+
+      {/* Course Title Badge Box */}
+      <div 
+        className="d-inline-block px-4 py-2 rounded-3 my-2"
+        style={{ background: "#f1f5f9", border: "2px solid #6366f1" }}
+      >
+        <h5 className="fw-bold mb-0" style={{ color: "#4338ca", fontSize: "1.15rem" }}>
+          {courseTitle}
+        </h5>
+      </div>
+
+      {/* Details Bar */}
+      <div className="d-flex align-items-center justify-content-center gap-2.5 my-2.5 flex-wrap">
+        <span className="small text-muted fw-semibold" style={{ fontSize: "0.78rem" }}>Issue Date: <strong>{issueDate}</strong></span>
+        <span className="text-muted">•</span>
+        <span className="small text-muted fw-semibold" style={{ fontSize: "0.78rem" }}>Verification ID: <code>{cert.id || "CERT-9021"}</code></span>
+        <span className="text-muted">•</span>
+        <span className={`badge px-3 py-1 fw-bold ${status === 'VERIFIED' ? 'bg-success' : status === 'REJECTED' ? 'bg-danger' : 'bg-warning text-dark'}`}>
+          STATUS: {status}
+        </span>
+      </div>
+
+      {/* Signatures & Seal */}
+      <div className="row align-items-end mt-3 pt-3 border-top border-secondary-subtle">
+        <div className="col-4 text-center">
+          <div style={{ borderBottom: "2px solid #1e293b", width: "75%", margin: "0 auto 4px" }} />
+          <strong className="d-block text-dark small" style={{ fontFamily: "Georgia, serif", fontSize: "0.8rem" }}>Dr. Aris Thorne</strong>
+          <small className="text-muted" style={{ fontSize: "0.68rem" }}>Head of Verification</small>
+        </div>
+
+        <div className="col-4 text-center">
+          <div 
+            className="d-inline-flex flex-column align-items-center justify-content-center rounded-circle shadow"
+            style={{
+              width: 68,
+              height: 68,
+              background: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+              color: "#ffffff",
+              border: "3px double #ffffff",
+              boxShadow: "0 4px 10px rgba(217, 119, 6, 0.4)"
+            }}
+          >
+            <small className="fw-bold" style={{ fontSize: "0.52rem", letterSpacing: "1px" }}>SAIOTAF</small>
+            <strong style={{ fontSize: "0.62rem", lineHeight: 1 }}>VERIFIED</strong>
+            <small className="fw-bold" style={{ fontSize: "0.52rem" }}>SEAL</small>
+          </div>
+        </div>
+
+        <div className="col-4 text-center">
+          <div style={{ borderBottom: "2px solid #1e293b", width: "75%", margin: "0 auto 4px" }} />
+          <strong className="d-block text-dark small" style={{ fontFamily: "Georgia, serif", fontSize: "0.8rem" }}>Prof. Elena Rostova</strong>
+          <small className="text-muted" style={{ fontSize: "0.68rem" }}>Dean of Academic Affairs</small>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CertificateVerificationTable() {
   const [certs, setCerts] = useState(getStoredCerts);
   const [loading, setLoading] = useState(true);
@@ -930,6 +1060,8 @@ export default function CertificateVerificationTable() {
         </div>
       )}
 
+
+
       {/* Viewing Certificate Document Modal */}
       {viewingCert && (
         <div
@@ -938,9 +1070,9 @@ export default function CertificateVerificationTable() {
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content faculty-modal-content">
-              <div className="modal-header border-bottom border-secondary">
-                <h5 className="modal-title fw-bold">
-                  📄 {viewingCert.file}
+              <div className="modal-header border-bottom border-secondary py-2.5">
+                <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
+                  <span>📜</span> {viewingCert.file || "Certificate Document"}
                 </h5>
                 <button
                   type="button"
@@ -948,46 +1080,24 @@ export default function CertificateVerificationTable() {
                   onClick={() => setViewingCert(null)}
                 ></button>
               </div>
-              <div className="modal-body p-4">
-                <div className="row mb-3 g-2 p-3 rounded border" style={{ background: "var(--input-bg)" }}>
-                  <div className="col-4">
-                    <small className="text-muted d-block fw-bold uppercase">Student Name</small>
-                    <span className="fw-bold" style={{ color: "var(--text-main)" }}>{resolveStudentName(viewingCert)}</span>
-                  </div>
-                  <div className="col-4">
-                    <small className="text-muted d-block fw-bold uppercase">Student ID</small>
-                    <span className="fw-bold">{viewingCert.student_id}</span>
-                  </div>
-                  <div className="col-4">
-                    <small className="text-muted d-block fw-bold uppercase">Issue Date</small>
-                    <span>{viewingCert.issue_date}</span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded text-center my-3 border" style={{ background: "var(--bg-card-subtle)" }}>
-                  <div className="fs-1 mb-2">📜</div>
-                  <h5 className="fw-bold" style={{ color: "var(--text-main)" }}>ACADEMIC & CREDENTIAL CERTIFICATE</h5>
-                  <p className="text-muted small mb-3">
-                    Verified Institutional Document for Student <strong>{viewingCert.student_id}</strong>
-                  </p>
-                  <span className="badge badge-cyan p-2">{viewingCert.file}</span>
-                </div>
+              <div className="modal-body p-3">
+                <CertificateDocumentPreview cert={viewingCert} />
               </div>
-              <div className="modal-footer border-top border-secondary justify-content-between">
+              <div className="modal-footer border-top border-secondary justify-content-between py-2">
                 <div>
                   <button
                     type="button"
                     className="btn btn-sm btn-action-custom btn-outline-info me-2 fw-semibold"
                     onClick={() => handleDownloadCert(viewingCert)}
                   >
-                    Download
+                    📥 Download Certificate / PDF
                   </button>
                   {viewingCert.verification_status !== "VERIFIED" && (
                     <button
                       className="btn btn-sm btn-action-custom btn-outline-success me-2 fw-semibold"
                       onClick={() => handleVerify(viewingCert.id)}
                     >
-                      Verify
+                      ✓ Verify
                     </button>
                   )}
                   {viewingCert.verification_status !== "REJECTED" && (
@@ -995,13 +1105,13 @@ export default function CertificateVerificationTable() {
                       className="btn btn-sm btn-action-custom btn-outline-danger me-2 fw-semibold"
                       onClick={() => handleReject(viewingCert.id)}
                     >
-                      Reject
+                      ✕ Reject
                     </button>
                   )}
                 </div>
                 <button
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm px-3"
                   onClick={() => setViewingCert(null)}
                 >
                   Close
@@ -1011,6 +1121,7 @@ export default function CertificateVerificationTable() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
