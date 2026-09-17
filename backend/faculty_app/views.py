@@ -158,24 +158,55 @@ class StudentVerificationViewSet(viewsets.ViewSet):
             from api.db_helper import get_db
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT u.email,
-                       COUNT(a.application_id) AS companies_applied,
-                       SUM(CASE WHEN LOWER(COALESCE(a.status, a.current_status)) IN ('shortlisted', 'selected', 'offered', 'offer', 'accepted')
-                                THEN 1 ELSE 0 END) AS shortlisted_count
-                FROM applications a
-                JOIN users u ON CAST(u.user_id AS TEXT) = CAST(a.student_id AS TEXT)
-                WHERE u.role = 'Student'
-                GROUP BY u.email
-            """)
-            for row in cursor.fetchall():
-                email_key = row['email'] if isinstance(row, dict) else row[0]
-                ca = row['companies_applied'] if isinstance(row, dict) else row[1]
-                sc = row['shortlisted_count'] if isinstance(row, dict) else row[2]
-                application_stats[email_key] = {
-                    'companies_applied': int(ca or 0),
-                    'shortlisted': int(sc or 0),
-                }
+
+            # Primary query: use student_email column (MySQL has this)
+            try:
+                cursor.execute("""
+                    SELECT student_email,
+                           COUNT(application_id) AS companies_applied,
+                           SUM(CASE WHEN LOWER(COALESCE(status, current_status)) IN ('shortlisted', 'selected', 'offered', 'offer', 'accepted')
+                                    THEN 1 ELSE 0 END) AS shortlisted_count
+                    FROM applications
+                    WHERE student_email IS NOT NULL AND student_email != ''
+                    GROUP BY student_email
+                """)
+                for row in cursor.fetchall():
+                    email_key = row['student_email'] if isinstance(row, dict) else row[0]
+                    ca = row['companies_applied'] if isinstance(row, dict) else row[1]
+                    sc = row['shortlisted_count'] if isinstance(row, dict) else row[2]
+                    if email_key:
+                        prev = application_stats.get(email_key, {'companies_applied': 0, 'shortlisted': 0})
+                        application_stats[email_key] = {
+                            'companies_applied': prev['companies_applied'] + int(ca or 0),
+                            'shortlisted': prev['shortlisted'] + int(sc or 0),
+                        }
+            except Exception:
+                pass  # student_email column may not exist in SQLite fallback
+
+            # Fallback query: join via user_id for SQLite (where student_email col may be missing)
+            try:
+                cursor.execute("""
+                    SELECT u.email,
+                           COUNT(a.application_id) AS companies_applied,
+                           SUM(CASE WHEN LOWER(COALESCE(a.status, a.current_status)) IN ('shortlisted', 'selected', 'offered', 'offer', 'accepted')
+                                    THEN 1 ELSE 0 END) AS shortlisted_count
+                    FROM applications a
+                    JOIN users u ON CAST(u.user_id AS TEXT) = CAST(a.student_id AS TEXT)
+                    WHERE u.role = 'Student'
+                    GROUP BY u.email
+                """)
+                for row in cursor.fetchall():
+                    email_key = row['email'] if isinstance(row, dict) else row[0]
+                    ca = row['companies_applied'] if isinstance(row, dict) else row[1]
+                    sc = row['shortlisted_count'] if isinstance(row, dict) else row[2]
+                    if email_key and email_key not in application_stats:
+                        application_stats[email_key] = {
+                            'companies_applied': int(ca or 0),
+                            'shortlisted': int(sc or 0),
+                        }
+            except Exception:
+                pass
+
             conn.close()
         except Exception as ex:
             logger.warning(f"Could not fetch application stats: {ex}")
