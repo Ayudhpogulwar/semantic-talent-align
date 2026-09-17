@@ -134,7 +134,7 @@ class StudentVerificationViewSet(viewsets.ViewSet):
                 email__icontains=search_param
             )
 
-        # Build real metrics lookup from MySQL student_profiles
+        # Build real metrics lookup from student_profiles
         profile_metrics = {}
         try:
             from api.db_helper import get_db
@@ -152,6 +152,34 @@ class StudentVerificationViewSet(viewsets.ViewSet):
         except Exception:
             pass
 
+        # Build application stats (companies applied + shortlisted) per student email
+        application_stats = {}  # email -> {companies_applied: int, shortlisted: int}
+        try:
+            from api.db_helper import get_db
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT u.email,
+                       COUNT(a.application_id) AS companies_applied,
+                       SUM(CASE WHEN LOWER(COALESCE(a.status, a.current_status)) IN ('shortlisted', 'selected', 'offered', 'offer', 'accepted')
+                                THEN 1 ELSE 0 END) AS shortlisted_count
+                FROM applications a
+                JOIN users u ON CAST(u.user_id AS TEXT) = CAST(a.student_id AS TEXT)
+                WHERE u.role = 'Student'
+                GROUP BY u.email
+            """)
+            for row in cursor.fetchall():
+                email_key = row['email'] if isinstance(row, dict) else row[0]
+                ca = row['companies_applied'] if isinstance(row, dict) else row[1]
+                sc = row['shortlisted_count'] if isinstance(row, dict) else row[2]
+                application_stats[email_key] = {
+                    'companies_applied': int(ca or 0),
+                    'shortlisted': int(sc or 0),
+                }
+            conn.close()
+        except Exception as ex:
+            logger.warning(f"Could not fetch application stats: {ex}")
+
         results = []
         for req in qs:
             metric = profile_metrics.get(req.email, {})
@@ -161,6 +189,10 @@ class StudentVerificationViewSet(viewsets.ViewSet):
             passout_year_val = metric.get('passout_year') or metric.get('graduation_year') or None
             if not passout_year_val:
                 passout_year_val = (2023 + req.year_of_study) if req.year_of_study else 2026
+
+            app_stats = application_stats.get(req.email, {})
+            companies_applied = app_stats.get('companies_applied', 0)
+            shortlisted_count = app_stats.get('shortlisted', 0)
 
             results.append({
                 "id": str(req.id),
@@ -179,8 +211,9 @@ class StudentVerificationViewSet(viewsets.ViewSet):
                 "request_date": str(req.created_at)[:10] if hasattr(req, 'created_at') and req.created_at else "2026-09-14",
                 "cgpa": cgpa_float,
                 "percentage": f"{(cgpa_float * 9.5):.1f}%" if cgpa_float > 0 else "N/A",
-                "companies_applied": 0,
-                "offers_received": 0,
+                "companies_applied": companies_applied,
+                "shortlisted": shortlisted_count,
+                "offers_received": shortlisted_count,  # backward compat alias
                 "status": req.status
             })
 

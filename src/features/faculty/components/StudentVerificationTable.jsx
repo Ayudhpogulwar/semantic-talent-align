@@ -152,8 +152,9 @@ export default function StudentVerificationTable() {
           year_of_study: item.year_of_study || item.year || 3,
           cgpa: item.cgpa ?? (8.0 + (idx % 15) * 0.1).toFixed(2),
           percentage: item.percentage ?? `${(75 + (idx % 20)).toFixed(1)}%`,
-          companies_applied: item.companies_applied ?? item.total_companies_applied ?? (3 + (idx % 8)),
-          offers_received: item.offers_received ?? item.total_offers_received ?? (idx % 3),
+          companies_applied: item.companies_applied ?? item.total_companies_applied ?? 0,
+          shortlisted: item.shortlisted ?? item.offers_received ?? item.total_offers_received ?? 0,
+          offers_received: item.offers_received ?? item.total_offers_received ?? 0,
         }));
         setRecords(enriched);
       } else {
@@ -461,13 +462,17 @@ export default function StudentVerificationTable() {
                         <div className="col-6">
                           <div className="p-2.5 rounded-3 bg-info bg-opacity-10 border border-info border-opacity-25">
                             <span className="text-info small fw-semibold d-block mb-1">Companies Applied</span>
-                            <span className="fw-extrabold fs-3 text-info">{selectedStudent.companies_applied ?? 3}</span>
+                            <span className="fw-extrabold fs-3 text-info">
+                              {selectedStudent.companies_applied ?? selectedStudent.total_companies_applied ?? 0}
+                            </span>
                           </div>
                         </div>
                         <div className="col-6">
-                          <div className="p-2.5 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-25">
-                            <span className="text-success small fw-semibold d-block mb-1">Offers Received</span>
-                            <span className="fw-extrabold fs-3 text-success">{selectedStudent.offers_received ?? 0}</span>
+                          <div className="p-2.5 rounded-3 bg-warning bg-opacity-10 border border-warning border-opacity-25">
+                            <span className="text-warning small fw-semibold d-block mb-1">Shortlisted</span>
+                            <span className="fw-extrabold fs-3 text-warning">
+                              {selectedStudent.shortlisted ?? selectedStudent.offers_received ?? 0}
+                            </span>
                           </div>
                         </div>
                       </div>
