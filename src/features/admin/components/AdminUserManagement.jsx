@@ -132,10 +132,10 @@ export default function AdminUserManagement() {
             <input
               type="search"
               className="form-control faculty-search-input ps-4"
-              placeholder="Search name, email, ID..."
+              placeholder="Search name, enrollment no, email, ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ width: 240, fontSize: "0.85rem" }}
+              style={{ width: 260, fontSize: "0.85rem" }}
             />
             <Search size={14} className="position-absolute text-muted" style={{ left: 10, top: 12 }} />
           </div>
@@ -174,7 +174,7 @@ export default function AdminUserManagement() {
         <table className="table table-hover align-middle faculty-table mb-0" style={{ minWidth: "950px" }}>
           <thead>
             <tr>
-              <th className="text-start ps-3 text-nowrap">User ID</th>
+              <th className="text-start ps-3 text-nowrap">Enrollment / Employee ID</th>
               <th className="text-start text-nowrap">Name</th>
               <th className="text-start text-nowrap">Email / Domain</th>
               <th className="text-center text-nowrap">Role</th>
@@ -206,7 +206,7 @@ export default function AdminUserManagement() {
                 <tr key={u.id}>
                   <td className="text-start ps-3 text-nowrap">
                     <code className="px-2 py-1 rounded text-info border" style={{ background: "var(--input-bg)", borderColor: "var(--border-color)", fontSize: "0.8rem" }}>
-                      {u.user_id || `USR-${u.id}`}
+                      {u.enrollment_no || u.roll_number || u.user_id || `USR-${u.id}`}
                     </code>
                   </td>
                   <td className="text-start fw-semibold text-nowrap" style={{ color: "var(--text-main)" }}>

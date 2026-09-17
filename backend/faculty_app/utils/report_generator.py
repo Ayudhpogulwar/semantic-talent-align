@@ -14,7 +14,7 @@ import io
 from datetime import datetime
 
 
-def _fetch_report_dataset(department: str | None, term: str | None) -> list[dict]:
+def _fetch_report_dataset(department: str | None, term: str | None, session: str | None = None) -> list[dict]:
     """
     Queries live placement & applications database to compile accredited report entries.
     """
@@ -38,8 +38,9 @@ def _fetch_report_dataset(department: str | None, term: str | None) -> list[dict
 
     return [
         {
+            "session": session or "2025-2026",
+            "term": term or "Even Semester (Term II)",
             "department": department or "All Departments",
-            "term": term or "2025-2026",
             "total_applications": total_apps,
             "under_review": under_review,
             "shortlisted": shortlisted,
@@ -50,8 +51,8 @@ def _fetch_report_dataset(department: str | None, term: str | None) -> list[dict
     ]
 
 
-def generate_placement_report(fmt: str, department: str | None, term: str | None):
-    dataset = _fetch_report_dataset(department, term)
+def generate_placement_report(fmt: str, department: str | None, term: str | None, session: str | None = None):
+    dataset = _fetch_report_dataset(department, term, session)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
 
     if fmt == "xlsx":

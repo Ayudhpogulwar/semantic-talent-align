@@ -158,21 +158,22 @@ export default function AdminOverrides() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.target;
-                const entityId = form.entityId.value;
-                handleOverrideAction(entityId, "DIRECT_MANUAL_OVERRIDE");
+                const entityId = form.entityId.value.trim();
+                const overrideState = form.overrideState.value;
+                if (!entityId) return;
+                handleOverrideAction(entityId, overrideState);
                 form.reset();
               }}
             >
               <div className="mb-3">
-                <label className="form-label small" style={{ color: "var(--text-muted)" }}>Entity ID (Student / Org / Opportunity)</label>
-                <input type="text" name="entityId" className="form-control faculty-search-input" placeholder="e.g. STU-1004 or ORG-1003" required />
+                <label className="form-label small" style={{ color: "var(--text-muted)" }}>Entity ID (Student Roll / Org ID / Opp ID)</label>
+                <input type="text" name="entityId" className="form-control faculty-search-input" placeholder="e.g. 2023CS3920, SVR-20273219, ORG-0bd8" required />
               </div>
               <div className="mb-3">
                 <label className="form-label small" style={{ color: "var(--text-muted)" }}>Target Override State</label>
                 <select name="overrideState" className="form-select faculty-select-filter">
-                  <option value="FORCE_VERIFIED">FORCE_VERIFIED (Student)</option>
-                  <option value="FORCE_APPROVED">FORCE_APPROVED (Company/NGO)</option>
-                  <option value="FORCE_SUSPENDED">FORCE_SUSPENDED (Account)</option>
+                  <option value="FORCE_APPROVE">FORCE_APPROVE (Verify / Approve)</option>
+                  <option value="FORCE_REJECT">FORCE_REJECT (Reject / Flag)</option>
                 </select>
               </div>
               <button type="submit" className="btn btn-warning w-100 fw-semibold text-dark">

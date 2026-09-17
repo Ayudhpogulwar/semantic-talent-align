@@ -100,7 +100,7 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 className="form-control faculty-search-input ps-4"
-                placeholder="e.g. admin@raisoni.net"
+                placeholder="e.g. admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

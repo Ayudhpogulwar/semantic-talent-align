@@ -144,18 +144,43 @@ export default function StudentVerificationTable() {
       });
       const fetched = data?.results ?? data;
       if (Array.isArray(fetched) && fetched.length > 0) {
-        const enriched = fetched.map((item, idx) => ({
-          ...item,
-          student_name: item.student_name || item.full_name || `Student ${idx + 1}`,
-          full_name: item.full_name || item.student_name || `Student ${idx + 1}`,
-          passing_year: formatBatchDisplay(item.passing_year || (2025 + (idx % 3))),
-          year_of_study: item.year_of_study || item.year || 3,
-          cgpa: item.cgpa ?? (8.0 + (idx % 15) * 0.1).toFixed(2),
-          percentage: item.percentage ?? `${(75 + (idx % 20)).toFixed(1)}%`,
-          companies_applied: item.companies_applied ?? item.total_companies_applied ?? 0,
-          shortlisted: item.shortlisted ?? item.offers_received ?? item.total_offers_received ?? 0,
-          offers_received: item.offers_received ?? item.total_offers_received ?? 0,
-        }));
+        const enriched = fetched.map((item, idx) => {
+          const rawCgpa = item.cgpa ?? item.cgpa_value;
+          let parsedCgpa = "NA";
+          let parsedPercentage = "NA";
+
+          if (
+            rawCgpa !== null &&
+            rawCgpa !== undefined &&
+            rawCgpa !== "" &&
+            rawCgpa !== "Not Provided" &&
+            rawCgpa !== "N/A" &&
+            rawCgpa !== "NA" &&
+            rawCgpa !== "0" &&
+            rawCgpa !== 0 &&
+            rawCgpa !== "0.00"
+          ) {
+            const num = parseFloat(rawCgpa);
+            if (!isNaN(num) && num > 0) {
+              parsedCgpa = num.toFixed(2);
+              parsedPercentage = `${(num * 9.5).toFixed(1)}%`;
+            }
+          }
+
+          return {
+            ...item,
+            student_name: item.student_name || item.full_name || `Student ${idx + 1}`,
+            full_name: item.full_name || item.student_name || `Student ${idx + 1}`,
+            passing_year: formatBatchDisplay(item.passing_year || item.batch_year || (2025 + (idx % 3))),
+            year_of_study: item.year_of_study || item.year || 3,
+            cgpa: parsedCgpa,
+            percentage: (item.percentage && item.percentage !== "N/A" && item.percentage !== "NA" && item.percentage !== "0.0%") ? item.percentage : parsedPercentage,
+            companies_applied: item.companies_applied ?? item.total_companies_applied ?? 0,
+            shortlisted: item.shortlisted ?? item.offers_received ?? item.total_offers_received ?? 0,
+            offers_received: item.offers_received ?? item.total_offers_received ?? 0,
+            applied_companies: item.applied_companies || [],
+          };
+        });
         setRecords(enriched);
       } else {
         setRecords(DEFAULT_MOCK_STUDENTS);
@@ -230,7 +255,7 @@ export default function StudentVerificationTable() {
           <input
             type="search"
             className="form-control faculty-search-input"
-            placeholder="Search name, roll number, email..."
+            placeholder="Search name, enrollment no, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: 220 }}
@@ -272,14 +297,15 @@ export default function StudentVerificationTable() {
       )}
 
       <div className="faculty-table-container">
-        <table className="table table-hover align-middle faculty-table" style={{ minWidth: "900px" }}>
+        <table className="table table-hover align-middle faculty-table" style={{ minWidth: "980px" }}>
           <thead>
             <tr>
-              <th className="text-start ps-3 text-nowrap">Roll Number</th>
+              <th className="text-start ps-3 text-nowrap">Enrollment No</th>
               <th className="text-start text-nowrap">Student Name</th>
               <th className="text-center text-nowrap">Department</th>
               <th className="text-center text-nowrap">Batch Year</th>
               <th className="text-start text-nowrap">Email</th>
+              <th className="text-center text-nowrap">Applied / Shortlisted</th>
               <th className="text-center text-nowrap">Status</th>
               <th className="text-center pe-3 text-nowrap" style={{ minWidth: "250px" }}>Actions</th>
             </tr>
@@ -287,7 +313,7 @@ export default function StudentVerificationTable() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="text-center py-4 text-muted">
+                <td colSpan={8} className="text-center py-4 text-muted">
                   Loading…
                 </td>
               </tr>
@@ -295,7 +321,7 @@ export default function StudentVerificationTable() {
 
             {!loading && filteredRecords.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-4 text-muted">
+                <td colSpan={8} className="text-center py-4 text-muted">
                   No student verification requests found.
                 </td>
               </tr>
@@ -318,6 +344,24 @@ export default function StudentVerificationTable() {
                   </td>
                   <td className="text-start text-muted small text-nowrap" style={{ whiteSpace: "nowrap" }}>
                     {r.email}
+                  </td>
+                  <td className="text-center text-nowrap">
+                    <span
+                      className="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 me-1"
+                      title="Companies Applied"
+                    >
+                      {r.companies_applied ?? 0} Applied
+                    </span>
+                    <span
+                      className={`badge ${
+                        (r.shortlisted ?? 0) > 0
+                          ? "bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25"
+                          : "bg-secondary bg-opacity-25 text-muted border border-secondary border-opacity-25"
+                      }`}
+                      title="Shortlisted Status"
+                    >
+                      {(r.shortlisted ?? 0) > 0 ? `✓ ${r.shortlisted} Shortlisted` : "0 Shortlisted"}
+                    </span>
                   </td>
                   <td className="text-center text-nowrap">
                     <span className={`badge ${STATUS_BADGE[r.status] || "badge-closed"}`}>
@@ -394,7 +438,7 @@ export default function StudentVerificationTable() {
                         <div className="modal-value fs-6">{selectedStudent.student_name || selectedStudent.full_name}</div>
                       </div>
                       <div className="mb-2.5">
-                        <span className="modal-label d-block mb-1">Roll Number:</span>
+                        <span className="modal-label d-block mb-1">Enrollment Number:</span>
                         <div className="fw-semibold text-info">
                           <code className="px-2 py-0.5 rounded border border-info border-opacity-25">{selectedStudent.roll_number || selectedStudent.roll_no}</code>
                         </div>
@@ -432,24 +476,20 @@ export default function StudentVerificationTable() {
                         Performance Metrics
                       </h6>
                       <div className="row text-center g-2 mb-3">
-                        <div className="col-4">
+                        <div className="col-6">
                           <div className="p-2 faculty-modal-stat-box">
-                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>Passing Year</span>
-                            <span className="fw-bold fs-6 text-info">
-                              {formatBatchDisplay(selectedStudent.passing_year || selectedStudent.year_of_study)}
+                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.75rem" }}>CGPA</span>
+                            <span className={`fw-bold ${selectedStudent.cgpa === "NA" || selectedStudent.cgpa === "N/A" || selectedStudent.cgpa === "Not Provided" || !selectedStudent.cgpa || selectedStudent.cgpa === 0 || selectedStudent.cgpa === "0" || selectedStudent.cgpa === "0.00" ? "fs-6 text-muted" : "fs-5 text-warning"}`}>
+                              {selectedStudent.cgpa && selectedStudent.cgpa !== "0" && selectedStudent.cgpa !== "0.00" && selectedStudent.cgpa !== "Not Provided" && selectedStudent.cgpa !== "N/A" && selectedStudent.cgpa !== "NA" ? selectedStudent.cgpa : "NA"}
                             </span>
                           </div>
                         </div>
-                        <div className="col-4">
+                        <div className="col-6">
                           <div className="p-2 faculty-modal-stat-box">
-                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>CGPA</span>
-                            <span className="fw-bold fs-5 text-warning">{selectedStudent.cgpa}</span>
-                          </div>
-                        </div>
-                        <div className="col-4">
-                          <div className="p-2 faculty-modal-stat-box">
-                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.7rem" }}>Percentage</span>
-                            <span className="fw-bold fs-5 text-success">{selectedStudent.percentage}</span>
+                            <span className="modal-label d-block mb-1" style={{ fontSize: "0.75rem" }}>Percentage</span>
+                            <span className={`fw-bold ${selectedStudent.percentage === "NA" || selectedStudent.percentage === "N/A" || !selectedStudent.percentage || selectedStudent.percentage === "0.0%" ? "fs-6 text-muted" : "fs-5 text-success"}`}>
+                              {selectedStudent.percentage && selectedStudent.percentage !== "0.0%" && selectedStudent.percentage !== "N/A" && selectedStudent.percentage !== "NA" ? selectedStudent.percentage : "NA"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -458,7 +498,7 @@ export default function StudentVerificationTable() {
                       <h6 className="modal-label fw-bold mb-3 pb-2 border-bottom">
                         Placement Statistics
                       </h6>
-                      <div className="row text-center g-2">
+                      <div className="row text-center g-2 mb-3">
                         <div className="col-6">
                           <div className="p-2.5 rounded-3 bg-info bg-opacity-10 border border-info border-opacity-25">
                             <span className="text-info small fw-semibold d-block mb-1">Companies Applied</span>
@@ -475,6 +515,64 @@ export default function StudentVerificationTable() {
                             </span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Dynamic List of Companies Applied and Shortlist Status */}
+                      <div className="mt-3">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="small fw-bold text-uppercase text-muted" style={{ fontSize: "0.75rem" }}>
+                            Applied Companies & Evaluation Status
+                          </span>
+                          <span className="badge bg-secondary" style={{ fontSize: "0.72rem" }}>
+                            {(selectedStudent.applied_companies || []).length} Records
+                          </span>
+                        </div>
+                        {selectedStudent.applied_companies && selectedStudent.applied_companies.length > 0 ? (
+                          <div className="table-responsive border rounded" style={{ maxHeight: "190px", overflowY: "auto" }}>
+                            <table className="table table-sm table-hover align-middle mb-0" style={{ fontSize: "0.82rem" }}>
+                              <thead className="table-light sticky-top">
+                                <tr>
+                                  <th className="ps-2 py-1">Company / Organization</th>
+                                  <th className="py-1">Role / Opportunity</th>
+                                  <th className="text-center py-1">Shortlisted?</th>
+                                  <th className="text-center pe-2 py-1">Applied Date</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedStudent.applied_companies.map((app, idx) => (
+                                  <tr key={idx}>
+                                    <td className="ps-2 fw-semibold" style={{ color: "var(--text-main)" }}>
+                                      {app.organization}
+                                    </td>
+                                    <td className="text-muted small">{app.opportunity_title}</td>
+                                    <td className="text-center">
+                                      {app.is_shortlisted ? (
+                                        <span className="badge bg-success" style={{ fontSize: "0.75rem" }}>
+                                          ✓ Shortlisted ({app.status})
+                                        </span>
+                                      ) : (
+                                        <span
+                                          className={`badge ${app.status === "Under Review" ? "bg-info" : "bg-secondary"}`}
+                                          style={{ fontSize: "0.75rem" }}
+                                        >
+                                          {app.status || "Applied"}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="text-center text-muted small pe-2">{app.applied_date || "—"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 text-center text-muted small border rounded"
+                            style={{ background: "var(--input-bg, rgba(255,255,255,0.05))" }}
+                          >
+                            No companies applied yet by this student.
+                          </div>
+                        )}
                       </div>
 
                       <div className="mt-3 text-center">
@@ -529,7 +627,7 @@ export default function StudentVerificationTable() {
                   rows={3}
                   value={reasonText}
                   onChange={(e) => setReasonText(e.target.value)}
-                  placeholder="e.g. Roll number does not match institutional records"
+                  placeholder="e.g. Enrollment number does not match institutional records"
                 />
               </div>
               <div className="modal-footer">

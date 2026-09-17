@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function convertCanvasToPdfBlob(canvas) {
   const jpegUrl = canvas.toDataURL('image/jpeg', 0.95);
@@ -74,6 +74,12 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [newCertFile, setNewCertFile] = useState('');
   const [viewingCert, setViewingCert] = useState(null);
+
+  useEffect(() => {
+    if (profile && Object.keys(profile).length > 0) {
+      setFormData({ ...profile });
+    }
+  }, [profile]);
 
   const [certificates, setCertificates] = useState(() => {
     try {
@@ -246,9 +252,11 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
     ctx.font = '900 52px "Georgia", serif';
     ctx.fillText(formattedName.replace(/^Mr\.\s+|^Ms\.\s+/i, ''), 800, 340);
 
-    ctx.fillStyle = '#475569';
-    ctx.font = 'bold 22px "Georgia", serif';
-    ctx.fillText(`Student Roll / ID: ${studentId}`, 800, 390);
+    // 4. Student Full Name & Enrollment No
+    ctx.font = 'bold 24px Inter, sans-serif';
+    ctx.fillStyle = '#1e293b';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Student Enrollment No / ID: ${studentId}`, 800, 390);
 
     ctx.fillStyle = '#334155';
     ctx.font = '22px "Helvetica Neue", sans-serif';
@@ -398,12 +406,16 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Full Name *</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Full Name <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input type="text" name="name" className="form-control" value={formData.name || ''} onChange={handleChange} required />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Institutional Email *</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Institutional Email <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input
                 type="email"
                 name="email"
@@ -423,18 +435,24 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Student Roll No. / ID *</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Student Enrollment No. / ID <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input type="text" name="roll_no" className="form-control" value={formData.roll_no || ''} onChange={handleChange} required />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Department / Specialization *</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Department / Specialization <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input type="text" name="dept" className="form-control" value={formData.dept || ''} onChange={handleChange} required />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Program *</label>
-              <select name="program" className="form-control" value={formData.program || ''} onChange={handleChange}>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Program <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
+              <select name="program" className="form-control" value={formData.program || ''} onChange={handleChange} required>
                 <option value="">-- Select Program --</option>
                 <option value="B.Tech">B.Tech</option>
                 <option value="B.E.">B.E.</option>
@@ -449,8 +467,11 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Academic Year *</label>
-              <select name="year" className="form-control" value={formData.year || ''} onChange={handleChange}>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Academic Year <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
+              <select name="year" className="form-control" value={formData.year || ''} onChange={handleChange} required>
+                <option value="">-- Select Academic Year --</option>
                 <option value="1st Year">1st Year</option>
                 <option value="2nd Year">2nd Year</option>
                 <option value="3rd Year">3rd Year</option>
@@ -460,7 +481,9 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Admission Year</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Admission Year <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input
                 type="number"
                 name="admission_year"
@@ -470,11 +493,14 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
                 max="2030"
                 value={formData.admission_year || ''}
                 onChange={handleChange}
+                required
               />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Passout / Graduation Year</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Passout / Graduation Year <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input
                 type="number"
                 name="passout_year"
@@ -484,11 +510,14 @@ export default function ProfileModule({ profile, onUpdateProfile }) {
                 max="2035"
                 value={formData.passout_year || ''}
                 onChange={handleChange}
+                required
               />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Current Cumulative CGPA *</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                Current Cumulative CGPA <span style={{ color: '#ef4444', fontWeight: 'bold' }}>*</span>
+              </label>
               <input type="text" name="cgpa" className="form-control" value={formData.cgpa || ''} onChange={handleChange} required />
             </div>
           </div>

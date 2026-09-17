@@ -36,8 +36,8 @@ export default function AdminSignUpPage() {
       return;
     }
 
-    if (!trimmedEmail.endsWith("@raisoni.net")) {
-      setError("Admin registration requires a valid @raisoni.net institutional email address.");
+    if (!trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -152,16 +152,16 @@ export default function AdminSignUpPage() {
             </div>
           </div>
 
-          {/* Gmail / Institutional Email */}
+          {/* Email */}
           <div className="mb-3">
             <label className="form-label small fw-semibold" style={{ color: "var(--text-muted)" }}>
-              Institutional Email <span style={{ color: "#fb7185" }}>(@raisoni.net)</span>
+              Email Address
             </label>
             <div className="position-relative">
               <input
                 type="email"
                 className="form-control faculty-search-input ps-4"
-                placeholder="e.g. admin@raisoni.net"
+                placeholder="e.g. admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

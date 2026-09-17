@@ -257,7 +257,7 @@ def profile(request):
             "roll_no": sp["roll_number"],
             "dept": sp["department"],
             "year": str(sp["graduation_year"]) if sp["graduation_year"] else "",
-            "cgpa": str(sp["cgpa"]) if float(sp["cgpa"]) > 0 else "",
+            "cgpa": f"{float(sp['cgpa']):.2f}" if sp.get("cgpa") is not None and float(sp["cgpa"]) > 0 else "NA",
             "contact": sp["phone_number"] or "",
             "linkedin": sp.get("linkedin") or "",
             "github": sp.get("github") or "",
@@ -284,6 +284,9 @@ def profile(request):
             except Exception:
                 pass
 
+        if not put_email:
+            put_email = request.data.get("email")
+
         if put_email:
             cursor.execute("""
                 SELECT sp.student_id FROM student_profiles sp
@@ -305,6 +308,19 @@ def profile(request):
         f_name = name_parts[0]
         l_name = name_parts[1] if len(name_parts) > 1 else ""
 
+        # Safely parse CGPA - if student enters "na", "NA", "N/A", "", or non-numeric, treat as 0.00 (not provided)
+        raw_cgpa = updates.get("cgpa")
+        cgpa_val = 0.0
+        if raw_cgpa is not None:
+            clean_cgpa = str(raw_cgpa).strip().lower()
+            if clean_cgpa not in ['', 'na', 'n/a', 'not provided', 'null', 'none', '0', '0.0', '0.00']:
+                try:
+                    parsed_val = float(clean_cgpa)
+                    if parsed_val > 0:
+                        cgpa_val = round(parsed_val, 2)
+                except (ValueError, TypeError):
+                    cgpa_val = 0.0
+
         cursor.execute("""
             UPDATE student_profiles SET
                 first_name = ?, last_name = ?, department = ?, phone_number = ?, cgpa = ?,
@@ -314,7 +330,7 @@ def profile(request):
             f_name, l_name,
             updates.get("dept", ""),
             updates.get("contact", ""),
-            float(updates.get("cgpa", 0) or 0),
+            cgpa_val,
             int(updates.get("passout_year") or updates.get("year") or 2026),
             updates.get("program", ""),
             int(updates.get("admission_year") or 0) or None,
@@ -324,6 +340,7 @@ def profile(request):
         conn.commit()
         conn.close()
         
+        updates["cgpa"] = f"{cgpa_val:.2f}" if cgpa_val > 0 else "NA"
         return Response(updates)
 
 # --- Resume ---

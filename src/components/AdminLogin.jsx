@@ -34,8 +34,8 @@ export default function AdminLogin() {
       return;
     }
 
-    if (!trimmedEmail.includes("@")) {
-      setError("Please enter a valid institutional admin email address.");
+    if (!trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -109,7 +109,7 @@ export default function AdminLogin() {
               <input
                 type="email"
                 className="form-control faculty-search-input ps-4"
-                placeholder="e.g. admin@raisoni.net"
+                placeholder="e.g. admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

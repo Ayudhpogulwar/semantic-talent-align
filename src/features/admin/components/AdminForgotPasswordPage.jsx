@@ -23,8 +23,8 @@ export default function AdminForgotPasswordPage() {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedKey = secretKey.trim();
 
-    if (!trimmedEmail.endsWith("@raisoni.net")) {
-      setError("Please enter your @raisoni.net institutional admin email.");
+    if (!trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -124,7 +124,7 @@ export default function AdminForgotPasswordPage() {
                 <input
                   type="email"
                   className="form-control faculty-search-input ps-4"
-                  placeholder="admin@raisoni.net"
+                  placeholder="admin@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

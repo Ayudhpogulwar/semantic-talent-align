@@ -489,14 +489,14 @@ export default function CertificateVerificationTable() {
     ctx.font = 'italic 24px "Georgia", serif';
     ctx.fillText('This document officially certifies and validates the achievement of', 800, 270);
 
-    // 4. Student Full Name & Roll ID
+    // 4. Student Full Name & Enrollment No
     ctx.fillStyle = '#1e3a8a';
     ctx.font = '900 52px "Georgia", serif';
     ctx.fillText(formattedName.replace(/^Mr\.\s+|^Ms\.\s+/i, ''), 800, 340);
 
     ctx.fillStyle = '#475569';
     ctx.font = 'bold 22px "Georgia", serif';
-    ctx.fillText(`Student Roll / ID: ${studentId}`, 800, 390);
+    ctx.fillText(`Student Enrollment No / ID: ${studentId}`, 800, 390);
 
     ctx.fillStyle = '#334155';
     ctx.font = '22px "Helvetica Neue", sans-serif';

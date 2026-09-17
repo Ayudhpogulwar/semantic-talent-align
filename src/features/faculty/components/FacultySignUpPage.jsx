@@ -22,7 +22,7 @@ export default function FacultySignUpPage() {
     last_name: "",
     employee_id: "",
     department: "",
-    role: "MODERATOR",
+    role: "PLACEMENT_OFFICER",
   });
 
   const [localError, setLocalError] = useState("");
@@ -39,8 +39,8 @@ export default function FacultySignUpPage() {
     e.preventDefault();
     setLocalError("");
 
-    if (!formData.email.trim().toLowerCase().endsWith("@raisoni.net")) {
-      setLocalError("Faculty access requires a valid @raisoni.net institutional email address.");
+    if (!formData.email.trim().includes("@")) {
+      setLocalError("Please enter a valid email address.");
       return;
     }
 
@@ -163,10 +163,8 @@ export default function FacultySignUpPage() {
                   onChange={handleChange}
                   required
                 >
-                  <option value="MODERATOR">Moderator</option>
                   <option value="PLACEMENT_OFFICER">Placement Officer</option>
-                  <option value="DEPARTMENT_ADMIN">Department Admin</option>
-                  <option value="SUPER_ADMIN">Super Admin</option>
+                  <option value="TPO_INCHARGE">TPO Incharge</option>
                 </select>
               </div>
             </div>

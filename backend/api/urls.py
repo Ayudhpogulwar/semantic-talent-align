@@ -1,12 +1,24 @@
 from django.urls import path
 from api import views
 from api import admin_auth_views
+from api import admin_views
 
 urlpatterns = [
-    # Admin Auth
-    path('admin/auth/login/', admin_auth_views.admin_login),
+    # Admin Auth & Dynamic Controllers
+    path('admin/auth/login/', admin_views.AdminLoginView.as_view(), name='admin-auth-login'),
+    path('admin/auth/login', admin_views.AdminLoginView.as_view(), name='admin-auth-login-noslash'),
     path('admin/auth/register/', admin_auth_views.admin_register),
     path('admin/auth/reset-password/', admin_auth_views.admin_reset_password),
+    path('admin/stats/', admin_views.AdminStatsView.as_view(), name='admin-stats'),
+    path('admin/stats', admin_views.AdminStatsView.as_view(), name='admin-stats-noslash'),
+    path('admin/users/', admin_views.AdminUserManagementView.as_view(), name='admin-users'),
+    path('admin/users', admin_views.AdminUserManagementView.as_view(), name='admin-users-noslash'),
+    path('admin/users/<str:user_id>/action/', admin_views.AdminUserActionView.as_view(), name='admin-user-action'),
+    path('admin/users/<str:user_id>/action', admin_views.AdminUserActionView.as_view(), name='admin-user-action-noslash'),
+    path('admin/users/<str:user_id>/', admin_views.AdminUserActionView.as_view(), name='admin-user-delete'),
+    path('admin/users/<str:user_id>', admin_views.AdminUserActionView.as_view(), name='admin-user-delete-noslash'),
+    path('admin/overrides/', admin_views.AdminOverridesView.as_view(), name='admin-overrides'),
+    path('admin/overrides', admin_views.AdminOverridesView.as_view(), name='admin-overrides-noslash'),
 
     # 14.1 Auth
     path('auth/login', views.login),

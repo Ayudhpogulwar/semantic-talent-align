@@ -29,14 +29,7 @@ export default function FacultyLoginPage() {
     setValidationError("");
     const val = usernameOrEmail.trim();
 
-    // If an email address is entered (contains '@'), validate that it ends with @raisoni.net
-    if (val.includes("@")) {
-      const emailRegex = /@raisoni\.net$/i;
-      if (!emailRegex.test(val)) {
-        setValidationError("Faculty access requires a valid @raisoni.net institutional email address.");
-        return;
-      }
-    }
+    // Any valid email format is accepted for faculty login
 
     try {
       const result = await login(val, password);
@@ -91,7 +84,7 @@ export default function FacultyLoginPage() {
                     setUsernameOrEmail(e.target.value);
                     if (validationError) setValidationError("");
                   }}
-                  placeholder="e.g. omi, FAC101 or name@raisoni.net"
+                  placeholder="e.g. omi, FAC101 or name@example.com"
                   required
                 />
                 {validationError && (

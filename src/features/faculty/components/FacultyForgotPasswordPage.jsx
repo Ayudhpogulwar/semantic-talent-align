@@ -20,8 +20,8 @@ export default function FacultyForgotPasswordPage() {
     setError(null);
 
     const val = emailOrId.trim();
-    if (val.includes("@") && !val.toLowerCase().endsWith("@raisoni.net")) {
-      setError("Institutional email must end with @raisoni.net");
+    if (val.includes("@") && !val.includes(".")) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function FacultyForgotPasswordPage() {
                 Reset Password
               </h5>
               <p className="text-muted small text-start mb-4">
-                Enter your Employee ID or institutional email address (@raisoni.net). We'll send you a password reset link.
+                Enter your Employee ID or email address. We'll send you a password reset link.
               </p>
 
               {error && <div className="alert alert-danger py-2 text-start mb-3">{error}</div>}
@@ -64,7 +64,7 @@ export default function FacultyForgotPasswordPage() {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g. EMP12345 or faculty@raisoni.net"
+                    placeholder="e.g. EMP12345 or faculty@example.com"
                     value={emailOrId}
                     onChange={(e) => setEmailOrId(e.target.value)}
                     required

@@ -173,7 +173,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
               </div>
 
               <div>
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Roll Number / Student ID</label>
+                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Enrollment Number / Student ID</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="text"

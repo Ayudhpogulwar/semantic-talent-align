@@ -154,9 +154,9 @@ export const certificateApi = {
 export const reportApi = {
   funnel: () => client.get("/faculty/reports/funnel/"),
   skillGaps: () => client.get("/faculty/reports/skill-gaps/"),
-  export: (format, department, term) =>
+  export: (format, department, term, session) =>
     client.get("/faculty/reports/export/", {
-      params: { format, department, term },
+      params: { format, department, term, session },
       responseType: "blob",
     }),
 };

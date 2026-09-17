@@ -67,9 +67,10 @@ function convertCanvasToPdfBlob(canvas) {
 }
 
 export default function ReportsPanel() {
+  const [session, setSession] = useState("2025-2026");
+  const [term, setTerm] = useState("Even Semester (Term II)");
+  const [department, setDepartment] = useState("All Departments");
   const [format, setFormat] = useState("pdf");
-  const [department, setDepartment] = useState("");
-  const [term, setTerm] = useState("");
   const [generating, setGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -77,8 +78,8 @@ export default function ReportsPanel() {
   const [previewReport, setPreviewReport] = useState(null);
   const [showInfo, setShowInfo] = useState(true);
 
-  // Live Analytics Data State (Connected 100% to Analytics Dashboard)
-  const [funnel, setFunnel] = useState({ applied: 6, under_review: 2, shortlisted: 1, interview: 0, offered: 0 });
+  // Live Analytics Data State (Connected 100% to Analytics Dashboard & Applications Table)
+  const [funnel, setFunnel] = useState({ total: 3, applied: 3, under_review: 2, shortlisted: 1, interview: 0, offered: 0 });
   const [skillGaps, setSkillGaps] = useState([
     { skill: "Docker", count: 8 },
     { skill: "Python", count: 6 },
@@ -89,16 +90,47 @@ export default function ReportsPanel() {
   ]);
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
 
-  // Fetch Live Analytics metrics on mount so Reports match Analytics 100%
+  // Fetch Live Analytics metrics on mount so Reports match Analytics & Applications 100%
   useEffect(() => {
     async function loadLiveAnalytics() {
       setLoadingAnalytics(true);
       try {
-        const [funnelRes, skillsRes] = await Promise.all([
-          reportApi.funnel(),
-          reportApi.skillGaps(),
+        const [funnelRes, skillsRes, appsRes] = await Promise.all([
+          reportApi.funnel().catch(() => null),
+          reportApi.skillGaps().catch(() => null),
+          fetch("http://127.0.0.1:8000/api/applications").then(r => r.ok ? r.json() : null).catch(() => null),
         ]);
-        if (funnelRes?.data) setFunnel(funnelRes.data);
+
+        let totalApps = 0;
+        let underReview = 0;
+        let shortlisted = 0;
+        let interview = 0;
+        let offered = 0;
+
+        if (Array.isArray(appsRes) && appsRes.length > 0) {
+          totalApps = appsRes.length;
+          underReview = appsRes.filter(a => (a.status || '').toLowerCase() === 'under review').length;
+          shortlisted = appsRes.filter(a => (a.status || '').toLowerCase() === 'shortlisted').length;
+          interview = appsRes.filter(a => (a.status || '').toLowerCase() === 'interview').length;
+          offered = appsRes.filter(a => ['selected', 'offered', 'accepted'].includes((a.status || '').toLowerCase())).length;
+        } else if (funnelRes?.data) {
+          const fd = funnelRes.data;
+          totalApps = fd.total ?? fd.applied ?? 0;
+          underReview = fd.under_review ?? 0;
+          shortlisted = fd.shortlisted ?? 0;
+          interview = fd.interview ?? 0;
+          offered = fd.offered ?? 0;
+        }
+
+        setFunnel({
+          total: totalApps,
+          applied: totalApps,
+          under_review: underReview,
+          shortlisted: shortlisted,
+          interview: interview,
+          offered: offered,
+        });
+
         if (skillsRes?.data && Array.isArray(skillsRes.data.skills)) {
           const skillsList = skillsRes.data.skills;
           const gapCounts = skillsRes.data.gap_counts || [];
@@ -119,13 +151,14 @@ export default function ReportsPanel() {
       id: "REP-2026-01",
       title: "All Departments Placement & Accreditation Report",
       format: "pdf",
+      session: "2025-2026",
+      term: "Even Semester (Term II)",
       department: "All Departments",
-      term: "2025-2026",
       generated_at: new Date().toISOString().split("T")[0],
       size: "1.2 MB",
       status: "Ready",
       metrics: {
-        applied: funnel.applied || 6,
+        applied: funnel.total ?? funnel.applied ?? 3,
         under_review: funnel.under_review || 2,
         shortlisted: funnel.shortlisted || 1,
         interview: funnel.interview || 0,
@@ -147,20 +180,42 @@ export default function ReportsPanel() {
     return BASELINE_SAMPLE_REPORT;
   });
 
+  // Compute 100% Dynamic KPIs derived directly from live funnel data
+  const liveTotal = funnel.total ?? (funnel.applied > 0 ? funnel.applied : ((funnel.under_review ?? 0) + (funnel.shortlisted ?? 0) + (funnel.interview ?? 0) + (funnel.offered ?? 0)));
+  const liveApplied = liveTotal;
+  const liveUnderReview = funnel.under_review ?? 0;
+  const liveShortlisted = (funnel.shortlisted ?? 0) + (funnel.interview ?? 0);
+  const liveOffered = funnel.offered ?? 0;
+  const placementRateStr = liveApplied > 0 ? `${((liveOffered / liveApplied) * 100).toFixed(1)}%` : "0.0%";
+
   useEffect(() => {
     try {
       localStorage.setItem("stufac_generated_reports", JSON.stringify(reports));
     } catch (e) {}
   }, [reports]);
 
-  // Compute 100% Dynamic KPIs derived directly from live funnel data
-  const liveApplied = funnel.applied ?? 6;
-  const liveUnderReview = funnel.under_review ?? 2;
-  const liveShortlisted = (funnel.shortlisted ?? 1) + (funnel.interview ?? 0);
-  const liveOffered = funnel.offered ?? 0;
-  const placementRateStr = liveApplied > 0 ? `${((liveOffered / liveApplied) * 100).toFixed(1)}%` : "0.0%";
+  // Sync baseline reports if stored with old 0 count
+  useEffect(() => {
+    if (liveApplied > 0) {
+      setReports(prev => prev.map(r => {
+        if (r.id === "REP-2026-01" && (r.metrics?.applied === 0 || !r.metrics?.applied)) {
+          return {
+            ...r,
+            metrics: {
+              ...r.metrics,
+              applied: liveApplied,
+              under_review: liveUnderReview,
+              shortlisted: liveShortlisted,
+              offered: liveOffered
+            }
+          };
+        }
+        return r;
+      }));
+    }
+  }, [liveApplied, liveUnderReview, liveShortlisted, liveOffered]);
 
-  const generateReportPdf = (deptName, termName) => {
+  const generateReportPdf = (deptName, termName, sessionName) => {
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
     canvas.height = 1700;
@@ -193,7 +248,7 @@ export default function ReportsPanel() {
 
     ctx.fillStyle = "#64748b";
     ctx.font = "20px sans-serif";
-    ctx.fillText(`Generated: ${new Date().toLocaleDateString()} | Department: ${deptName} | Term: ${termName}`, 600, 270);
+    ctx.fillText(`Generated: ${new Date().toLocaleDateString()} | Session: ${sessionName || "2025-2026"} | Term: ${termName} | Department: ${deptName}`, 600, 270);
 
     ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(100, 300); ctx.lineTo(1100, 300); ctx.stroke();
@@ -290,10 +345,10 @@ export default function ReportsPanel() {
     return convertCanvasToPdfBlob(canvas);
   };
 
-  const generateCsvReport = (deptName, termName) => {
+  const generateCsvReport = (deptName, termName, sessionName) => {
     const csvRows = [
       ["SAIOTAF INSTITUTIONAL PLACEMENT REPORT"],
-      [`Department: ${deptName}`, `Term: ${termName}`, `Generated: ${new Date().toLocaleDateString()}`],
+      [`Session: ${sessionName || "2025-2026"}`, `Term: ${termName}`, `Department: ${deptName}`, `Generated: ${new Date().toLocaleDateString()}`],
       [],
       ["PLACEMENT FUNNEL METRICS"],
       ["Total Applications Processed", liveApplied],
@@ -315,24 +370,32 @@ export default function ReportsPanel() {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    const deptName = department.trim() || "All Departments";
-    const termName = term.trim() || "2025-2026";
-    const exportFileName = `Placement_Report_${deptName.replace(/[^a-zA-Z0-9]/g, "_")}_${termName.replace(/[^a-zA-Z0-9]/g, "_")}.${format}`;
+    const sessionName = (session || "").trim() || "2025-2026";
+    const termName = (term || "").trim() || "Even Semester (Term II)";
+    const deptName = (department || "").trim() || "All Departments";
+
+    if (!sessionName || !termName || !deptName || !format) {
+      setErrorMsg("Please fill in all required fields: Session, Academic Term, Department, and Format.");
+      setGenerating(false);
+      return;
+    }
+
+    const exportFileName = `Placement_Report_${sessionName.replace(/[^a-zA-Z0-9]/g, "_")}_${termName.replace(/[^a-zA-Z0-9]/g, "_")}_${deptName.replace(/[^a-zA-Z0-9]/g, "_")}.${format}`;
 
     // Criteria Validation: Return warning if unrepresented department is specified
-    if (department.trim().toLowerCase() in { "none": 1, "nonexistent": 1, "invalid": 1, "empty": 1, "unknown": 1 }) {
-      setErrorMsg(`No placement records found for department "${department}" and term "${termName}". Please adjust your search criteria.`);
+    if (deptName.toLowerCase() in { "none": 1, "nonexistent": 1, "invalid": 1, "empty": 1, "unknown": 1 }) {
+      setErrorMsg(`No placement records found for department "${deptName}", session "${sessionName}", and term "${termName}". Please adjust your selection criteria.`);
       setGenerating(false);
       return;
     }
 
     try {
       // 1. Fire Real API Export Request
-      const response = await reportApi.export(format, department || undefined, term || undefined);
+      const response = await reportApi.export(format, deptName, termName, sessionName);
       if (response?.data && !(response.data instanceof Blob && response.data.size < 50)) {
         const blob = new Blob([response.data], { type: format === "pdf" ? "application/pdf" : "text/csv" });
         triggerDownload(blob, exportFileName);
-        finishSuccess(deptName, termName, exportFileName);
+        finishSuccess(deptName, termName, sessionName, exportFileName);
         return;
       }
     } catch (err) {
@@ -346,14 +409,14 @@ export default function ReportsPanel() {
     // 2. Dynamic Instant Generator Fallback
     setTimeout(() => {
       if (format === "pdf") {
-        const pdfBlob = generateReportPdf(deptName, termName);
+        const pdfBlob = generateReportPdf(deptName, termName, sessionName);
         triggerDownload(pdfBlob, exportFileName);
       } else {
-        const csvContent = generateCsvReport(deptName, termName);
+        const csvContent = generateCsvReport(deptName, termName, sessionName);
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         triggerDownload(blob, exportFileName.replace(/\.xlsx$/, ".csv"));
       }
-      finishSuccess(deptName, termName, exportFileName);
+      finishSuccess(deptName, termName, sessionName, exportFileName);
     }, 500);
   };
 
@@ -368,13 +431,14 @@ export default function ReportsPanel() {
     setTimeout(() => window.URL.revokeObjectURL(url), 2000);
   };
 
-  const finishSuccess = (deptName, termName, fileName) => {
+  const finishSuccess = (deptName, termName, sessionName, fileName) => {
     const newReportRecord = {
       id: `REP-${Date.now().toString().slice(-4)}`,
       title: `${deptName} Placement & Accreditation Report`,
       format: format,
-      department: deptName,
+      session: sessionName,
       term: termName,
+      department: deptName,
       generated_at: new Date().toISOString().split("T")[0],
       size: format === "pdf" ? "1.2 MB" : "320 KB",
       status: "Ready",
@@ -388,7 +452,7 @@ export default function ReportsPanel() {
     };
 
     setReports(prev => [newReportRecord, ...prev]);
-    setSuccessMsg(`✅ Placement Report for "${deptName}" (${termName}) generated successfully as ${fileName}!`);
+    setSuccessMsg(`✅ Placement Report for "${deptName}" (${sessionName} • ${termName}) generated successfully as ${fileName}!`);
     setGenerating(false);
   };
 
@@ -433,10 +497,10 @@ export default function ReportsPanel() {
       if (r) {
         const exportName = `${r.title.replace(/[^a-zA-Z0-9]/g, "_")}.${r.format}`;
         if (r.format === "pdf") {
-          const pdfBlob = generateReportPdf(r.department, r.term);
+          const pdfBlob = generateReportPdf(r.department, r.term, r.session);
           triggerDownload(pdfBlob, exportName);
         } else {
-          const csvContent = generateCsvReport(r.department, r.term);
+          const csvContent = generateCsvReport(r.department, r.term, r.session);
           const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
           triggerDownload(blob, exportName.replace(/\.xlsx$/, ".csv"));
         }
@@ -563,53 +627,87 @@ export default function ReportsPanel() {
         )}
 
         <div className="row g-3 align-items-end">
-          <div className="col-md-3">
+          {/* 1. Session */}
+          <div className="col-md-3 col-sm-6">
             <label className="form-label fw-semibold small" style={{ color: "var(--text-muted)" }}>
-              Format & Purpose
+              Session <span className="text-danger">*</span>
+            </label>
+            <select
+              className="form-select faculty-select-filter"
+              value={session}
+              onChange={(e) => setSession(e.target.value)}
+              required
+            >
+              <option value="2025-2026">2025-2026</option>
+              <option value="2024-2025">2024-2025</option>
+              <option value="2026-2027">2026-2027</option>
+              <option value="2023-2024">2023-2024</option>
+            </select>
+          </div>
+
+          {/* 2. Academic Term */}
+          <div className="col-md-3 col-sm-6">
+            <label className="form-label fw-semibold small" style={{ color: "var(--text-muted)" }}>
+              Academic Term <span className="text-danger">*</span>
+            </label>
+            <select
+              className="form-select faculty-select-filter"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              required
+            >
+              <option value="Even Semester (Term II)">Even Semester (Term II)</option>
+              <option value="Odd Semester (Term I)">Odd Semester (Term I)</option>
+              <option value="Annual / Full Year">Annual / Full Year</option>
+              <option value="Summer Term">Summer Term</option>
+            </select>
+          </div>
+
+          {/* 3. Department */}
+          <div className="col-md-3 col-sm-6">
+            <label className="form-label fw-semibold small" style={{ color: "var(--text-muted)" }}>
+              Department <span className="text-danger">*</span>
+            </label>
+            <select
+              className="form-select faculty-select-filter"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              required
+            >
+              <option value="All Departments">All Departments</option>
+              <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+              <option value="Electronics & Telecommunication">Electronics & Telecommunication</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+            </select>
+          </div>
+
+          {/* 4. Format */}
+          <div className="col-md-3 col-sm-6">
+            <label className="form-label fw-semibold small" style={{ color: "var(--text-muted)" }}>
+              Format <span className="text-danger">*</span>
             </label>
             <select
               className="form-select faculty-select-filter"
               value={format}
               onChange={(e) => setFormat(e.target.value)}
+              required
             >
               <option value="pdf">PDF (Accreditation Report)</option>
               <option value="xlsx">Excel / CSV (Placement Matrix)</option>
             </select>
           </div>
 
-          <div className="col-md-4">
-            <label className="form-label fw-semibold small" style={{ color: "var(--text-muted)" }}>
-              Department (optional)
-            </label>
-            <input
-              type="text"
-              className="form-control faculty-search-input"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              placeholder="e.g. Computer Science"
-            />
-          </div>
-
-          <div className="col-md-3">
-            <label className="form-label fw-semibold small" style={{ color: "var(--text-muted)" }}>
-              Academic Term / Batch (optional)
-            </label>
-            <input
-              type="text"
-              className="form-control faculty-search-input"
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              placeholder="e.g. Fall 2026 or 2025-2026"
-            />
-          </div>
-
-          <div className="col-md-2">
+          {/* Generate Report Button */}
+          <div className="col-12 text-end mt-2">
             <button
-              className="btn btn-primary w-100 fw-semibold"
+              className="btn btn-primary px-4 py-2 fw-semibold"
               onClick={handleExport}
               disabled={generating}
             >
-              {generating ? "Exporting…" : "Export Report"}
+              {generating ? "Generating Report…" : "📄 Generate Report"}
             </button>
           </div>
         </div>
@@ -651,8 +749,9 @@ export default function ReportsPanel() {
                   />
                 </th>
                 <th className="fw-bold">Report Title</th>
+                <th className="fw-bold">Session</th>
+                <th className="fw-bold">Academic Term</th>
                 <th className="fw-bold">Department</th>
-                <th className="fw-bold">Term / Batch</th>
                 <th className="fw-bold">Format</th>
                 <th className="fw-bold">Date Generated</th>
                 <th className="text-end fw-bold">Actions</th>
@@ -661,8 +760,8 @@ export default function ReportsPanel() {
             <tbody>
               {reports.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-4 text-muted">
-                    No generated reports in history. Select format and department above to generate a report.
+                  <td colSpan={8} className="text-center py-4 text-muted">
+                    No generated reports in history. Select session, term, department, and format above to generate a report.
                   </td>
                 </tr>
               )}
@@ -688,8 +787,9 @@ export default function ReportsPanel() {
                         </div>
                       </div>
                     </td>
-                    <td><span className="badge border" style={{ background: "var(--input-bg)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>{r.department}</span></td>
+                    <td className="fw-semibold small" style={{ color: "var(--text-main)" }}>{r.session || "2025-2026"}</td>
                     <td className="text-muted small">{r.term}</td>
+                    <td><span className="badge border" style={{ background: "var(--input-bg)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>{r.department}</span></td>
                     <td>
                       <span className={`badge ${r.format === "pdf" ? "bg-danger" : "bg-success"}`}>
                         {r.format.toUpperCase()}
@@ -709,10 +809,10 @@ export default function ReportsPanel() {
                           onClick={() => {
                             const exportName = `${r.title.replace(/[^a-zA-Z0-9]/g, "_")}.${r.format}`;
                             if (r.format === "pdf") {
-                              const pdfBlob = generateReportPdf(r.department, r.term);
+                              const pdfBlob = generateReportPdf(r.department, r.term, r.session);
                               triggerDownload(pdfBlob, exportName);
                             } else {
-                              const csvContent = generateCsvReport(r.department, r.term);
+                              const csvContent = generateCsvReport(r.department, r.term, r.session);
                               const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
                               triggerDownload(blob, exportName.replace(/\.xlsx$/, ".csv"));
                             }
@@ -750,16 +850,16 @@ export default function ReportsPanel() {
               <div className="modal-body p-4">
                 <div className="row g-2 mb-3 p-3 rounded border" style={{ background: "var(--input-bg)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
                   <div className="col-3">
-                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Department</small>
-                    <span className="fw-bold">{previewReport.department}</span>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Session</small>
+                    <span className="fw-bold">{previewReport.session || "2025-2026"}</span>
                   </div>
                   <div className="col-3">
-                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Term / Batch</small>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Academic Term</small>
                     <span>{previewReport.term}</span>
                   </div>
                   <div className="col-3">
-                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Date Generated</small>
-                    <span>{previewReport.generated_at}</span>
+                    <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Department</small>
+                    <span className="fw-bold">{previewReport.department}</span>
                   </div>
                   <div className="col-3">
                     <small className="d-block fw-bold text-uppercase" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Format</small>
@@ -807,10 +907,10 @@ export default function ReportsPanel() {
                   onClick={() => {
                     const exportName = `${previewReport.title.replace(/[^a-zA-Z0-9]/g, "_")}.${previewReport.format}`;
                     if (previewReport.format === "pdf") {
-                      const pdfBlob = generateReportPdf(previewReport.department, previewReport.term);
+                      const pdfBlob = generateReportPdf(previewReport.department, previewReport.term, previewReport.session);
                       triggerDownload(pdfBlob, exportName);
                     } else {
-                      const csvContent = generateCsvReport(previewReport.department, previewReport.term);
+                      const csvContent = generateCsvReport(previewReport.department, previewReport.term, previewReport.session);
                       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
                       triggerDownload(blob, exportName.replace(/\.xlsx$/, ".csv"));
                     }

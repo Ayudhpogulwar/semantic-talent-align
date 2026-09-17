@@ -36,6 +36,7 @@ const MOCK_USERS = [
   {
     id: 1,
     user_id: "STU-1001",
+    enrollment_no: "EN2026CS101",
     name: "Aditi Sharma",
     email: "aditi.sharma@raisoni.net",
     role: "Student",
@@ -58,6 +59,7 @@ const MOCK_USERS = [
   {
     id: 3,
     user_id: "STU-1004",
+    enrollment_no: "EN2027EC202",
     name: "Siddharth Kulkarni",
     email: "siddharth.k@raisoni.net",
     role: "Student",
@@ -80,6 +82,7 @@ const MOCK_USERS = [
   {
     id: 5,
     user_id: "STU-1005",
+    enrollment_no: "EN2026ME115",
     name: "Ananya Deshmukh",
     email: "ananya.d@raisoni.net",
     role: "Student",
@@ -96,7 +99,7 @@ const MOCK_OVERRIDES = [
     target_type: "Student Verification",
     target_id: "STU-1004",
     target_name: "Siddharth Kulkarni",
-    issue: "Roll number mismatch flagged by moderator",
+    issue: "Enrollment number mismatch flagged by moderator",
     current_status: "Pending",
     recommended_action: "Force Verify Profile"
   },

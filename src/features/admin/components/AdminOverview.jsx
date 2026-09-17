@@ -77,7 +77,7 @@ export default function AdminOverview() {
                   Total Students
                 </span>
                 <h2 className="fw-extrabold mb-0" style={{ color: "var(--text-main)" }}>
-                  {s.total_students?.toLocaleString() ?? "1,248"}
+                  {s.total_students?.toLocaleString() ?? "0"}
                 </h2>
               </div>
               <div
@@ -88,7 +88,7 @@ export default function AdminOverview() {
               </div>
             </div>
             <div className="small d-flex align-items-center gap-1 fw-medium" style={{ color: "#34d399" }}>
-              <TrendingUp size={14} /> <span>+12.4% from last academic term</span>
+              <TrendingUp size={14} /> <span>{s.total_students ?? 0} Registered Students</span>
             </div>
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function AdminOverview() {
                   Verified Faculty
                 </span>
                 <h2 className="fw-extrabold mb-0" style={{ color: "var(--text-main)" }}>
-                  {s.total_faculty?.toLocaleString() ?? "86"}
+                  {s.total_faculty?.toLocaleString() ?? "0"}
                 </h2>
               </div>
               <div
@@ -116,7 +116,7 @@ export default function AdminOverview() {
               </div>
             </div>
             <div className="small d-flex align-items-center gap-1 fw-medium" style={{ color: "#22d3ee" }}>
-              <CheckCircle size={14} /> <span>Across 6 Academic Depts</span>
+              <CheckCircle size={14} /> <span>{s.total_faculty ?? 0} Verified Faculty Accounts</span>
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function AdminOverview() {
                   Active Opportunities
                 </span>
                 <h2 className="fw-extrabold mb-0" style={{ color: "var(--text-main)" }}>
-                  {s.total_opportunities?.toLocaleString() ?? "142"}
+                  {s.total_opportunities?.toLocaleString() ?? "0"}
                 </h2>
               </div>
               <div
@@ -144,7 +144,7 @@ export default function AdminOverview() {
               </div>
             </div>
             <div className="small d-flex align-items-center gap-1 fw-medium" style={{ color: "#fbbf24" }}>
-              <Activity size={14} /> <span>{s.active_applications?.toLocaleString() ?? "3,410"} Total Applications</span>
+              <Activity size={14} /> <span>{s.active_applications?.toLocaleString() ?? "0"} Total Applications</span>
             </div>
           </div>
         </div>
@@ -206,7 +206,7 @@ export default function AdminOverview() {
                     style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}
                   >
                     <span className="small d-block mb-1 fw-semibold" style={{ color: "var(--text-muted)" }}>Student Profiles</span>
-                    <span className="fw-extrabold fs-5" style={{ color: "#22d3ee" }}>100% Synced</span>
+                    <span className="fw-extrabold fs-5" style={{ color: "#22d3ee" }}>{s.total_students ?? 0} Synced</span>
                   </div>
                 </div>
                 <div className="col-12 col-sm-4">
@@ -215,7 +215,7 @@ export default function AdminOverview() {
                     style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}
                   >
                     <span className="small d-block mb-1 fw-semibold" style={{ color: "var(--text-muted)" }}>Faculty Officers</span>
-                    <span className="fw-extrabold fs-5" style={{ color: "#34d399" }}>86 Active</span>
+                    <span className="fw-extrabold fs-5" style={{ color: "#34d399" }}>{s.total_faculty ?? 0} Active</span>
                   </div>
                 </div>
                 <div className="col-12 col-sm-4">
@@ -224,7 +224,7 @@ export default function AdminOverview() {
                     style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}
                   >
                     <span className="small d-block mb-1 fw-semibold" style={{ color: "var(--text-muted)" }}>Pending Overrides</span>
-                    <span className="fw-extrabold fs-5" style={{ color: "#fbbf24" }}>{s.pending_verifications ?? 19} Pending</span>
+                    <span className="fw-extrabold fs-5" style={{ color: "#fbbf24" }}>{s.pending_verifications ?? 0} Pending</span>
                   </div>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export default function AdminOverview() {
                   style={{ background: "transparent", borderColor: "var(--border-color)", color: "var(--text-main)" }}
                 >
                   <span className="small fw-semibold" style={{ color: "var(--text-muted)" }}>Domain Security Enforcement:</span>
-                  <span className="badge px-3 py-1 rounded-pill" style={{ background: "rgba(6, 182, 212, 0.15)", color: "#22d3ee", border: "1px solid rgba(6, 182, 212, 0.3)", fontSize: "0.75rem", fontWeight: 700 }}>@raisoni.net (Strict)</span>
+                  <span className="badge px-3 py-1 rounded-pill" style={{ background: "rgba(6, 182, 212, 0.15)", color: "#22d3ee", border: "1px solid rgba(6, 182, 212, 0.3)", fontSize: "0.75rem", fontWeight: 700 }}>@raisoni.net (Students)</span>
                 </li>
                 <li
                   className="list-group-item px-0 py-2.5 d-flex justify-content-between align-items-center border-bottom"

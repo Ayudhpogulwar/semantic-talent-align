@@ -19,6 +19,10 @@ import {
 
 export default function DashboardOverview({ profile, resume, readiness, applications, recommendations, setActiveTab }) {
   const pendingAppsCount = applications.filter(a => a.status === 'Applied' || a.status === 'Under Review').length;
+  const shortlistedApps = applications.filter(a => {
+    const s = (a.status || '').toLowerCase();
+    return s === 'shortlisted' || s === 'interview' || s === 'selected' || s === 'offered';
+  });
   const topMatch = recommendations[0];
 
   return (
@@ -137,8 +141,10 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '14px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
             Total Submitted: {applications.length} applications
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--accent-emerald)', marginTop: '4px' }}>
-            1 Application Shortlisted for Technical Interview
+          <div style={{ fontSize: '0.72rem', color: shortlistedApps.length > 0 ? 'var(--accent-emerald)' : 'var(--text-dim)', marginTop: '4px' }}>
+            {shortlistedApps.length > 0
+              ? `${shortlistedApps.length} Application${shortlistedApps.length > 1 ? 's' : ''} Shortlisted / In Progress`
+              : '0 Applications Shortlisted'}
           </div>
         </div>
 
