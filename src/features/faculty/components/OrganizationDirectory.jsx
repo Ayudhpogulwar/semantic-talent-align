@@ -98,7 +98,7 @@ export default function OrganizationDirectory() {
     setError(null);
     try {
       const localList = getStoredOrgs();
-      const res = await organizationApi.list({ org_type: typeFilter || undefined });
+      const res = await organizationApi.list();
       const apiData = res?.data?.results ?? res?.data ?? [];
       let merged = [...localList];
       if (Array.isArray(apiData) && apiData.length > 0) {
@@ -106,6 +106,7 @@ export default function OrganizationDirectory() {
           const existingIdx = merged.findIndex(
             (m) => String(m.id) === String(item.id) || m.name.toLowerCase() === item.name.toLowerCase()
           );
+
           const mappedItem = {
             id: item.id || `ORG-${Math.floor(1000 + Math.random() * 9000)}`,
             name: item.name,
@@ -121,7 +122,9 @@ export default function OrganizationDirectory() {
           };
 
           if (existingIdx !== -1) {
-            // Merge with existing while keeping newer fields
+            // CRITICAL: if this org was locally edited, do NOT overwrite with (possibly stale) API data.
+            // The user's edit is authoritative until the page reloads or they explicitly refresh.
+            if (merged[existingIdx]._locallyEdited) return;
             merged[existingIdx] = { ...merged[existingIdx], ...mappedItem };
           } else {
             merged.unshift(mappedItem);
@@ -136,7 +139,7 @@ export default function OrganizationDirectory() {
     } finally {
       setLoading(false);
     }
-  }, [typeFilter]);
+  }, []); // No typeFilter dependency — filtering is client-side only
 
   useEffect(() => {
     fetchOrgs();
@@ -172,12 +175,15 @@ export default function OrganizationDirectory() {
 
   const handleUpdateSuccess = (updatedOrg) => {
     setEditingOrg(null);
+    // Mark as locally edited so fetchOrgs never overwrites this with stale API data
+    const protectedOrg = { ...updatedOrg, _locallyEdited: true };
     setOrgs((prev) => {
-      const nextList = prev.map((o) => (String(o.id) === String(updatedOrg.id) ? { ...o, ...updatedOrg } : o));
+      const nextList = prev.map((o) =>
+        String(o.id) === String(updatedOrg.id) ? protectedOrg : o
+      );
       localStorage.setItem("stufac_organizations", JSON.stringify(nextList));
       return nextList;
     });
-    fetchOrgs();
   };
 
   const filteredOrgs = orgs.filter((org) => {
@@ -243,9 +249,15 @@ export default function OrganizationDirectory() {
       {!editingOrg && showAddForm && (
         <div className="mb-4">
           <AddOrganizationForm
-            onSuccess={() => {
+            onSuccess={(newOrg) => {
               setShowAddForm(false);
-              fetchOrgs();
+              // Immediately prepend the new org so it shows without waiting for API
+              setOrgs((prev) => {
+                const exists = prev.some((o) => String(o.id) === String(newOrg.id));
+                const nextList = exists ? prev : [newOrg, ...prev];
+                localStorage.setItem("stufac_organizations", JSON.stringify(nextList));
+                return nextList;
+              });
             }}
             onCancel={() => setShowAddForm(false)}
           />

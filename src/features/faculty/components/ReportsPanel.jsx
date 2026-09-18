@@ -78,72 +78,102 @@ export default function ReportsPanel() {
   const [previewReport, setPreviewReport] = useState(null);
   const [showInfo, setShowInfo] = useState(true);
 
-  // Live Analytics Data State (Connected 100% to Analytics Dashboard & Applications Table)
-  const [funnel, setFunnel] = useState({ total: 3, applied: 3, under_review: 2, shortlisted: 1, interview: 0, offered: 0 });
-  const [skillGaps, setSkillGaps] = useState([
-    { skill: "Docker", count: 8 },
-    { skill: "Python", count: 6 },
-    { skill: "Java", count: 6 },
-    { skill: "React.js", count: 4 },
-    { skill: "Machine Learning", count: 4 },
-    { skill: "System Design", count: 2 }
-  ]);
+  // Live Analytics Data State — all derived from dept-filtered applications
+  const [funnel, setFunnel] = useState({ total: 0, applied: 0, under_review: 0, shortlisted: 0, interview: 0, offered: 0 });
+  const [skillGaps, setSkillGaps] = useState([]);
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
 
-  // Fetch Live Analytics metrics on mount so Reports match Analytics & Applications 100%
+  // Fetch live metrics filtered by selected department and session
+  // ALL numbers (funnel + skill gaps) come from the same filtered dataset
   useEffect(() => {
     async function loadLiveAnalytics() {
       setLoadingAnalytics(true);
+      // Reset to 0 immediately so old numbers don't linger while loading
+      setFunnel({ total: 0, applied: 0, under_review: 0, shortlisted: 0, interview: 0, offered: 0 });
+      setSkillGaps([]);
+
       try {
-        const [funnelRes, skillsRes, appsRes] = await Promise.all([
-          reportApi.funnel().catch(() => null),
-          reportApi.skillGaps().catch(() => null),
-          fetch("http://127.0.0.1:8000/api/applications").then(r => r.ok ? r.json() : null).catch(() => null),
-        ]);
+        const queryParams = new URLSearchParams();
+        if (department && department !== "All Departments") queryParams.set("department", department);
+        if (session && session !== "All Sessions") queryParams.set("session", session);
+        if (term && term !== "All Terms") queryParams.set("term", term);
+        const deptQuery = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
-        let totalApps = 0;
-        let underReview = 0;
-        let shortlisted = 0;
-        let interview = 0;
-        let offered = 0;
+        // Single fetch — applications already filtered by dept & session on the backend
+        const appsRes = await fetch(`http://127.0.0.1:8000/api/applications${deptQuery}`)
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null);
 
-        if (Array.isArray(appsRes) && appsRes.length > 0) {
-          totalApps = appsRes.length;
-          underReview = appsRes.filter(a => (a.status || '').toLowerCase() === 'under review').length;
-          shortlisted = appsRes.filter(a => (a.status || '').toLowerCase() === 'shortlisted').length;
-          interview = appsRes.filter(a => (a.status || '').toLowerCase() === 'interview').length;
-          offered = appsRes.filter(a => ['selected', 'offered', 'accepted'].includes((a.status || '').toLowerCase())).length;
-        } else if (funnelRes?.data) {
-          const fd = funnelRes.data;
-          totalApps = fd.total ?? fd.applied ?? 0;
-          underReview = fd.under_review ?? 0;
-          shortlisted = fd.shortlisted ?? 0;
-          interview = fd.interview ?? 0;
-          offered = fd.offered ?? 0;
+        const apiCallFailed = appsRes === null;
+        const allApps = Array.isArray(appsRes) ? appsRes : [];
+
+        // --- Funnel metrics (always from filtered apps) ---
+        let totalApps = allApps.length;
+        let underReview = 0, shortlisted = 0, interview = 0, offered = 0;
+
+        if (totalApps > 0) {
+          underReview = allApps.filter(a => (a.status || '').toLowerCase() === 'under review').length;
+          shortlisted = allApps.filter(a => (a.status || '').toLowerCase() === 'shortlisted').length;
+          interview   = allApps.filter(a => (a.status || '').toLowerCase() === 'interview').length;
+          offered     = allApps.filter(a => ['selected', 'offered', 'accepted'].includes((a.status || '').toLowerCase())).length;
+        } else if (apiCallFailed && (!department || department === "All Departments") && (!session || session === "All Sessions")) {
+          // Network failure + no filter → try global funnel as last resort
+          try {
+            const funnelRes = await reportApi.funnel().catch(() => null);
+            if (funnelRes?.data) {
+              const fd = funnelRes.data;
+              totalApps   = fd.total ?? fd.applied ?? 0;
+              underReview = fd.under_review ?? 0;
+              shortlisted = fd.shortlisted ?? 0;
+              interview   = fd.interview ?? 0;
+              offered     = fd.offered ?? 0;
+            }
+          } catch (_) {}
         }
+        // filter returned 0 → all stay 0 correctly
 
         setFunnel({
-          total: totalApps,
-          applied: totalApps,
-          under_review: underReview,
-          shortlisted: shortlisted,
-          interview: interview,
-          offered: offered,
+          total: totalApps, applied: totalApps,
+          under_review: underReview, shortlisted, interview, offered,
         });
 
-        if (skillsRes?.data && Array.isArray(skillsRes.data.skills)) {
-          const skillsList = skillsRes.data.skills;
-          const gapCounts = skillsRes.data.gap_counts || [];
-          setSkillGaps(skillsList.map((skill, idx) => ({ skill, count: gapCounts[idx] ?? 0 })));
+        // --- Skill gaps: derived from opportunity required_skills in the same filtered apps ---
+        const opportunityIds = [...new Set(allApps.map(a => a.opportunity_id).filter(Boolean))];
+        const gapMap = {}; // skill → count of students missing it
+
+        if (opportunityIds.length > 0) {
+          const oppFetches = opportunityIds.map(id =>
+            fetch(`http://127.0.0.1:8000/api/opportunities`)
+              .then(r => r.ok ? r.json() : [])
+              .catch(() => [])
+          );
+          const oppResults = await Promise.all(oppFetches);
+          const allOpps = Array.isArray(oppResults[0]) ? oppResults[0] : [];
+
+          allApps.forEach(app => {
+            const opp = allOpps.find(o => String(o.id || o.opportunity_id) === String(app.opportunity_id));
+            const skills = Array.isArray(opp?.required_skills) ? opp.required_skills : [];
+            skills.forEach(skill => {
+              const key = typeof skill === "string" ? skill : skill?.skill_name || skill?.name || "";
+              if (key) gapMap[key] = (gapMap[key] || 0) + 1;
+            });
+          });
         }
+
+        const computedGaps = Object.entries(gapMap)
+          .sort((a, b) => b[1] - a[1])
+          .map(([skill, count]) => ({ skill, count }));
+
+        setSkillGaps(computedGaps);
+
       } catch (err) {
-        console.warn("Using live analytics database connection fallback:", err);
+        console.warn("Analytics load error:", err);
       } finally {
         setLoadingAnalytics(false);
       }
     }
     loadLiveAnalytics();
-  }, []);
+  }, [department, session, term]);
 
   // Baseline sample report initialized dynamically from live funnel metrics
   const BASELINE_SAMPLE_REPORT = [
@@ -215,7 +245,69 @@ export default function ReportsPanel() {
     }
   }, [liveApplied, liveUnderReview, liveShortlisted, liveOffered]);
 
-  const generateReportPdf = (deptName, termName, sessionName) => {
+  // Helper: Fetch fresh, authoritative metrics and skill gaps for any department & session
+  const fetchDeptMetrics = async (deptName, sessionName = "", termName = "") => {
+    const params = new URLSearchParams();
+    if (deptName && deptName !== "All Departments") params.set("department", deptName);
+    if (sessionName && sessionName !== "All Sessions") params.set("session", sessionName);
+    if (termName && termName !== "All Terms") params.set("term", termName);
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+
+    try {
+      const [appsRes, oppsRes] = await Promise.all([
+        fetch(`http://127.0.0.1:8000/api/applications${queryString}`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`http://127.0.0.1:8000/api/opportunities`).then(r => r.ok ? r.json() : []).catch(() => [])
+      ]);
+
+      const allApps = Array.isArray(appsRes) ? appsRes : [];
+      const allOpps = Array.isArray(oppsRes) ? oppsRes : [];
+
+      const totalApps = allApps.length;
+      const underReview = allApps.filter(a => (a.status || '').toLowerCase() === 'under review').length;
+      const shortlisted = allApps.filter(a => (a.status || '').toLowerCase() === 'shortlisted').length;
+      const interview = allApps.filter(a => (a.status || '').toLowerCase() === 'interview').length;
+      const offered = allApps.filter(a => ['selected', 'offered', 'accepted'].includes((a.status || '').toLowerCase())).length;
+
+      const gapMap = {};
+      allApps.forEach(app => {
+        const opp = allOpps.find(o => String(o.id || o.opportunity_id) === String(app.opportunity_id));
+        const skills = Array.isArray(opp?.required_skills) ? opp.required_skills : [];
+        skills.forEach(skill => {
+          const key = typeof skill === "string" ? skill : skill?.skill_name || skill?.name || "";
+          if (key) gapMap[key] = (gapMap[key] || 0) + 1;
+        });
+      });
+
+      const computedGaps = Object.entries(gapMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([skill, count]) => ({ skill, count }));
+
+      return {
+        metrics: {
+          applied: totalApps,
+          under_review: underReview,
+          shortlisted: shortlisted + interview,
+          offered: offered,
+          rate: totalApps > 0 ? `${((offered / totalApps) * 100).toFixed(1)}%` : "0.0%"
+        },
+        skillGaps: computedGaps
+      };
+    } catch (err) {
+      return {
+        metrics: { applied: 0, under_review: 0, shortlisted: 0, offered: 0, rate: "0.0%" },
+        skillGaps: []
+      };
+    }
+  };
+
+  const generateReportPdf = (deptName, termName, sessionName, customMetrics = null, customSkillGaps = null) => {
+    const reportApplied = customMetrics?.applied ?? liveApplied;
+    const reportUnderReview = customMetrics?.under_review ?? liveUnderReview;
+    const reportShortlisted = customMetrics?.shortlisted ?? liveShortlisted;
+    const reportOffered = customMetrics?.offered ?? liveOffered;
+    const reportRateStr = customMetrics?.rate ?? (reportApplied > 0 ? `${((reportOffered / reportApplied) * 100).toFixed(1)}%` : "0.0%");
+    const reportSkills = customSkillGaps ?? skillGaps;
+
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
     canvas.height = 1700;
@@ -237,33 +329,63 @@ export default function ReportsPanel() {
     ctx.fillRect(48, 48, 1104, 120);
 
     ctx.fillStyle = "#6366f1";
-    ctx.font = "bold 34px sans-serif";
-    ctx.fillText("SAIOTAF INSTITUTIONAL VERIFICATION & PLACEMENT CELL", 80, 115);
+    ctx.font = "bold 30px sans-serif";
+    ctx.fillText("G H RAISONI COLLEGE OF ENGINEERING, NAGPUR", 80, 100, 1000);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "16px sans-serif";
+    ctx.fillText("Placement & Training Cell  |  Autonomous Institution  |  NAAC Accredited", 80, 130, 1000);
 
-    // Report Title
-    ctx.textAlign = "center";
+    // Helper: draw text wrapping inside maxWidth
+    const fillTextWrapped = (text, x, y, maxWidth, lineHeight, font, align = "left") => {
+      ctx.font = font;
+      ctx.textAlign = align;
+      const refX = align === "center" ? x : x;
+      const words = text.split(" ");
+      let line = "";
+      let currentY = y;
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + " ";
+        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+          ctx.fillText(line.trim(), refX, currentY, maxWidth);
+          line = words[i] + " ";
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line.trim(), refX, currentY, maxWidth);
+      return currentY;
+    };
+
+    // Report Title — cleanly wrapped with non-overlapping spacing
     ctx.fillStyle = "#1e3a8a";
-    ctx.font = "bold 38px sans-serif";
-    ctx.fillText("OFFICIAL CAMPUS PLACEMENT & ACCREDITATION AUDIT REPORT", 600, 230);
+    const titleEndY = fillTextWrapped(
+      "OFFICIAL CAMPUS PLACEMENT & ACCREDITATION AUDIT REPORT",
+      600, 205, 1000, 38, "bold 32px sans-serif", "center"
+    );
 
+    // Metadata line cleanly positioned below the title with no overlap
     ctx.fillStyle = "#64748b";
-    ctx.font = "20px sans-serif";
-    ctx.fillText(`Generated: ${new Date().toLocaleDateString()} | Session: ${sessionName || "2025-2026"} | Term: ${termName} | Department: ${deptName}`, 600, 270);
+    ctx.font = "16px sans-serif";
+    ctx.textAlign = "center";
+    const metaLine = `Generated: ${new Date().toLocaleDateString()} | Session: ${sessionName || "2025-2026"} | Term: ${termName} | Dept: ${deptName}`;
+    ctx.fillText(metaLine, 600, titleEndY + 35, 1080);
 
     ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(100, 300); ctx.lineTo(1100, 300); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(100, titleEndY + 55); ctx.lineTo(1100, titleEndY + 55); ctx.stroke();
 
-    // Summary Metric Cards (Exact Live Funnel Values)
+    // Summary Metric Cards (Exact Live Department Values)
     const metrics = [
-      { label: "Total Applications Processed", val: `${liveApplied}`, color: "#2563eb" },
-      { label: "Applications Under Review", val: `${liveUnderReview}`, color: "#06b6d4" },
-      { label: "Shortlisted / Interview Stage", val: `${liveShortlisted}`, color: "#f59e0b" },
-      { label: "Offers Confirmed / Placed", val: `${liveOffered} (${placementRateStr})`, color: "#10b981" }
+      { label: "Total Applications Processed", val: `${reportApplied}`, color: "#2563eb" },
+      { label: "Applications Under Review", val: `${reportUnderReview}`, color: "#06b6d4" },
+      { label: "Shortlisted / Interview Stage", val: `${reportShortlisted}`, color: "#f59e0b" },
+      { label: "Offers Confirmed / Placed", val: `${reportOffered} (${reportRateStr})`, color: "#10b981" }
     ];
 
+    const cardsStartY = Math.max(320, titleEndY + 75);
     metrics.forEach((m, idx) => {
       const x = 100 + (idx % 2) * 510;
-      const y = 340 + Math.floor(idx / 2) * 130;
+      const y = cardsStartY + Math.floor(idx / 2) * 125;
 
       ctx.fillStyle = "#f8fafc";
       ctx.strokeStyle = "#cbd5e1";
@@ -273,93 +395,136 @@ export default function ReportsPanel() {
 
       ctx.textAlign = "left";
       ctx.fillStyle = "#64748b";
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillText(m.label.toUpperCase(), x + 25, y + 40);
+      ctx.font = "bold 15px sans-serif";
+      ctx.fillText(m.label.toUpperCase(), x + 25, y + 38, 430);
 
       ctx.fillStyle = m.color;
       ctx.font = "bold 30px sans-serif";
-      ctx.fillText(m.val, x + 25, y + 80);
+      ctx.fillText(m.val, x + 25, y + 80, 430);
     });
 
     // Live Skill Gap Analysis Section
+    const skillSectionY = cardsStartY + 275;
     ctx.textAlign = "left";
     ctx.fillStyle = "#0f172a";
     ctx.font = "bold 24px sans-serif";
-    ctx.fillText("Cohort-Wide Skill Gap Audit Highlights", 100, 640);
+    ctx.fillText("Cohort-Wide Skill Gap Audit Highlights", 100, skillSectionY, 1000);
 
     ctx.fillStyle = "#1e293b";
-    ctx.fillRect(100, 670, 1000, 45);
+    ctx.fillRect(100, skillSectionY + 25, 1000, 45);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 18px sans-serif";
-    ctx.fillText("Target Skill Area", 120, 700);
-    ctx.fillText("Candidates Requiring Training", 650, 700);
+    ctx.font = "bold 17px sans-serif";
+    ctx.fillText("Target Skill Area", 120, skillSectionY + 54, 480);
+    ctx.fillText("Candidates Requiring Training", 650, skillSectionY + 54, 430);
 
-    const topSkills = skillGaps.length > 0 ? skillGaps.slice(0, 5) : [
-      { skill: "Docker", count: 8 },
-      { skill: "Python", count: 6 },
-      { skill: "Java", count: 6 },
-      { skill: "React.js", count: 4 },
-      { skill: "Machine Learning", count: 4 }
-    ];
+    const topSkills = (reportSkills || []).slice(0, 5);
 
-    topSkills.forEach((s, i) => {
-      const py = 745 + i * 55;
-      ctx.fillStyle = i % 2 === 0 ? "#ffffff" : "#f8fafc";
-      ctx.fillRect(100, py - 30, 1000, 48);
+    if (topSkills.length === 0) {
+      // No skill gap data for this department — show honest, clean message
+      ctx.fillStyle = "#64748b";
+      ctx.font = "italic 16px sans-serif";
+      ctx.fillText("No application or skill gap records found for " + deptName + ".", 120, skillSectionY + 110, 900);
+    } else {
+      topSkills.forEach((s, i) => {
+        const py = skillSectionY + 105 + i * 55;
+        ctx.fillStyle = i % 2 === 0 ? "#ffffff" : "#f8fafc";
+        ctx.fillRect(100, py - 30, 1000, 48);
 
-      ctx.fillStyle = "#334155";
-      ctx.font = "17px sans-serif";
-      ctx.fillText(s.skill, 120, py);
-      ctx.fillText(`${s.count} Students missing skill`, 650, py);
-    });
+        ctx.fillStyle = "#334155";
+        ctx.font = "17px sans-serif";
+        ctx.fillText(s.skill, 120, py, 480);
+        ctx.fillText(`${s.count} Students missing skill`, 650, py, 430);
+      });
+    }
 
-    // NAAC & NIRF Institutional Seal Stamp
-    ctx.textAlign = "center";
+    // GHRCE Institutional Seal Stamp
     ctx.save();
-    ctx.translate(600, 1200);
-    ctx.fillStyle = "#d97706";
-    ctx.beginPath(); ctx.arc(0, 0, 70, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = "#b45309"; ctx.lineWidth = 4; ctx.stroke();
+    ctx.translate(600, 1185);
 
+    // Outer glow ring
+    ctx.beginPath(); ctx.arc(0, 0, 80, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(30, 58, 138, 0.12)"; ctx.fill();
+
+    // Outer ring — college blue
+    ctx.beginPath(); ctx.arc(0, 0, 72, 0, Math.PI * 2);
+    ctx.fillStyle = "#1e3a8a"; ctx.fill();
+    ctx.strokeStyle = "#d97706"; ctx.lineWidth = 5; ctx.stroke();
+
+    // Inner circle
+    ctx.beginPath(); ctx.arc(0, 0, 55, 0, Math.PI * 2);
+    ctx.fillStyle = "#162d6b"; ctx.fill();
+
+    // Seal text — GHRCE branding
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#f5c842";
+    ctx.font = "bold 12px sans-serif";
+    ctx.fillText("GHRCE", 0, -26);
+    ctx.font = "bold 9px sans-serif";
+    ctx.fillText("NAGPUR", 0, -12);
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px sans-serif";
-    ctx.fillText("SAIOTAF", 0, -20);
-    ctx.fillText("OFFICIAL SEAL", 0, 0);
-    ctx.fillText("AUDITED 2026", 0, 20);
+    ctx.font = "bold 8.5px sans-serif";
+    ctx.fillText("OFFICIAL SEAL", 0, 5);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "8px sans-serif";
+    ctx.fillText("VERIFIED " + new Date().getFullYear(), 0, 20);
+
+    // Decorative tick marks around seal
+    ctx.strokeStyle = "#d97706"; ctx.lineWidth = 1.5;
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 60, Math.sin(a) * 60);
+      ctx.lineTo(Math.cos(a) * 68, Math.sin(a) * 68);
+      ctx.stroke();
+    }
     ctx.restore();
 
     // Signatures
     ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(150, 1480); ctx.lineTo(450, 1480); ctx.stroke();
     ctx.fillStyle = "#1e293b"; ctx.font = "bold 18px sans-serif";
-    ctx.fillText("Dr. Aris Thorne", 300, 1510);
+    ctx.textAlign = "center";
+    ctx.fillText("Dr. Aris Thorne", 300, 1510, 290);
     ctx.fillStyle = "#64748b"; ctx.font = "15px sans-serif";
-    ctx.fillText("Head of Placement & Verification", 300, 1535);
+    ctx.fillText("Head of Placement & Training Cell", 300, 1535, 290);
 
     ctx.beginPath(); ctx.moveTo(750, 1480); ctx.lineTo(1050, 1480); ctx.stroke();
     ctx.fillStyle = "#1e293b"; ctx.font = "bold 18px sans-serif";
-    ctx.fillText("Prof. Elena Rostova", 900, 1510);
+    ctx.fillText("Prof. Elena Rostova", 900, 1510, 290);
     ctx.fillStyle = "#64748b"; ctx.font = "15px sans-serif";
-    ctx.fillText("Dean of Academic Affairs", 900, 1535);
+    ctx.fillText("Dean of Academic Affairs", 900, 1535, 290);
+
+    // Footer strip
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(48, 1600, 1104, 42);
+    ctx.fillStyle = "#94a3b8"; ctx.font = "13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("G H Raisoni College of Engineering, Nagpur  |  Placement & Accreditation Cell  |  Confidential", 600, 1627, 1060);
 
     return convertCanvasToPdfBlob(canvas);
   };
 
-  const generateCsvReport = (deptName, termName, sessionName) => {
+  const generateCsvReport = (deptName, termName, sessionName, customMetrics = null, customSkillGaps = null) => {
+    const reportApplied = customMetrics?.applied ?? liveApplied;
+    const reportUnderReview = customMetrics?.under_review ?? liveUnderReview;
+    const reportShortlisted = customMetrics?.shortlisted ?? liveShortlisted;
+    const reportOffered = customMetrics?.offered ?? liveOffered;
+    const reportRateStr = customMetrics?.rate ?? (reportApplied > 0 ? `${((reportOffered / reportApplied) * 100).toFixed(1)}%` : "0.0%");
+    const reportSkills = customSkillGaps ?? skillGaps;
+
     const csvRows = [
-      ["SAIOTAF INSTITUTIONAL PLACEMENT REPORT"],
+      ["G H RAISONI COLLEGE OF ENGINEERING - INSTITUTIONAL PLACEMENT REPORT"],
       [`Session: ${sessionName || "2025-2026"}`, `Term: ${termName}`, `Department: ${deptName}`, `Generated: ${new Date().toLocaleDateString()}`],
       [],
       ["PLACEMENT FUNNEL METRICS"],
-      ["Total Applications Processed", liveApplied],
-      ["Under Review", liveUnderReview],
-      ["Shortlisted / Interview Stage", liveShortlisted],
-      ["Offered / Placed", liveOffered],
-      ["Placement Rate", placementRateStr],
+      ["Total Applications Processed", reportApplied],
+      ["Under Review", reportUnderReview],
+      ["Shortlisted / Interview Stage", reportShortlisted],
+      ["Offered / Placed", reportOffered],
+      ["Placement Rate", reportRateStr],
       [],
       ["TARGET COHORT SKILL GAPS"],
       ["Skill Name", "Students Requiring Skill Training"],
-      ...skillGaps.map(s => [s.skill, s.count])
+      ...(reportSkills || []).map(s => [s.skill, s.count])
     ];
 
     return csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -382,42 +547,24 @@ export default function ReportsPanel() {
 
     const exportFileName = `Placement_Report_${sessionName.replace(/[^a-zA-Z0-9]/g, "_")}_${termName.replace(/[^a-zA-Z0-9]/g, "_")}_${deptName.replace(/[^a-zA-Z0-9]/g, "_")}.${format}`;
 
-    // Criteria Validation: Return warning if unrepresented department is specified
-    if (deptName.toLowerCase() in { "none": 1, "nonexistent": 1, "invalid": 1, "empty": 1, "unknown": 1 }) {
-      setErrorMsg(`No placement records found for department "${deptName}", session "${sessionName}", and term "${termName}". Please adjust your selection criteria.`);
-      setGenerating(false);
-      return;
-    }
-
     try {
-      // 1. Fire Real API Export Request
-      const response = await reportApi.export(format, deptName, termName, sessionName);
-      if (response?.data && !(response.data instanceof Blob && response.data.size < 50)) {
-        const blob = new Blob([response.data], { type: format === "pdf" ? "application/pdf" : "text/csv" });
-        triggerDownload(blob, exportFileName);
-        finishSuccess(deptName, termName, sessionName, exportFileName);
-        return;
-      }
-    } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
-        setErrorMsg(err.response.data.message);
-        setGenerating(false);
-        return;
-      }
-    }
+      // Fetch fresh, verified metrics & skill gaps specifically for the requested department & session
+      const { metrics: exportMetrics, skillGaps: exportSkills } = await fetchDeptMetrics(deptName, sessionName, termName);
 
-    // 2. Dynamic Instant Generator Fallback
-    setTimeout(() => {
       if (format === "pdf") {
-        const pdfBlob = generateReportPdf(deptName, termName, sessionName);
+        const pdfBlob = generateReportPdf(deptName, termName, sessionName, exportMetrics, exportSkills);
         triggerDownload(pdfBlob, exportFileName);
       } else {
-        const csvContent = generateCsvReport(deptName, termName, sessionName);
+        const csvContent = generateCsvReport(deptName, termName, sessionName, exportMetrics, exportSkills);
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         triggerDownload(blob, exportFileName.replace(/\.xlsx$/, ".csv"));
       }
-      finishSuccess(deptName, termName, sessionName, exportFileName);
-    }, 500);
+
+      finishSuccess(deptName, termName, sessionName, exportFileName, exportMetrics, exportSkills);
+    } catch (err) {
+      setErrorMsg("Failed to generate report: " + (err?.message || "Unknown error"));
+      setGenerating(false);
+    }
   };
 
   const triggerDownload = (blob, fileName) => {
@@ -431,7 +578,16 @@ export default function ReportsPanel() {
     setTimeout(() => window.URL.revokeObjectURL(url), 2000);
   };
 
-  const finishSuccess = (deptName, termName, sessionName, fileName) => {
+  const finishSuccess = (deptName, termName, sessionName, fileName, exportMetrics = null, exportSkills = null) => {
+    const metricsToSave = exportMetrics || {
+      applied: liveApplied,
+      under_review: liveUnderReview,
+      shortlisted: liveShortlisted,
+      offered: liveOffered,
+      rate: placementRateStr
+    };
+    const skillsToSave = exportSkills || skillGaps;
+
     const newReportRecord = {
       id: `REP-${Date.now().toString().slice(-4)}`,
       title: `${deptName} Placement & Accreditation Report`,
@@ -443,12 +599,14 @@ export default function ReportsPanel() {
       size: format === "pdf" ? "1.2 MB" : "320 KB",
       status: "Ready",
       metrics: {
-        applied: liveApplied,
-        under_review: liveUnderReview,
-        shortlisted: liveShortlisted,
-        offered: liveOffered,
-        top_skill_gaps: skillGaps.slice(0, 3).map(s => s.skill).join(", ") || "Docker, Python, Java"
-      }
+        applied: metricsToSave.applied,
+        under_review: metricsToSave.under_review,
+        shortlisted: metricsToSave.shortlisted,
+        offered: metricsToSave.offered,
+        rate: metricsToSave.rate,
+        top_skill_gaps: (skillsToSave || []).slice(0, 3).map(s => s.skill).join(", ") || "None"
+      },
+      skillGaps: skillsToSave
     };
 
     setReports(prev => [newReportRecord, ...prev]);
@@ -496,11 +654,19 @@ export default function ReportsPanel() {
       const r = reports.find((item) => item.id === id);
       if (r) {
         const exportName = `${r.title.replace(/[^a-zA-Z0-9]/g, "_")}.${r.format}`;
+        const reportMetrics = r.metrics || {
+          applied: liveApplied,
+          under_review: liveUnderReview,
+          shortlisted: liveShortlisted,
+          offered: liveOffered,
+          rate: placementRateStr
+        };
+        const reportSkills = r.skillGaps || skillGaps;
         if (r.format === "pdf") {
-          const pdfBlob = generateReportPdf(r.department, r.term, r.session);
+          const pdfBlob = generateReportPdf(r.department, r.term, r.session, reportMetrics, reportSkills);
           triggerDownload(pdfBlob, exportName);
         } else {
-          const csvContent = generateCsvReport(r.department, r.term, r.session);
+          const csvContent = generateCsvReport(r.department, r.term, r.session, reportMetrics, reportSkills);
           const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
           triggerDownload(blob, exportName.replace(/\.xlsx$/, ".csv"));
         }
@@ -594,11 +760,15 @@ export default function ReportsPanel() {
             <div className="p-3 rounded border" style={{ background: "var(--input-bg)" }}>
               <h6 className="fw-bold mb-2 small text-uppercase text-muted">Cohort Skill Gap Highlights</h6>
               <div className="d-flex flex-wrap gap-2">
-                {skillGaps.map((s, i) => (
-                  <span key={i} className="badge p-2 border" style={{ background: "var(--bg-card-subtle)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
-                    {s.skill}: <strong className="text-danger">{s.count} missing</strong>
-                  </span>
-                ))}
+                {skillGaps.length === 0 ? (
+                  <span className="text-muted small">No skill gaps recorded for {department}.</span>
+                ) : (
+                  skillGaps.map((s, i) => (
+                    <span key={i} className="badge p-2 border" style={{ background: "var(--bg-card-subtle)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
+                      {s.skill}: <strong className="text-danger">{s.count} missing</strong>
+                    </span>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -638,9 +808,9 @@ export default function ReportsPanel() {
               onChange={(e) => setSession(e.target.value)}
               required
             >
+              <option value="2026-2027">2026-2027</option>
               <option value="2025-2026">2025-2026</option>
               <option value="2024-2025">2024-2025</option>
-              <option value="2026-2027">2026-2027</option>
               <option value="2023-2024">2023-2024</option>
             </select>
           </div>
@@ -658,7 +828,6 @@ export default function ReportsPanel() {
             >
               <option value="Even Semester (Term II)">Even Semester (Term II)</option>
               <option value="Odd Semester (Term I)">Odd Semester (Term I)</option>
-              <option value="Annual / Full Year">Annual / Full Year</option>
               <option value="Summer Term">Summer Term</option>
             </select>
           </div>
@@ -705,9 +874,9 @@ export default function ReportsPanel() {
             <button
               className="btn btn-primary px-4 py-2 fw-semibold"
               onClick={handleExport}
-              disabled={generating}
+              disabled={generating || loadingAnalytics}
             >
-              {generating ? "Generating Report…" : "📄 Generate Report"}
+              {generating ? "Generating Report…" : loadingAnalytics ? "Loading Analytics…" : "📄 Generate Report"}
             </button>
           </div>
         </div>
@@ -808,11 +977,19 @@ export default function ReportsPanel() {
                           className="btn btn-outline-primary"
                           onClick={() => {
                             const exportName = `${r.title.replace(/[^a-zA-Z0-9]/g, "_")}.${r.format}`;
+                            const reportMetrics = r.metrics || {
+                              applied: liveApplied,
+                              under_review: liveUnderReview,
+                              shortlisted: liveShortlisted,
+                              offered: liveOffered,
+                              rate: placementRateStr
+                            };
+                            const reportSkills = r.skillGaps || skillGaps;
                             if (r.format === "pdf") {
-                              const pdfBlob = generateReportPdf(r.department, r.term, r.session);
+                              const pdfBlob = generateReportPdf(r.department, r.term, r.session, reportMetrics, reportSkills);
                               triggerDownload(pdfBlob, exportName);
                             } else {
-                              const csvContent = generateCsvReport(r.department, r.term, r.session);
+                              const csvContent = generateCsvReport(r.department, r.term, r.session, reportMetrics, reportSkills);
                               const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
                               triggerDownload(blob, exportName.replace(/\.xlsx$/, ".csv"));
                             }
@@ -872,19 +1049,19 @@ export default function ReportsPanel() {
                   <div className="row text-center g-2">
                     <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
                       <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Applications</small>
-                      <strong className="fs-5 text-primary">{previewReport.metrics?.applied ?? liveApplied}</strong>
+                      <strong className="fs-5 text-primary">{previewReport.metrics?.applied ?? 0}</strong>
                     </div>
                     <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
                       <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Under Review</small>
-                      <strong className="fs-5 text-info">{previewReport.metrics?.under_review ?? liveUnderReview}</strong>
+                      <strong className="fs-5 text-info">{previewReport.metrics?.under_review ?? 0}</strong>
                     </div>
                     <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
                       <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Shortlisted</small>
-                      <strong className="fs-5 text-warning">{previewReport.metrics?.shortlisted ?? liveShortlisted}</strong>
+                      <strong className="fs-5 text-warning">{previewReport.metrics?.shortlisted ?? 0}</strong>
                     </div>
                     <div className="col-3 p-2 border rounded" style={{ background: "var(--bg-card)", borderColor: "var(--border-color)" }}>
                       <small className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Offered / Placed</small>
-                      <strong className="fs-5 text-success">{previewReport.metrics?.offered ?? liveOffered}</strong>
+                      <strong className="fs-5 text-success">{previewReport.metrics?.offered ?? 0}</strong>
                     </div>
                   </div>
                 </div>
@@ -892,11 +1069,15 @@ export default function ReportsPanel() {
                 <div className="p-3 border rounded" style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}>
                   <h6 className="fw-bold mb-2" style={{ color: "var(--text-main)" }}>Audited Skill Gaps & Training Needs</h6>
                   <div className="d-flex flex-wrap gap-2">
-                    {skillGaps.map((s, i) => (
-                      <span key={i} className="badge border p-2" style={{ background: "var(--bg-card)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
-                        {s.skill}: <strong className="text-danger">{s.count} missing</strong>
-                      </span>
-                    ))}
+                    {(previewReport.skillGaps || []).length > 0 ? (
+                      (previewReport.skillGaps || []).map((s, i) => (
+                        <span key={i} className="badge border p-2" style={{ background: "var(--bg-card)", color: "var(--text-main)", borderColor: "var(--border-color)" }}>
+                          {s.skill}: <strong className="text-danger">{s.count} missing</strong>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-muted small">No skill gaps recorded for {previewReport.department}.</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -906,11 +1087,19 @@ export default function ReportsPanel() {
                   className="btn btn-primary btn-sm"
                   onClick={() => {
                     const exportName = `${previewReport.title.replace(/[^a-zA-Z0-9]/g, "_")}.${previewReport.format}`;
+                    const reportMetrics = previewReport.metrics || {
+                      applied: liveApplied,
+                      under_review: liveUnderReview,
+                      shortlisted: liveShortlisted,
+                      offered: liveOffered,
+                      rate: placementRateStr
+                    };
+                    const reportSkills = previewReport.skillGaps || skillGaps;
                     if (previewReport.format === "pdf") {
-                      const pdfBlob = generateReportPdf(previewReport.department, previewReport.term, previewReport.session);
+                      const pdfBlob = generateReportPdf(previewReport.department, previewReport.term, previewReport.session, reportMetrics, reportSkills);
                       triggerDownload(pdfBlob, exportName);
                     } else {
-                      const csvContent = generateCsvReport(previewReport.department, previewReport.term, previewReport.session);
+                      const csvContent = generateCsvReport(previewReport.department, previewReport.term, previewReport.session, reportMetrics, reportSkills);
                       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
                       triggerDownload(blob, exportName.replace(/\.xlsx$/, ".csv"));
                     }
@@ -929,5 +1118,3 @@ export default function ReportsPanel() {
     </div>
   );
 }
-
-
