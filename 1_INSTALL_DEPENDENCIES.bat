@@ -63,11 +63,15 @@ if %errorlevel% neq 0 (
 :: 4. Install Frontend Node.js Dependencies
 echo.
 echo [4/4] Installing React frontend dependencies (npm install)...
-cd /d "%FRONTEND_DIR%"
-call npm install
+call npm install --legacy-peer-deps
+if %errorlevel% neq 0 (
+    echo [INFO] Retrying npm install with --force flag...
+    call npm install --force
+)
 if %errorlevel% neq 0 (
     color 0C
     echo [ERROR] npm install encountered an error!
+    echo Please ensure Node.js LTS is installed and internet connection is active.
     pause
     exit /b 1
 )
