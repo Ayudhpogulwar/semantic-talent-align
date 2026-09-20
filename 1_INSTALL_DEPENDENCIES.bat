@@ -42,7 +42,7 @@ node --version >nul 2>&1
 if %errorlevel% neq 0 (
     color 0C
     echo [ERROR] Node.js is not installed or not added to your system PATH!
-    echo Please install Node.js (LTS version) from https://nodejs.org/
+    echo Please install Node.js LTS from https://nodejs.org/
     pause
     exit /b 1
 )
@@ -63,6 +63,7 @@ if %errorlevel% neq 0 (
 :: 4. Install Frontend Node.js Dependencies
 echo.
 echo [4/4] Installing React frontend dependencies (npm install)...
+cd /d "%FRONTEND_DIR%"
 call npm install --legacy-peer-deps
 if %errorlevel% neq 0 (
     echo [INFO] Retrying npm install with --force flag...
