@@ -180,8 +180,9 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
               <div
                 className="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between shadow-sm"
                 style={{
-                  background: "var(--bg-card)",
-                  borderColor: "var(--border-color)",
+                  background: "linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, var(--bg-card) 100%)",
+                  borderColor: "rgba(99, 102, 241, 0.4)",
+                  boxShadow: "0 10px 30px rgba(99, 102, 241, 0.1)",
                   transition: "all 0.3s ease"
                 }}
               >
@@ -206,21 +207,31 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
               <div
                 className="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between shadow-sm"
                 style={{
-                  background: "var(--bg-card)",
-                  borderColor: "var(--border-color)",
+                  background: "linear-gradient(180deg, rgba(6, 182, 212, 0.08) 0%, var(--bg-card) 100%)",
+                  borderColor: "rgba(6, 182, 212, 0.4)",
+                  boxShadow: "0 10px 30px rgba(6, 182, 212, 0.1)",
                   transition: "all 0.3s ease"
                 }}
               >
                 <div>
                   <h4 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
-                    <ShieldCheck size={26} className="text-info" /> Faculty Portal
+                    <ShieldCheck size={26} style={{ color: "#06b6d4" }} /> Faculty Portal
                   </h4>
                   <p className="small mb-4" style={{ color: "var(--text-muted)" }}>
                     Verify student registrations, review certificates, approve corporate opportunities, and generate accreditation reports.
                   </p>
                 </div>
                 <div>
-                  <Link to="/faculty/login" className="btn btn-outline-info w-100 fw-semibold d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+                  <Link 
+                    to="/faculty/login" 
+                    className="btn w-100 fw-semibold d-flex align-items-center justify-content-center gap-2 text-decoration-none text-white"
+                    style={{
+                      background: "linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)",
+                      border: "none",
+                      padding: "0.5rem 1rem",
+                      boxShadow: "0 4px 14px rgba(6, 182, 212, 0.3)"
+                    }}
+                  >
                     Sign In as Faculty <ChevronRight size={16} />
                   </Link>
                 </div>
@@ -230,9 +241,10 @@ export default function LandingIntroPage({ onOpenLogin, onOpenRegister }) {
             {/* 3. Super Admin Portal Card */}
             <div className="col">
               <div
-                className="p-4 rounded-3 border border-danger h-100 d-flex flex-column justify-content-between shadow-sm"
+                className="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between shadow-sm"
                 style={{
                   background: "linear-gradient(180deg, rgba(220, 38, 38, 0.08) 0%, var(--bg-card) 100%)",
+                  borderColor: "rgba(220, 38, 38, 0.4)",
                   boxShadow: "0 10px 30px rgba(220, 38, 38, 0.12)",
                   transition: "all 0.3s ease"
                 }}

@@ -119,7 +119,7 @@ export default function ApplicationTracker({ applications }) {
                             height: '24px',
                             borderRadius: '50%',
                             background: isCompleted ? 'var(--primary)' : 'var(--border-color)',
-                            color: '#fff',
+                            color: isCompleted ? '#fff' : 'var(--text-muted)',
                             fontSize: '0.7rem',
                             fontWeight: 800,
                             display: 'flex',

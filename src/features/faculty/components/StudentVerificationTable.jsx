@@ -250,7 +250,7 @@ export default function StudentVerificationTable() {
   return (
     <div className="student-verification-table">
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h4 className="mb-0 fw-bold text-white">Student Verification</h4>
+        <h4 className="mb-0 fw-bold" style={{ color: "var(--text-main)" }}>Student Verification</h4>
         <div className="d-flex align-items-center gap-2 flex-wrap">
           <input
             type="search"
@@ -335,7 +335,7 @@ export default function StudentVerificationTable() {
                       {r.roll_number || r.roll_no}
                     </code>
                   </td>
-                  <td className="text-start fw-semibold text-white text-nowrap">
+                  <td className="text-start fw-semibold text-nowrap" style={{ color: "var(--text-main)" }}>
                     {r.student_name || r.full_name}
                   </td>
                   <td className="text-center fw-bold text-nowrap">{formatDeptShort(r.department)}</td>

@@ -23,7 +23,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
   useEffect(() => {
     let active = true;
     let objectUrl = null;
-    if (effectivePdfUrl && effectivePdfUrl.startsWith('http')) {
+    if (effectivePdfUrl && effectivePdfUrl.startsWith('http') && !effectivePdfUrl.toLowerCase().endsWith('.docx')) {
       fetch(effectivePdfUrl)
         .then(res => {
           if (!res.ok) throw new Error("Could not fetch PDF");
@@ -31,7 +31,8 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
         })
         .then(blob => {
           if (active) {
-            objectUrl = URL.createObjectURL(blob);
+            const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+            objectUrl = URL.createObjectURL(pdfBlob);
             setBlobPdfUrl(objectUrl);
           }
         })
@@ -78,8 +79,12 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
   };
 
   const processUpload = async (file) => {
-    if (!file.name.endsWith('.pdf') && !file.name.endsWith('.docx')) {
+    if (!file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.docx')) {
       alert("Unsupported file format! Please upload a PDF or DOCX file.");
+      return;
+    }
+    if (file.size < 400) {
+      alert("The selected file is empty or corrupted (< 1 KB). Please select your original PDF or DOCX resume document.");
       return;
     }
     setIsUploading(true);
@@ -87,13 +92,22 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
       const reader = new FileReader();
       reader.onload = async (e) => {
         const fileDataUrl = e.target.result;
-        await onUploadResume(file, fileDataUrl);
+        try {
+          await onUploadResume(file, fileDataUrl);
+        } catch (uploadErr) {
+          alert(uploadErr.message || "Failed to upload resume document");
+        } finally {
+          setIsUploading(false);
+        }
+      };
+      reader.onerror = () => {
+        alert("Failed to read the selected file.");
         setIsUploading(false);
       };
-      reader.onerror = () => setIsUploading(false);
       reader.readAsDataURL(file);
     } catch (err) {
       console.error("Error during upload process:", err);
+      alert(err.message || "Error during upload");
       setIsUploading(false);
     }
   };
@@ -112,7 +126,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
       {/* Header */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '1.4rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 style={{ fontSize: '1.4rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FileText color="#38bdf8" /> Resume Parsing & Skill Alignment
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
@@ -133,7 +147,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
         
         {/* Left Column: Drag and Drop Resume Upload (FR-3) */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h3 style={{ fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Upload size={18} color="#818cf8" /> Resume Document Upload
           </h3>
 
@@ -452,7 +466,7 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
                     <FileText size={24} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', margin: 0 }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                       {safeResume.filename || 'Resume_Document.pdf'}
                     </h3>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
@@ -499,23 +513,35 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <a
-                  href={effectivePdfUrl || '#'}
-                  download={safeResume.filename || "Resume.pdf"}
-                  className="btn btn-outline"
-                  style={{ fontSize: '0.8rem', padding: '6px 12px', borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Download size={14} /> Download PDF
-                </a>
-                <a
-                  href={effectivePdfUrl || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline"
-                  style={{ fontSize: '0.8rem', padding: '6px 12px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <ExternalLink size={14} /> Open Full
-                </a>
+                {effectivePdfUrl ? (
+                  <a
+                    href={effectivePdfUrl}
+                    download={safeResume.filename || "Resume.pdf"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.8rem', padding: '6px 12px', borderColor: 'rgba(52, 211, 153, 0.4)', color: '#34d399', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Download size={14} /> Download PDF
+                  </a>
+                ) : (
+                  <span
+                    style={{ fontSize: '0.8rem', padding: '6px 12px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: 0.6 }}
+                  >
+                    <Download size={14} /> No File URL
+                  </span>
+                )}
+                {effectivePdfUrl && (
+                  <a
+                    href={effectivePdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.8rem', padding: '6px 12px', color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <ExternalLink size={14} /> Open Full
+                  </a>
+                )}
                 <button 
                   type="button"
                   onClick={() => setShowPreviewModal(false)}
@@ -529,36 +555,79 @@ export default function ResumeSkillsModule({ resume = {}, skills = [], onUploadR
             {/* Modal Body: Toggleable PDF Viewer or Extracted Summary */}
             <div style={{ flex: 1, padding: '14px', background: 'rgba(11, 15, 25, 0.95)', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
               {modalTab === 'pdf' ? (
-                effectivePdfUrl ? (
-                  <iframe
-                    src={blobPdfUrl || effectivePdfUrl}
-                    title="Original Resume PDF Document"
-                    width="100%"
-                    height="100%"
-                    style={{
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      background: '#ffffff',
+                (() => {
+                  const isDocx = (safeResume.filename || '').toLowerCase().endsWith('.docx');
+                  if (isDocx) {
+                    return (
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flex: 1,
+                        minHeight: '400px',
+                        gap: '16px',
+                        color: 'var(--text-muted)'
+                      }}>
+                        <FileText size={52} color="#818cf8" style={{ marginBottom: '8px' }} />
+                        <p style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 600, margin: 0 }}>
+                          DOCX files cannot be previewed in the browser
+                        </p>
+                        <p style={{ fontSize: '0.85rem', margin: 0 }}>
+                          Switch to the <strong style={{ color: '#c084fc' }}>✨ Extracted Skills Summary</strong> tab above to see what was parsed from your resume.
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setModalTab('summary')}
+                            className="btn btn-primary"
+                            style={{ fontSize: '0.85rem', padding: '8px 20px' }}
+                          >
+                            ✨ View Extracted Summary
+                          </button>
+                          <a
+                            href={effectivePdfUrl || '#'}
+                            download={safeResume.filename || 'Resume.docx'}
+                            className="btn btn-outline"
+                            style={{ fontSize: '0.85rem', padding: '8px 16px', color: '#34d399', borderColor: 'rgba(52,211,153,0.5)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <Download size={14} /> Download DOCX
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return effectivePdfUrl ? (
+                    <iframe
+                      src={blobPdfUrl || effectivePdfUrl}
+                      title="Original Resume PDF Document"
+                      width="100%"
+                      height="100%"
+                      style={{
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        background: '#ffffff',
+                        flex: 1,
+                        minHeight: '520px',
+                        width: '100%'
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       flex: 1,
-                      minHeight: '520px',
-                      width: '100%'
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flex: 1,
-                    minHeight: '400px',
-                    color: 'var(--text-muted)'
-                  }}>
-                    <FileText size={48} color="#6366f1" style={{ marginBottom: '16px' }} />
-                    <p style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 600 }}>No PDF preview file available</p>
-                    <p style={{ fontSize: '0.85rem' }}>Switch to the &quot;Extracted Summary&quot; tab above to view parsed information.</p>
-                  </div>
-                )
+                      minHeight: '400px',
+                      color: 'var(--text-muted)'
+                    }}>
+                      <FileText size={48} color="#6366f1" style={{ marginBottom: '16px' }} />
+                      <p style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 600 }}>No PDF preview file available</p>
+                      <p style={{ fontSize: '0.85rem' }}>Switch to the &quot;Extracted Summary&quot; tab above to view parsed information.</p>
+                    </div>
+                  );
+                })()
               ) : (
                 <div style={{
                   flex: 1,

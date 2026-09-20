@@ -100,10 +100,18 @@ export default function DashboardOverview({ profile, resume, readiness, applicat
           <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', marginTop: '14px', overflow: 'hidden' }}>
             <div style={{ width: `${profile.profile_completion_pct}%`, height: '100%', background: 'linear-gradient(90deg, #6366f1, #06b6d4)', borderRadius: '3px' }}></div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '0.75rem' }}>
-            <span style={{ color: 'var(--text-dim)' }}>Verification Status</span>
-            <span style={{ color: 'var(--accent-emerald)', fontWeight: 700 }}>Faculty Verified</span>
-          </div>
+          {(() => {
+            const isVerified = profile?.verified_by_faculty || (profile?.verification_status === 'Approved' || profile?.verification_status === 'VERIFIED');
+            const isRejected = profile?.verification_status === 'Rejected' || profile?.verification_status === 'REJECTED';
+            const statusLabel = isVerified ? 'Faculty Verified' : isRejected ? 'Verification Rejected' : 'Pending Verification';
+            const statusColor = isVerified ? 'var(--accent-emerald)' : isRejected ? '#f43f5e' : '#fbbf24';
+            return (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '0.75rem' }}>
+                <span style={{ color: 'var(--text-dim)' }}>Verification Status</span>
+                <span style={{ color: statusColor, fontWeight: 700 }}>{statusLabel}</span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Readiness Score Card */}

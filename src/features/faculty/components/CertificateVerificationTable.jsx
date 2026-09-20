@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { certificateApi } from "../api/facultyApi";
+import { downloadCertificateFile } from "../../../utils/certificateGenerator";
 
 const STATUS_BADGE = {
   PENDING: "badge-pill-custom badge-pending",
@@ -106,13 +107,13 @@ const INITIAL_FORM = {
   student_id: "",
   student_name: "",
   cert_type: "CERTIFICATE OF INTERNSHIP",
-  organization: "PSK Technologies Private Limited",
-  course_title: "React JS & Fullstack Development",
-  department: "Development Department",
-  duration: "45-day internship from 5th Jan 2026 to 12th Mar 2026",
+  organization: "",
+  course_title: "",
+  department: "",
+  duration: "",
   file_name: "",
   issue_date: new Date().toISOString().split("T")[0],
-  status: "PENDING"
+  status: "VERIFIED"
 };
 
 function convertCanvasToPdfBlob(canvas) {
@@ -340,12 +341,12 @@ export default function CertificateVerificationTable() {
       const newRecord = {
         id: `CERT-${Date.now().toString().slice(-4)}`,
         student_id: (formData.student_id || "").trim(),
-        student_name: (formData.student_name || "").trim() || "Mr. Yash Mahesh Fokmare",
+        student_name: (formData.student_name || "").trim(),
         cert_type: formData.cert_type || "CERTIFICATE OF INTERNSHIP",
-        organization: (formData.organization || "").trim() || "PSK Technologies Private Limited",
-        course_title: (formData.course_title || "").trim() || "React JS & Fullstack Development",
-        department: (formData.department || "").trim() || "Development Department",
-        duration: (formData.duration || "").trim() || "45-day internship from 5th Jan 2026 to 12th Mar 2026",
+        organization: (formData.organization || "").trim(),
+        course_title: (formData.course_title || "").trim(),
+        department: (formData.department || "").trim(),
+        duration: (formData.duration || "").trim(),
         file: fileNameToUse,
         file_url: fileUrlToUse,
         issue_date: formData.issue_date || new Date().toISOString().split("T")[0],
@@ -394,204 +395,7 @@ export default function CertificateVerificationTable() {
   };
 
   const handleDownloadCert = async (c) => {
-    const fileName = c.file || c.file_name || 'Academic_Certificate.pdf';
-    
-    // If c.file_url is a persistent data URL or remote http/https URL, download it directly
-    if (c.file_url && c.file_url !== '#' && c.file_url !== '') {
-      if (c.file_url.startsWith('data:') || c.file_url.startsWith('http://') || c.file_url.startsWith('https://')) {
-        const a = document.createElement('a');
-        a.href = c.file_url;
-        a.download = fileName;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        return;
-      }
-
-      if (c.file_url.startsWith('blob:')) {
-        try {
-          const resp = await fetch(c.file_url);
-          if (resp.ok) {
-            const blob = await resp.blob();
-            if (blob.size > 0) {
-              const downloadUrl = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = downloadUrl;
-              a.download = fileName;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn("Direct blob download failed, falling back to canvas PDF generation:", err);
-        }
-      }
-    }
-
-    const studentId = c.student_id || c.studentId || 'GH23412';
-    const rawName = resolveStudentName(c);
-    const formattedName = rawName.toLowerCase().startsWith('mr.') || rawName.toLowerCase().startsWith('ms.') ? rawName : `Mr. ${rawName}`;
-    const orgName = c.organization || 'Microsoft';
-    const certType = (c.cert_type || 'CERTIFICATE OF COMPLETION').toUpperCase();
-    const courseTitle = c.course_title || c.file?.replace(/\.[^/.]+$/, "").replace(/_/g, " ") || 'Git & Github';
-    const dept = c.department || 'Technical Certification Department';
-    const duration = c.duration || 'professional course';
-    const issueDate = c.issue_date || '2026-08-31';
-    const status = (c.verification_status || c.status || 'PENDING').toUpperCase();
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 1600;
-    canvas.height = 1131;
-    const ctx = canvas.getContext('2d');
-
-    // 1. Subtle Ivory Linear Gradient Background
-    const bgGrad = ctx.createLinearGradient(0, 0, 1600, 1131);
-    bgGrad.addColorStop(0, '#ffffff');
-    bgGrad.addColorStop(0.5, '#fafaf9');
-    bgGrad.addColorStop(1, '#f5f5f4');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 1600, 1131);
-
-    // 2. Decorative Double Border Frame & Corner Ribbons
-    ctx.strokeStyle = '#1e3a8a';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(30, 30, 1540, 1071);
-
-    ctx.strokeStyle = '#d97706';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(48, 48, 1504, 1035);
-
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(60, 60, 1480, 1011);
-
-    ctx.fillStyle = '#1e3a8a';
-    ctx.beginPath(); ctx.moveTo(30, 30); ctx.lineTo(140, 30); ctx.lineTo(30, 140); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(1570, 30); ctx.lineTo(1460, 30); ctx.lineTo(1570, 140); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(30, 1101); ctx.lineTo(140, 1101); ctx.lineTo(30, 991); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(1570, 1101); ctx.lineTo(1460, 1101); ctx.lineTo(1570, 991); ctx.fill();
-
-    // 3. Organization Header & Certificate Title
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#475569';
-    ctx.font = 'bold 22px "Georgia", serif';
-    ctx.fillText(orgName.toUpperCase(), 800, 130);
-
-    ctx.fillStyle = '#0f172a';
-    ctx.font = '900 48px "Georgia", serif';
-    ctx.fillText(certType, 800, 210);
-
-    ctx.fillStyle = '#d97706';
-    ctx.font = 'italic 24px "Georgia", serif';
-    ctx.fillText('This document officially certifies and validates the achievement of', 800, 270);
-
-    // 4. Student Full Name & Enrollment No
-    ctx.fillStyle = '#1e3a8a';
-    ctx.font = '900 52px "Georgia", serif';
-    ctx.fillText(formattedName.replace(/^Mr\.\s+|^Ms\.\s+/i, ''), 800, 340);
-
-    ctx.fillStyle = '#475569';
-    ctx.font = 'bold 22px "Georgia", serif';
-    ctx.fillText(`Student Enrollment No / ID: ${studentId}`, 800, 390);
-
-    ctx.fillStyle = '#334155';
-    ctx.font = '22px "Helvetica Neue", sans-serif';
-    ctx.fillText('for successful submission & institutional verification of credential:', 800, 440);
-
-    // 5. Credential Highlight Box (Course Title)
-    ctx.fillStyle = '#f1f5f9';
-    ctx.strokeStyle = '#6366f1';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(300, 470, 1000, 90, 16);
-    } else {
-      ctx.rect(300, 470, 1000, 90);
-    }
-    ctx.fill(); ctx.stroke();
-
-    ctx.fillStyle = '#4338ca';
-    ctx.font = 'bold 36px "Helvetica Neue", sans-serif';
-    ctx.fillText(courseTitle, 800, 528);
-
-    // 6. Verification Status & Details
-    ctx.fillStyle = '#475569';
-    ctx.font = '20px "Helvetica Neue", sans-serif';
-    ctx.fillText(`Issue Date: ${issueDate}   |   Verification ID: ${c.id || 'CERT-2e84bb'}`, 800, 620);
-
-    ctx.fillStyle = status === 'VERIFIED' ? '#059669' : (status === 'REJECTED' ? '#dc2626' : '#d97706');
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(620, 660, 360, 50, 25);
-    } else {
-      ctx.rect(620, 660, 360, 50);
-    }
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px "Helvetica Neue", sans-serif';
-    ctx.fillText(`STATUS: ${status}`, 800, 693);
-
-    // 7. Gold Official Verification Seal Stamp
-    ctx.save();
-    ctx.translate(800, 840);
-    ctx.fillStyle = '#d97706';
-    ctx.beginPath();
-    ctx.arc(0, 0, 70, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#b45309';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('SAIOTAF', 0, -20);
-    ctx.fillText('VERIFIED', 0, 0);
-    ctx.fillText('SEAL', 0, 20);
-    ctx.restore();
-
-    // 8. Signatures
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(250, 930); ctx.lineTo(550, 930); ctx.stroke();
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 18px "Georgia", serif';
-    ctx.fillText('Dr. Aris Thorne', 400, 960);
-    ctx.fillStyle = '#64748b';
-    ctx.font = '15px sans-serif';
-    ctx.fillText('Head of Placement & Verification', 400, 985);
-
-    ctx.beginPath(); ctx.moveTo(1050, 930); ctx.lineTo(1350, 930); ctx.stroke();
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 18px "Georgia", serif';
-    ctx.fillText('Prof. Elena Rostova', 1200, 960);
-    ctx.fillStyle = '#64748b';
-    ctx.font = '15px sans-serif';
-    ctx.fillText('Dean of Academic Affairs', 1200, 985);
-
-    if (fileName.toLowerCase().endsWith('.pdf')) {
-      const pdfBlob = convertCanvasToPdfBlob(canvas);
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = pdfUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 2000);
-    } else {
-      const image = canvas.toDataURL('image/png', 1.0);
-      const a = document.createElement('a');
-      a.href = image;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
+    await downloadCertificateFile(c, resolveStudentName(c));
   };
 
   return (
@@ -877,34 +681,17 @@ export default function CertificateVerificationTable() {
                     />
                   </div>
 
-                  <div className="row g-2">
-                    <div className="col-6">
-                      <label className="form-label fw-semibold">Issue Date *</label>
-                      <input
-                        type="date"
-                        className="form-control faculty-search-input"
-                        required
-                        value={formData.issue_date}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, issue_date: e.target.value }))
-                        }
-                      />
-                    </div>
-
-                    <div className="col-6">
-                      <label className="form-label fw-semibold">Status *</label>
-                      <select
-                        className="form-select faculty-select-filter"
-                        value={formData.status}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, status: e.target.value }))
-                        }
-                      >
-                        <option value="PENDING">PENDING</option>
-                        <option value="VERIFIED">VERIFIED</option>
-                        <option value="REJECTED">REJECTED</option>
-                      </select>
-                    </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Issue Date *</label>
+                    <input
+                      type="date"
+                      className="form-control faculty-search-input"
+                      required
+                      value={formData.issue_date}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, issue_date: e.target.value }))
+                      }
+                    />
                   </div>
                 </div>
 

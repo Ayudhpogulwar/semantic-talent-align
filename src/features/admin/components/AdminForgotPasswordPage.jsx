@@ -123,13 +123,14 @@ export default function AdminForgotPasswordPage() {
               <div className="position-relative">
                 <input
                   type="email"
-                  className="form-control faculty-search-input ps-4"
+                  className="form-control faculty-search-input"
+                  style={{ paddingLeft: "38px" }}
                   placeholder="admin@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-                <Mail size={16} className="position-absolute text-muted" style={{ left: 10, top: 12 }} />
+                <Mail size={16} className="position-absolute text-muted" style={{ left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
               </div>
             </div>
 
@@ -141,14 +142,15 @@ export default function AdminForgotPasswordPage() {
               <div className="position-relative">
                 <input
                   type="password"
-                  className="form-control faculty-search-input ps-4"
+                  className="form-control faculty-search-input"
+                  style={{ paddingLeft: "38px" }}
                   placeholder="Enter your 8-character Secret Key"
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
                   maxLength={8}
                   required
                 />
-                <Key size={16} className="position-absolute text-danger" style={{ left: 10, top: 12 }} />
+                <Key size={16} className="position-absolute text-danger" style={{ left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
               </div>
             </div>
 

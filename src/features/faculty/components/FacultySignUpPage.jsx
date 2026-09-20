@@ -164,7 +164,7 @@ export default function FacultySignUpPage() {
                   required
                 >
                   <option value="PLACEMENT_OFFICER">Placement Officer</option>
-                  <option value="TPO_INCHARGE">TPO Incharge</option>
+                  <option value="TPO_INCHARGE">T&P Incharge</option>
                 </select>
               </div>
             </div>

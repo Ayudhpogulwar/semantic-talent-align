@@ -365,11 +365,8 @@ export default function HeaderNavbar({ activeTab, setActiveTab, user, onLogout, 
             }}>
               {user.name ? user.name[0] : 'A'}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>{user.name}</span>
-              <span style={{ fontSize: '0.68rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <ShieldCheck size={10} /> Verified
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>{user.name || 'Student'}</span>
             </div>
           </div>
 

@@ -113,7 +113,10 @@ class RealApiService {
       headers,
       body: formData
     });
-    if (!res.ok) throw new Error("Failed to upload resume");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || "Failed to upload resume");
+    }
     return await res.json();
   }
 
@@ -226,6 +229,39 @@ class RealApiService {
     } catch (e) {
       console.error(e);
       return { overall_score: 75, category_scores: {}, actionable_suggestions: [] };
+    }
+  }
+
+  // 14.8 Student Certificates (read-only, faculty-issued)
+  async getMyCertificates(rollNo = "") {
+    try {
+      const res = await fetch(`${API_BASE_URL}/certificates/my`, { headers: this.getHeaders() });
+      const apiCerts = res.ok ? (await res.json()) : [];
+
+      // Merge with localStorage certs from the faculty portal (rich records)
+      const localRaw = localStorage.getItem("stufac_certificates");
+      const localCerts = localRaw ? JSON.parse(localRaw) : [];
+
+      const matchId = (rollNo || "").trim().toLowerCase();
+      const filtered = matchId
+        ? localCerts.filter(c => {
+            const sid = String(c.student_id || "").trim().toLowerCase();
+            return sid === matchId;
+          })
+        : [];
+
+      // Merge: local records take priority (they have richer data)
+      const merged = [...filtered];
+      apiCerts.forEach(a => {
+        if (!merged.some(m => String(m.id) === String(a.id))) {
+          merged.push(a);
+        }
+      });
+
+      return merged;
+    } catch (e) {
+      console.error("getMyCertificates error:", e);
+      return [];
     }
   }
 

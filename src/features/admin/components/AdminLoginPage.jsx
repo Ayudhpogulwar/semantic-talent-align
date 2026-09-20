@@ -99,13 +99,14 @@ export default function AdminLoginPage() {
             <div className="position-relative">
               <input
                 type="email"
-                className="form-control faculty-search-input ps-4"
+                className="form-control faculty-search-input"
+                style={{ paddingLeft: "38px" }}
                 placeholder="e.g. admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <Mail size={16} className="position-absolute text-muted" style={{ left: 10, top: 12 }} />
+              <Mail size={16} className="position-absolute text-muted" style={{ left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             </div>
           </div>
 
@@ -114,13 +115,14 @@ export default function AdminLoginPage() {
             <div className="position-relative">
               <input
                 type="password"
-                className="form-control faculty-search-input ps-4"
+                className="form-control faculty-search-input"
+                style={{ paddingLeft: "38px" }}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <Lock size={16} className="position-absolute text-muted" style={{ left: 10, top: 12 }} />
+              <Lock size={16} className="position-absolute text-muted" style={{ left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             </div>
           </div>
 
@@ -132,14 +134,15 @@ export default function AdminLoginPage() {
             <div className="position-relative">
               <input
                 type="password"
-                className="form-control faculty-search-input ps-4"
+                className="form-control faculty-search-input"
+                style={{ paddingLeft: "38px" }}
                 placeholder="Enter 8-character Secret Key (e.g. SAI88202)"
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
                 maxLength={8}
                 required
               />
-              <Key size={16} className="position-absolute text-danger" style={{ left: 10, top: 12 }} />
+              <Key size={16} className="position-absolute text-danger" style={{ left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
             </div>
             <small className="mt-1 d-block" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
               High-level security check • Default key: <code className="text-warning border px-1.5 py-0.5 rounded fw-bold" style={{ background: "var(--input-bg)", borderColor: "var(--border-color)" }}>SAI88202</code>

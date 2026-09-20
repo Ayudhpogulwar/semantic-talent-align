@@ -149,6 +149,7 @@ function StudentDashboardApp() {
       await refreshRecsAndReadiness();
     } catch (err) {
       console.error("Upload resume error:", err);
+      throw err;
     }
   };
 
@@ -249,7 +250,7 @@ function StudentDashboardApp() {
 
   if (!profile) {
     return (
-      <div style={{ color: '#fff', textAlign: 'center', padding: '100px', fontSize: '1.2rem' }}>
+      <div style={{ color: 'var(--text-main)', textAlign: 'center', padding: '100px', fontSize: '1.2rem' }}>
         Loading Student Dashboard...
       </div>
     );

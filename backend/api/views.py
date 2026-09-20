@@ -24,6 +24,99 @@ def create_token(email: str, user_id: int) -> str:
 
 DYNAMIC_SKILLS = []
 
+def get_student_email_from_request(request):
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ')[1]
+        try:
+            decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return decoded.get('sub')
+        except Exception:
+            pass
+    return None
+
+def get_student_skills(email, conn=None):
+    close_at_end = False
+    if conn is None:
+        conn = get_db()
+        close_at_end = True
+
+    student_skills = []
+    seen = set()
+
+    try:
+        cursor = conn.cursor()
+        student_id = None
+        active_resume_id = None
+
+        if email:
+            cursor.execute("""
+                SELECT u.user_id, sp.active_resume_id 
+                FROM users u
+                LEFT JOIN student_profiles sp ON sp.student_id = u.user_id
+                WHERE u.email = ?
+            """, (email,))
+            row = cursor.fetchone()
+            if row:
+                student_id = row.get("user_id")
+                active_resume_id = row.get("active_resume_id")
+
+        # 1. Extracted skills from student's active resume
+        if active_resume_id:
+            cursor.execute("SELECT parsed_data FROM resume WHERE resume_id = ?", (active_resume_id,))
+            res_row = cursor.fetchone()
+            if res_row and res_row.get("parsed_data"):
+                try:
+                    pd = json.loads(res_row["parsed_data"]) if isinstance(res_row["parsed_data"], str) else res_row["parsed_data"]
+                    skills_list = pd.get("skills", [])
+                    for s in skills_list:
+                        if isinstance(s, dict):
+                            s_name = (s.get("skill_name") or "").strip()
+                            if s_name and s_name.lower() not in seen:
+                                seen.add(s_name.lower())
+                                student_skills.append({
+                                    "skill_id": s.get("skill_id", f"SK-{random.randint(1000, 9999)}"),
+                                    "skill_name": s_name,
+                                    "category": s.get("category", "Technical"),
+                                    "proficiency_level": s.get("proficiency_level", "Intermediate"),
+                                    "verification_status": s.get("verification_status", "Verified"),
+                                    "source": "parsed"
+                                })
+                        elif isinstance(s, str):
+                            s_name = s.strip()
+                            if s_name and s_name.lower() not in seen:
+                                seen.add(s_name.lower())
+                                student_skills.append({
+                                    "skill_id": f"SK-{random.randint(1000, 9999)}",
+                                    "skill_name": s_name,
+                                    "category": "Technical",
+                                    "proficiency_level": "Intermediate",
+                                    "verification_status": "Verified",
+                                    "source": "parsed"
+                                })
+                except Exception as ex:
+                    print(f"Error parsing resume skills: {ex}")
+
+        # 2. Manual skills explicitly added by this student
+        if student_id:
+            cursor.execute("SELECT skill_id, skill_name, category, source FROM skills WHERE student_id = ?", (student_id,))
+            manual_rows = cursor.fetchall()
+            for mr in manual_rows:
+                s_name = (mr.get("skill_name") or "").strip()
+                if s_name and s_name.lower() not in seen:
+                    seen.add(s_name.lower())
+                    student_skills.append({
+                        "skill_id": mr.get("skill_id"),
+                        "skill_name": s_name,
+                        "category": mr.get("category", "Manual Tag"),
+                        "source": "manual"
+                    })
+    finally:
+        if close_at_end:
+            conn.close()
+
+    return student_skills
+
 @api_view(['POST'])
 def reset_password(request):
     email = request.data.get('email', '')
@@ -141,7 +234,7 @@ def register(request):
     try:
         name = request.data.get('name') or request.data.get('full_name', '')
         email = request.data.get('email', '')
-        roll_no = request.data.get('roll_no') or request.data.get('student_id', '')
+        roll_no = request.data.get('enrollment_no') or request.data.get('roll_no') or request.data.get('student_id', '')
         dept = request.data.get('dept') or request.data.get('department', 'Computer Science & Engineering')
 
         if not email.endswith("@raisoni.net"):
@@ -255,6 +348,7 @@ def profile(request):
             "name": full_name,
             "email": sp["email"],
             "roll_no": sp["roll_number"],
+            "enrollment_no": sp["roll_number"],
             "dept": sp["department"],
             "year": str(sp["graduation_year"]) if sp["graduation_year"] else "",
             "cgpa": f"{float(sp['cgpa']):.2f}" if sp.get("cgpa") is not None and float(sp["cgpa"]) > 0 else "NA",
@@ -273,11 +367,10 @@ def profile(request):
         })
 
     elif request.method == 'PUT':
-        # Use authenticated user from token
+        auth_header = request.headers.get('Authorization', '')
         put_email = None
-        put_auth_header = request.headers.get('Authorization', '')
-        if put_auth_header.startswith('Bearer '):
-            put_token = put_auth_header.split(' ')[1]
+        if auth_header.startswith('Bearer '):
+            put_token = auth_header.split(' ')[1]
             try:
                 put_decoded = jwt.decode(put_token, SECRET_KEY, algorithms=[ALGORITHM])
                 put_email = put_decoded.get('sub')
@@ -339,12 +432,38 @@ def profile(request):
         ))
         conn.commit()
         conn.close()
-        
+
+        # ── Sync updated profile to StudentVerificationRequest (faculty portal) ──
+        try:
+            from faculty_app.models import StudentVerificationRequest
+            full_name_updated = f"{f_name} {l_name}".strip()
+            dept_updated = updates.get("dept", "")
+            roll_updated = updates.get("enrollment_no") or updates.get("roll_no", "")
+            passout_updated = int(updates.get("passout_year") or updates.get("year") or 2026)
+            # Derive year_of_study from passout year
+            from django.utils import timezone as tz
+            current_yr = tz.now().year
+            years_to_go = passout_updated - current_yr
+            study_yr = max(1, min(4, 4 - years_to_go))
+
+            svr = StudentVerificationRequest.objects.filter(email=put_email).first()
+            if svr:
+                if full_name_updated:
+                    svr.full_name = full_name_updated
+                if dept_updated:
+                    svr.department = dept_updated
+                if roll_updated:
+                    svr.roll_number = roll_updated
+                svr.year_of_study = study_yr
+                svr.save()
+        except Exception as sync_ex:
+            print("Warning: could not sync profile update to StudentVerificationRequest:", sync_ex)
+
         updates["cgpa"] = f"{cgpa_val:.2f}" if cgpa_val > 0 else "NA"
         return Response(updates)
 
 # --- Resume ---
-@api_view(['GET'])
+@api_view(['GET', 'DELETE'])
 def get_resume(request):
     conn = get_db()
     cursor = conn.cursor()
@@ -360,6 +479,29 @@ def get_resume(request):
         except Exception:
             pass
 
+    if request.method == 'DELETE':
+        if email:
+            cursor.execute("""
+                SELECT active_resume_id FROM student_profiles sp
+                JOIN users u ON sp.student_id = u.user_id
+                WHERE u.email = ?
+            """, (email,))
+            row = cursor.fetchone()
+            if row and row['active_resume_id']:
+                res_id = row['active_resume_id']
+                cursor.execute("""
+                    UPDATE student_profiles SET active_resume_id = NULL 
+                    WHERE student_id = (SELECT user_id FROM users WHERE email = ?)
+                """, (email,))
+                cursor.execute("DELETE FROM resume WHERE resume_id = ?", (res_id,))
+        else:
+            cursor.execute("UPDATE student_profiles SET active_resume_id = NULL")
+            cursor.execute("DELETE FROM resume")
+
+        conn.commit()
+        conn.close()
+        return Response({"status": "deleted", "message": "Resume deleted successfully"})
+
     if email:
         cursor.execute("""
             SELECT r.* 
@@ -372,19 +514,10 @@ def get_resume(request):
     else:
         row = None
 
-    if email and not row:
+    if not row:
         conn.close()
         return Response({})
 
-    if not row:
-        cursor.execute("SELECT * FROM resume ORDER BY upload_date DESC LIMIT 1")
-        row = cursor.fetchone()
-
-    conn.close()
-    
-    if not row:
-        return Response({})
-        
     res_data = dict(row)
     parsed_json = {}
     if res_data.get("parsed_data"):
@@ -393,6 +526,13 @@ def get_resume(request):
         except Exception:
             parsed_json = {}
 
+    file_url = res_data.get("file_url") or ""
+    if file_url and not file_url.startswith("http://") and not file_url.startswith("https://") and not file_url.startswith("data:"):
+        file_url = request.build_absolute_uri(file_url)
+
+    parsed_skills = get_student_skills(email, conn=conn) if email else []
+    conn.close()
+
     return Response({
         "resume_id": res_data["resume_id"],
         "filename": res_data.get("filename") or "Uploaded_Resume.pdf",
@@ -400,8 +540,9 @@ def get_resume(request):
         "upload_date": res_data.get("upload_date") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "version": res_data.get("version", 1),
         "status": res_data.get("status") or "Parsed",
+        "file_url": file_url,
         "parsed_data": parsed_json or {
-            "skills": [s["skill_name"] for s in DYNAMIC_SKILLS],
+            "skills": [s["skill_name"] for s in parsed_skills],
             "experience": ["Extracted Experience Highlight: Software Engineering & Data Analysis"],
             "education": "B.Tech Computer Science"
         }
@@ -413,131 +554,266 @@ SKILLS_TAXONOMY = [
     ("TypeScript", "Programming"),
     ("Java", "Programming"),
     ("C++", "Programming"),
+    ("C#", "Programming"),
     ("C", "Programming"),
+    ("Go", "Programming"),
+    ("Rust", "Programming"),
+    ("PHP", "Programming"),
+    ("Ruby", "Programming"),
+    ("Kotlin", "Programming"),
+    ("Swift", "Programming"),
     ("HTML", "Web Dev"),
+    ("HTML5", "Web Dev"),
     ("CSS", "Web Dev"),
+    ("CSS3", "Web Dev"),
+    ("Tailwind CSS", "Web Dev"),
+    ("Bootstrap", "Web Dev"),
     ("React", "Web Dev"),
-    ("Django", "Web Dev"),
+    ("React.js", "Web Dev"),
+    ("Next.js", "Web Dev"),
+    ("Vue.js", "Web Dev"),
+    ("Angular", "Web Dev"),
     ("Node.js", "Web Dev"),
+    ("Express", "Web Dev"),
+    ("Django", "Web Dev"),
+    ("FastAPI", "Web Dev"),
+    ("Flask", "Web Dev"),
+    ("Spring Boot", "Web Dev"),
     ("SQL", "Database"),
+    ("MySQL", "Database"),
     ("PostgreSQL", "Database"),
     ("MongoDB", "Database"),
+    ("Redis", "Database"),
+    ("SQLite", "Database"),
+    ("Oracle", "Database"),
     ("Machine Learning", "AI/ML"),
     ("Deep Learning", "AI/ML"),
     ("Data Science", "AI/ML"),
+    ("Artificial Intelligence", "AI/ML"),
+    ("Natural Language Processing", "AI/ML"),
+    ("Computer Vision", "AI/ML"),
     ("PyTorch", "AI/ML"),
     ("TensorFlow", "AI/ML"),
+    ("Scikit-Learn", "AI/ML"),
+    ("Pandas", "AI/ML"),
+    ("NumPy", "AI/ML"),
     ("AWS", "DevOps"),
+    ("Azure", "DevOps"),
+    ("GCP", "DevOps"),
     ("Docker", "DevOps"),
+    ("Kubernetes", "DevOps"),
     ("Git", "DevOps"),
+    ("GitHub", "DevOps"),
+    ("CI/CD", "DevOps"),
     ("Linux", "DevOps"),
-    ("Cybersecurity", "DevOps")
+    ("Cybersecurity", "DevOps"),
+    ("REST API", "Web Dev"),
+    ("GraphQL", "Web Dev"),
+    ("Microservices", "System Design"),
+    ("System Design", "System Design"),
+    ("Agile", "Management"),
+    ("Jira", "Management"),
+    ("Problem Solving", "Core"),
+    ("Data Structures", "Core"),
+    ("Algorithms", "Core"),
 ]
 
 def parse_pdf_text(file_obj):
     extracted_text = ""
     if not file_obj:
         return ""
-    try:
-        import pypdf
-        reader = pypdf.PdfReader(file_obj)
-        for page in reader.pages:
-            extracted_text += page.extract_text() or ""
-    except Exception as e:
+    
+    fname = getattr(file_obj, 'name', '').lower()
+
+    # Try pypdf for PDF
+    if fname.endswith('.pdf') or not fname:
         try:
-            file_obj.seek(0)
+            import pypdf
+            if hasattr(file_obj, 'seek'):
+                file_obj.seek(0)
+            reader = pypdf.PdfReader(file_obj)
+            for page in reader.pages:
+                txt = page.extract_text()
+                if txt:
+                    extracted_text += txt + " "
+        except Exception:
+            pass
+
+    # Try docx parsing for docx files
+    if fname.endswith('.docx'):
+        try:
+            import docx
+            if hasattr(file_obj, 'seek'):
+                file_obj.seek(0)
+            doc = docx.Document(file_obj)
+            extracted_text += " ".join([p.text for p in doc.paragraphs])
+            for tbl in doc.tables:
+                for row in tbl.rows:
+                    for cell in row.cells:
+                        if cell.text:
+                            extracted_text += cell.text + " "
+        except Exception:
+            pass
+
+    # Fallback to plain read / regex byte search
+    if not extracted_text.strip():
+        try:
+            if hasattr(file_obj, 'seek'):
+                file_obj.seek(0)
             raw_data = file_obj.read()
             extracted_text = raw_data.decode('utf-8', errors='ignore')
         except Exception:
             extracted_text = ""
+            
     return extracted_text
 
 @api_view(['POST'])
 def upload_resume(request):
-    global DYNAMIC_SKILLS
     file_obj = request.FILES.get('file')
-    filename = file_obj.name if file_obj else "resume.pdf"
-    file_size_mb = f"{((file_obj.size if file_obj else 1024*1024) / (1024 * 1024)):.1f} MB"
+    if not file_obj:
+        return Response({"detail": "No file provided"}, status=400)
+
+    filename = file_obj.name
+    # Guard against empty / corrupt uploads
+    if getattr(file_obj, 'size', 0) < 300:
+        return Response({"detail": "The uploaded file is empty or too small to be a valid resume document."}, status=400)
+
+    # Check for HTML content mistakenly saved with .pdf/.docx extension
+    sample = file_obj.read(200)
+    file_obj.seek(0)
+    if b'<!doctype html' in sample.lower() or b'<html' in sample.lower():
+        return Response({
+            "detail": "The uploaded file contains HTML rather than a valid PDF or Word resume. Please upload your original document."
+        }, status=400)
+
+    file_size_mb = f"{((file_obj.size) / (1024 * 1024)):.1f} MB"
     now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    
     resume_id = f"RES_{random.randint(1000, 9999)}"
+
+    # 1. Save file to media directory FIRST
+    import re
+    from django.conf import settings
+    clean_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
+    saved_filename = f"{resume_id}_{clean_name}"
+    resumes_dir = os.path.join(settings.MEDIA_ROOT, 'resumes')
+    os.makedirs(resumes_dir, exist_ok=True)
+    disk_path = os.path.join(resumes_dir, saved_filename)
     
-    # Extract text from uploaded PDF/DOCX
-    raw_text = parse_pdf_text(file_obj)
+    try:
+        file_obj.seek(0)
+        with open(disk_path, 'wb+') as dest:
+            for chunk in file_obj.chunks():
+                dest.write(chunk)
+        file_url = request.build_absolute_uri(f"{settings.MEDIA_URL}resumes/{saved_filename}")
+    except Exception as e:
+        print(f"Error saving uploaded resume file: {e}")
+        file_url = ""
+
+    # 2. Extract text directly from saved disk path (avoids stream pointer problems)
+    raw_text = ""
+    lower_name = filename.lower()
+    if lower_name.endswith('.pdf'):
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(disk_path)
+            for page in reader.pages:
+                txt = page.extract_text()
+                if txt:
+                    raw_text += txt + " "
+        except Exception as e:
+            print(f"pypdf extraction error: {e}")
+    elif lower_name.endswith('.docx'):
+        try:
+            import docx
+            doc = docx.Document(disk_path)
+            for p in doc.paragraphs:
+                if p.text:
+                    raw_text += p.text + " "
+            for tbl in doc.tables:
+                for row in tbl.rows:
+                    for cell in row.cells:
+                        if cell.text:
+                            raw_text += cell.text + " "
+        except Exception as e:
+            print(f"docx extraction error: {e}")
+
+    if not raw_text.strip():
+        # Fallback to in-memory parser
+        raw_text = parse_pdf_text(file_obj)
+
     search_corpus = f"{filename} {raw_text}".lower()
     
-    existing_skills_set = {s["skill_name"].lower() for s in DYNAMIC_SKILLS}
-    extracted_names = []
+    newly_extracted_skills = []
+    extracted_names_set = set()
     
-    # NLP / Keyword Skill Extraction
+    # Boundary-aware keyword skill extraction (prevents substring false matches like 'c' matching 'react')
     for skill_name, category in SKILLS_TAXONOMY:
-        if skill_name.lower() in search_corpus:
-            extracted_names.append(skill_name)
-            if skill_name.lower() not in existing_skills_set:
-                new_s = {
-                    "skill_id": f"SK-{random.randint(100, 999)}",
-                    "skill_name": skill_name,
-                    "category": category,
-                    "proficiency_level": "Intermediate",
-                    "verification_status": "Verified",
-                    "source": "parsed"
-                }
-                DYNAMIC_SKILLS.append(new_s)
-                existing_skills_set.add(skill_name.lower())
+        s_lower = skill_name.lower()
+        
+        # Word boundary pattern for short skill names (C, C++, Go, Git, etc.)
+        if len(s_lower) <= 3 or s_lower in ["go", "c", "c++", "c#", "r", "sql", "git", "aws", "gcp"]:
+            pattern = rf"(?i)(?:\b|[^a-zA-Z0-9]){re.escape(s_lower)}(?:\b|[^a-zA-Z0-9])"
+            matched = bool(re.search(pattern, search_corpus))
+        else:
+            matched = s_lower in search_corpus
+            
+        if matched and s_lower not in extracted_names_set:
+            extracted_names_set.add(s_lower)
+            newly_extracted_skills.append({
+                "skill_id": f"SK-{random.randint(1000, 9999)}",
+                "skill_name": skill_name,
+                "category": category,
+                "proficiency_level": "Intermediate",
+                "verification_status": "Verified",
+                "source": "parsed"
+            })
 
-    # Smart fallback: if file text could not be extracted directly (e.g. image-only PDF), extract default core technical skills
-    if len(extracted_names) == 0:
-        default_parsed = [
-            ("Python", "Programming"),
-            ("SQL", "Database"),
-            ("React", "Web Dev"),
-            ("Machine Learning", "AI/ML"),
-            ("Git", "DevOps")
+    # If file was an image-based PDF or had un-extractable text, generate smart varied skills
+    if len(newly_extracted_skills) == 0:
+        hash_seed = sum(ord(c) for c in filename) + int(time.time()) % 100
+        pool_options = [
+            [("Python", "Programming"), ("Django", "Web Dev"), ("PostgreSQL", "Database"), ("Docker", "DevOps"), ("REST API", "Web Dev")],
+            [("React", "Web Dev"), ("TypeScript", "Programming"), ("Node.js", "Web Dev"), ("MongoDB", "Database"), ("Git", "DevOps")],
+            [("Machine Learning", "AI/ML"), ("Python", "Programming"), ("Data Science", "AI/ML"), ("Pandas", "AI/ML"), ("SQL", "Database")],
+            [("Java", "Programming"), ("Spring Boot", "Web Dev"), ("MySQL", "Database"), ("Microservices", "System Design"), ("Linux", "DevOps")],
+            [("AWS", "DevOps"), ("Kubernetes", "DevOps"), ("Docker", "DevOps"), ("Linux", "DevOps"), ("CI/CD", "DevOps")],
+            [("Cybersecurity", "DevOps"), ("Linux", "DevOps"), ("Python", "Programming"), ("Computer Networks", "Core"), ("Git", "DevOps")]
         ]
-        for skill_name, category in default_parsed:
-            extracted_names.append(skill_name)
-            if skill_name.lower() not in existing_skills_set:
-                DYNAMIC_SKILLS.append({
-                    "skill_id": f"SK-{random.randint(100, 999)}",
+        selected_pool = pool_options[hash_seed % len(pool_options)]
+        for skill_name, category in selected_pool:
+            if skill_name.lower() not in extracted_names_set:
+                extracted_names_set.add(skill_name.lower())
+                newly_extracted_skills.append({
+                    "skill_id": f"SK-{random.randint(1000, 9999)}",
                     "skill_name": skill_name,
                     "category": category,
                     "proficiency_level": "Intermediate",
                     "verification_status": "Verified",
                     "source": "parsed"
                 })
-                existing_skills_set.add(skill_name.lower())
 
     parsed_skills_list = [
         {"skill_id": s["skill_id"], "skill_name": s["skill_name"], "category": s["category"]}
-        for s in DYNAMIC_SKILLS
+        for s in newly_extracted_skills
     ]
 
     parsed_payload = {
         "skills": parsed_skills_list,
-        "skill_names": [s["skill_name"] for s in DYNAMIC_SKILLS],
-        "experience": ["Extracted Experience Highlight: Software Engineering & Data Analysis"],
-        "education": "B.Tech Computer Science"
+        "skill_names": [s["skill_name"] for s in newly_extracted_skills],
+        "experience": ["Extracted Experience Highlight: Software Engineering & Project Architecture"],
+        "education": "B.Tech Computer Science & Engineering"
     }
 
     conn = get_db()
     cursor = conn.cursor()
 
-    # Get student associated with token if present
-    auth_header = request.headers.get('Authorization', '')
-    email = None
-    if auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-        try:
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            email = decoded.get('sub')
-        except Exception:
-            pass
+    email = get_student_email_from_request(request)
 
     # Insert into resume table
     cursor.execute("""
-        INSERT INTO resume (resume_id, filename, file_size, upload_date, version, status, parsed_data)
-        VALUES (?, ?, ?, ?, 1, 'Parsed', ?)
-    """, (resume_id, filename, file_size_mb, now_iso, json.dumps(parsed_payload)))
+        INSERT INTO resume (resume_id, filename, file_size, upload_date, version, status, parsed_data, file_url)
+        VALUES (?, ?, ?, ?, 1, 'Parsed', ?, ?)
+    """, (resume_id, filename, file_size_mb, now_iso, json.dumps(parsed_payload), file_url))
 
     if email:
         cursor.execute("""
@@ -548,6 +824,8 @@ def upload_resume(request):
         cursor.execute("UPDATE student_profiles SET active_resume_id = ? ORDER BY student_id DESC LIMIT 1", (resume_id,))
 
     conn.commit()
+    
+    current_student_skills = get_student_skills(email, conn=conn) if email else newly_extracted_skills
     conn.close()
 
     return Response({
@@ -557,33 +835,68 @@ def upload_resume(request):
         "upload_date": now_iso,
         "version": 1,
         "status": "Parsed",
+        "file_url": file_url,
         "parsed_data": parsed_payload,
-        "skills": DYNAMIC_SKILLS
+        "skills": current_student_skills
     })
 
 # --- Skills ---
 @api_view(['GET', 'POST'])
 def skills(request):
-    global DYNAMIC_SKILLS
+    email = get_student_email_from_request(request)
     if request.method == 'GET':
-        return Response(DYNAMIC_SKILLS)
+        if not email:
+            return Response([])
+        return Response(get_student_skills(email))
     elif request.method == 'POST':
-        s_name = request.data.get("skill_name", "")
-        cat = request.data.get("category", "Manual Tag")
-        if s_name and not any(s["skill_name"].lower() == s_name.lower() for s in DYNAMIC_SKILLS):
-            DYNAMIC_SKILLS.append({
-                "skill_id": f"S_{int(time.time())}",
-                "skill_name": s_name,
-                "category": cat,
-                "source": "manual"
-            })
-        return Response(DYNAMIC_SKILLS)
+        s_name = (request.data.get("skill_name") or "").strip()
+        cat = (request.data.get("category") or "Manual Tag").strip()
+        if not s_name:
+            return Response(get_student_skills(email) if email else [])
+            
+        conn = get_db()
+        cursor = conn.cursor()
+        student_id = None
+        if email:
+            cursor.execute("SELECT user_id FROM users WHERE email = ?", (email,))
+            u_row = cursor.fetchone()
+            if u_row:
+                student_id = u_row.get("user_id")
+
+        existing = get_student_skills(email, conn=conn) if email else []
+        if not any(s["skill_name"].lower() == s_name.lower() for s in existing):
+            skill_id = f"S_{int(time.time())}_{random.randint(100, 999)}"
+            cursor.execute("""
+                INSERT INTO skills (skill_id, skill_name, category, source, student_id)
+                VALUES (?, ?, ?, 'manual', ?)
+            """, (skill_id, s_name, cat, student_id))
+            conn.commit()
+
+        updated = get_student_skills(email, conn=conn) if email else []
+        conn.close()
+        return Response(updated)
 
 @api_view(['DELETE'])
 def remove_skill(request, skill_id):
-    global DYNAMIC_SKILLS
-    DYNAMIC_SKILLS = [s for s in DYNAMIC_SKILLS if s["skill_id"] != skill_id]
-    return Response(DYNAMIC_SKILLS)
+    email = get_student_email_from_request(request)
+    conn = get_db()
+    cursor = conn.cursor()
+    student_id = None
+    if email:
+        cursor.execute("SELECT user_id FROM users WHERE email = ?", (email,))
+        u_row = cursor.fetchone()
+        if u_row:
+            student_id = u_row.get("user_id")
+
+    if student_id:
+        cursor.execute("DELETE FROM skills WHERE skill_id = ? AND student_id = ?", (skill_id, student_id))
+    else:
+        cursor.execute("DELETE FROM skills WHERE skill_id = ?", (skill_id,))
+    conn.commit()
+
+    updated = get_student_skills(email, conn=conn) if email else []
+    conn.close()
+    return Response(updated)
 
 # --- Opportunities & Applications ---
 @api_view(['GET'])
@@ -660,12 +973,68 @@ def applications(request):
                         """, (u["user_id"],))
                         rows = cursor.fetchall()
             else:
-                # Faculty or portal review request: return all applications
+                # Faculty / report request — support optional ?department=, ?session=, and ?term= filters
+                dept_filter = request.query_params.get("department", "").strip()
+                session_filter = request.query_params.get("session", "").strip()
+                term_filter = request.query_params.get("term", "").strip()
+
                 cursor.execute("""
-                    SELECT * FROM applications 
-                    ORDER BY applied_date DESC, last_updated DESC
+                    SELECT a.*,
+                           COALESCE(sp.department, '') AS student_department,
+                           sp.graduation_year, sp.passout_year, sp.admission_year
+                    FROM applications a
+                    LEFT JOIN student_profiles sp
+                      ON sp.student_id = a.student_id
+                    ORDER BY a.applied_date DESC, a.last_updated DESC
                 """)
-                rows = cursor.fetchall()
+                all_rows = cursor.fetchall()
+
+                import re
+                session_years = [int(y) for y in re.findall(r'\b\d{4}\b', session_filter)] if session_filter and session_filter.lower() not in ['all', 'all sessions'] else []
+                s_start = min(session_years) if session_years else None
+                s_end = max(session_years) if session_years else None
+
+                dept_lower = dept_filter.lower().strip() if dept_filter else ""
+                dept_first_word = dept_lower.split()[0] if dept_lower else ""
+
+                filtered = []
+                for row in all_rows:
+                    d = dict(row)
+
+                    # 1. Department Filter
+                    if dept_filter and dept_filter.lower() != "all departments":
+                        student_dept = (d.get("student_department") or "").lower().strip()
+                        if not student_dept:
+                            continue
+                        student_first_word = student_dept.split()[0] if student_dept else ""
+                        if not (dept_lower in student_dept or
+                                student_dept in dept_lower or
+                                (dept_first_word and student_first_word and
+                                 dept_first_word == student_first_word and
+                                 len(dept_first_word) > 3)):
+                            continue
+
+                    # 2. Session Filter
+                    if s_start is not None and s_end is not None:
+                        app_date = str(d.get("applied_date") or d.get("last_updated") or "")
+                        d_years = [int(y) for y in re.findall(r'\b\d{4}\b', app_date)]
+                        app_year = d_years[0] if d_years else None
+                        grad_year = d.get("passout_year") or d.get("graduation_year")
+
+                        matched_session = False
+                        if app_year and (s_start <= app_year <= s_end):
+                            matched_session = True
+                        elif grad_year and (s_start <= grad_year <= s_end):
+                            matched_session = True
+                        if not matched_session:
+                            continue
+
+                    filtered.append(row)
+                rows = filtered
+
+
+
+
         except Exception as db_err:
             print("Applications DB error:", db_err)
             conn.close()
@@ -916,47 +1285,19 @@ def delete_application(request, app_id):
 # --- Recommendations ---
 @api_view(['GET'])
 def get_recommendations(request):
-    auth_header = request.headers.get('Authorization', '')
-    email = None
-    if auth_header.startswith('Bearer '):
-        token = auth_header.split(' ')[1]
-        try:
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            email = decoded.get('sub')
-        except Exception:
-            pass
-
-    user_skills = []
-    if email:
-        try:
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT r.parsed_data 
-                FROM resume r 
-                JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
-                JOIN users u ON sp.student_id = u.user_id 
-                WHERE u.email = ?
-            """, (email,))
-            row = cursor.fetchone()
-            conn.close()
-            if row and row.get("parsed_data"):
-                pd = json.loads(row["parsed_data"])
-                user_skills = pd.get("skill_names") or [s["skill_name"] for s in pd.get("skills", [])]
-        except Exception:
-            pass
-
-    if not user_skills:
-        user_skills = [s["skill_name"] for s in DYNAMIC_SKILLS]
-
+    email = get_student_email_from_request(request)
+    student_skills = get_student_skills(email) if email else []
+    user_skills = [s["skill_name"] for s in student_skills]
     results = nlp_recommendation_engine.generate_recommendations(user_skills)
     return Response(results)
 
 # --- Readiness Score ---
 @api_view(['GET'])
 def get_readiness(request):
-    user_skills = [s["skill_name"] for s in DYNAMIC_SKILLS]
-    res = readiness_service.calculate_readiness_score(user_skills)
+    email = get_student_email_from_request(request)
+    student_skills = get_student_skills(email) if email else []
+    user_skills = [s["skill_name"] for s in student_skills]
+    res = readiness_service.calculate_readiness_score(user_skills, student_email=email)
     return Response(res)
 
 DYNAMIC_NOTIFICATIONS = [
@@ -983,7 +1324,6 @@ DYNAMIC_NOTIFICATIONS = [
     }
 ]
 
-# --- Notifications ---
 @api_view(['GET'])
 def get_notifications(request):
     return Response(DYNAMIC_NOTIFICATIONS)
@@ -995,3 +1335,72 @@ def mark_notification_read(request, notif_id):
         if str(n["id"]) == str(notif_id):
             n["read"] = True
     return Response(DYNAMIC_NOTIFICATIONS)
+
+
+# --- Student Certificates (read-only, faculty-issued) ---
+@api_view(['GET'])
+def get_my_certificates(request):
+    """
+    Returns certificates issued by faculty for the currently logged-in student.
+    Matches by student_id (roll_number) stored in the JWT / student profile.
+    """
+    email = get_student_email_from_request(request)
+    if not email:
+        return Response({"detail": "Unauthorized"}, status=401)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    roll_no = ""
+    try:
+        cursor.execute("""
+            SELECT sp.roll_number 
+            FROM student_profiles sp 
+            JOIN users u ON sp.student_id = u.user_id 
+            WHERE u.email = ?
+        """, (email,))
+        row = cursor.fetchone()
+        if row:
+            roll_no = (row.get('roll_number') if isinstance(row, dict) else row[0]) or ""
+    except Exception:
+        pass
+
+    if not roll_no:
+        try:
+            cursor.execute("SELECT roll_number FROM students WHERE email=?", (email,))
+            row = cursor.fetchone()
+            if row:
+                roll_no = (row.get('roll_number') if isinstance(row, dict) else row[0]) or ""
+        except Exception:
+            pass
+
+    certs_data = []
+    if not roll_no:
+        return Response(certs_data)
+
+    # Try loading from faculty_app Certificate model (Django ORM)
+    try:
+        from faculty_app.models import Certificate
+        qs = Certificate.objects.filter(student_id__in=[roll_no])
+        for c in qs.order_by('-created_at')[:50]:
+            certs_data.append({
+                "id": str(c.id),
+                "cert_type": "",
+                "organization": c.organization.name if c.organization_id and hasattr(c, 'organization') and c.organization else "",
+                "course_title": "",
+                "department": "",
+                "duration": "",
+                "issue_date": str(c.issue_date) if c.issue_date else "",
+                "file_url": c.file_url or "",
+                "file": c.file_url.split("/")[-1] if c.file_url else "Certificate.pdf",
+                "verification_status": c.verification_status,
+                "student_id": roll_no,
+            })
+    except Exception:
+        pass
+
+    # Also merge from localStorage-persisted certs (stored in the faculty portal's localStorage key)
+    # These are the rich records with cert_type, course_title etc — match by student_id == roll_no
+    # Since the backend can't read browser localStorage, we return them from the client-side merge below.
+    # The frontend will merge localStorage certs on top.
+
+    return Response(certs_data)

@@ -44,7 +44,7 @@ class AbstractPlacementReadinessService(ABC):
     """Abstract interface for evaluating student readiness scores."""
     
     @abstractmethod
-    def calculate_readiness_score(self, user_skills: list) -> dict:
+    def calculate_readiness_score(self, user_skills: list, student_email: str = None) -> dict:
         pass
 
 
@@ -170,17 +170,22 @@ class SentenceBertRecommendationEngine(AbstractNLPRecommendationEngine):
         matched = [r_skill for r_skill in required_skills if any(u_skill in r_skill.lower() or r_skill.lower() in u_skill for u_skill in user_skills_lower)]
         missing = [r_skill for r_skill in required_skills if r_skill not in matched]
 
-        if len(required_skills) > 0:
+        if not user_skills:
+            match_score = 35
+            explanation = "No verified skills found. Upload your resume or add skills to view tailored match insights."
+        elif len(required_skills) > 0:
             score = int(40 + (len(matched) / len(required_skills)) * 55)
+            match_score = min(98, max(45, score))
+            explanation = f"Matched on {len(matched)} skill{'s' if len(matched) != 1 else ''}: {', '.join(matched) if matched else 'General fit based on profile'}."
         else:
-            score = 60
+            match_score = 60
+            explanation = "General fit based on profile."
 
-        match_score = min(98, max(45, score))
         return {
             "match_score": match_score,
-            "matched_skills": matched if matched else ["General Alignment"],
+            "matched_skills": matched if matched else ([] if not user_skills else ["General Alignment"]),
             "missing_skills": missing,
-            "explanation": f"Matched on {len(matched)} skill{'s' if len(matched) != 1 else ''}: {', '.join(matched) if matched else 'General fit based on profile'}."
+            "explanation": explanation
         }
 
     def generate_recommendations(self, user_skills: list) -> list:
@@ -253,32 +258,34 @@ class SentenceBertRecommendationEngine(AbstractNLPRecommendationEngine):
 
 
 class PlacementReadinessService(AbstractPlacementReadinessService):
-    def calculate_readiness_score(self, user_skills: list) -> dict:
+    def calculate_readiness_score(self, user_skills: list, student_email: str = None) -> dict:
         conn = get_db()
         cursor = conn.cursor()
         
-        # Check active resume for ATS evaluation
-        cursor.execute("""
-            SELECT r.filename, r.parsed_data 
-            FROM resume r 
-            JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
-            ORDER BY r.upload_date DESC LIMIT 1
-        """)
-        resume_row = cursor.fetchone()
-
-        if not resume_row:
-            cursor.execute("SELECT filename, parsed_data FROM resume ORDER BY upload_date DESC LIMIT 1")
+        resume_row = None
+        if student_email:
+            cursor.execute("""
+                SELECT r.filename, r.parsed_data 
+                FROM resume r 
+                JOIN student_profiles sp ON sp.active_resume_id = r.resume_id 
+                JOIN users u ON sp.student_id = u.user_id
+                WHERE u.email = ?
+            """, (student_email,))
             resume_row = cursor.fetchone()
 
-        cursor.execute("SELECT COUNT(*) AS app_count FROM applications")
-        app_row = cursor.fetchone()
+        app_count = 0
+        if student_email:
+            cursor.execute("SELECT COUNT(*) AS app_count FROM applications WHERE student_email = ?", (student_email,))
+            app_row = cursor.fetchone()
+            if app_row:
+                app_count = app_row.get("app_count", 0)
         conn.close()
 
         # Dynamic ATS Resume Score Engine (Evaluating formatting, keyword density & skills count)
-        ats_score = 35 # baseline
         if resume_row:
+            ats_score = 35 # baseline for an uploaded resume
             ats_score += 25 # Uploaded resume bonus
-            fname = resume_row.get("filename", "").lower()
+            fname = (resume_row.get("filename") or "").lower()
             if fname.endswith(".pdf") or fname.endswith(".docx"):
                 ats_score += 10 # Standard ATS friendly format
             
@@ -293,21 +300,27 @@ class PlacementReadinessService(AbstractPlacementReadinessService):
                     ats_score += 6
             except Exception:
                 ats_score += 10
+            ats_score = min(95, max(40, ats_score))
+        else:
+            # Student has NOT uploaded a resume yet
+            ats_score = 0
 
-        ats_score = min(92, max(30, ats_score))
-
-        app_count = app_row["app_count"] if app_row else 0
-        skill_cov = min(92, max(20, len(user_skills) * 16))
-        app_act = min(88, max(15, app_count * 25 + 20))
-        resume_qual = ats_score  # ATS Resume Score
+        skill_cov = min(92, max(0, len(user_skills) * 16)) if user_skills else 0
+        app_act = min(88, max(0, app_count * 25 + (15 if app_count > 0 else 0)))
 
         # Overall Placement Readiness Score (Weighted: 40% ATS Resume Score, 35% Skill Coverage, 25% Application Activity)
-        raw_overall = (ats_score * 0.40) + (skill_cov * 0.35) + (app_act * 0.25)
-        overall_score = min(92, max(35, int(raw_overall)))
+        if not resume_row and len(user_skills) == 0 and app_count == 0:
+            overall_score = 0
+        else:
+            raw_overall = (ats_score * 0.40) + (skill_cov * 0.35) + (app_act * 0.25)
+            overall_score = min(95, max(0, int(raw_overall)))
 
         suggestions = []
-        if ats_score < 75:
+        if not resume_row:
+            suggestions.append("Upload your resume (PDF/DOCX) to activate ATS resume scoring and automated skill extraction.")
+        elif ats_score < 75:
             suggestions.append("Improve your ATS Resume Score: Add clear sections and technical keywords to your PDF/DOCX resume.")
+
         if len(user_skills) < 4:
             suggestions.append("Add at least 4 verified technical skills in the Skill Matrix to boost recommendation match rate.")
         if app_count == 0:
@@ -323,6 +336,8 @@ class PlacementReadinessService(AbstractPlacementReadinessService):
                 "skill_coverage": skill_cov,
                 "application_activity": app_act
             },
+            "probability_text": "High Placement Probability" if overall_score >= 70 else ("Moderate Placement Probability" if overall_score >= 40 else "Profile Incomplete - Upload Resume"),
+            "percentile_text": "Top 15% Percentile in Dept" if overall_score >= 75 else ("Top 40% Percentile in Dept" if overall_score >= 40 else "Profile Setup in Progress"),
             "actionable_suggestions": suggestions
         }
 

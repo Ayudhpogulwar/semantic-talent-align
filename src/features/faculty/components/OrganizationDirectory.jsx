@@ -195,7 +195,7 @@ export default function OrganizationDirectory() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-          <h4 className="mb-0 fw-bold text-white">Organizations &amp; Corporate Partners</h4>
+          <h4 className="mb-0 fw-bold" style={{ color: "var(--text-main)" }}>Organizations &amp; Corporate Partners</h4>
           <p className="text-muted small mb-0">Manage accredited companies, NGOs, and their designated HR coordinators.</p>
         </div>
 
@@ -318,7 +318,7 @@ export default function OrganizationDirectory() {
                         <span className="badge badge-cyan">{org.org_type}</span>
                       </td>
                       <td>
-                        <div className="fw-semibold text-white">
+                        <div className="fw-semibold" style={{ color: "var(--text-main)" }}>
                           {org.contact_name || "N/A"}
                         </div>
                         <div>
@@ -326,7 +326,7 @@ export default function OrganizationDirectory() {
                             className="badge px-2 py-0.5 rounded"
                             style={{
                               background: "rgba(99, 102, 241, 0.15)",
-                              color: "#a5b4fc",
+                              color: "var(--primary-light)",
                               border: "1px solid rgba(99, 102, 241, 0.3)",
                               fontSize: "0.72rem",
                               fontWeight: 600,

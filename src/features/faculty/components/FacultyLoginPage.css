@@ -124,3 +124,48 @@
 .login-form .form-control::placeholder {
   color: #64748b !important;
 }
+
+[data-theme="light"] .login-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #ede9fe 100%) !important;
+}
+
+[data-theme="light"] .card.login-card {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .login-card__title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .login-card__subtitle {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .login-form .form-label {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .login-form .form-control {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .login-form .form-control:focus {
+  background-color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+[data-theme="light"] .mfa-info {
+  background-color: #eff6ff !important;
+  border-left-color: #3b82f6 !important;
+}
+
+[data-theme="light"] .mfa-info p,
+[data-theme="light"] .mfa-info span {
+  color: #1e3a8a !important;
+}

@@ -90,7 +90,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
           }}>
             <GraduationCap size={32} color="#fff" />
           </div>
-          <h2 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: 800 }}>
+          <h2 style={{ fontSize: '1.6rem', color: 'var(--text-main)', fontWeight: 800 }}>
             TalentAlign AI Student Portal
           </h2>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -99,7 +99,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
         </div>
 
         {/* Tab Selector */}
-        <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', padding: '4px', borderRadius: '10px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', padding: '4px', borderRadius: '10px', marginBottom: '24px' }}>
           <button
             type="button"
             onClick={() => { setIsRegister(false); setError(null); }}
@@ -109,7 +109,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
               borderRadius: '8px',
               border: 'none',
               background: !isRegister ? 'var(--primary)' : 'transparent',
-              color: '#fff',
+              color: !isRegister ? '#fff' : 'var(--text-muted)',
               fontWeight: 600,
               fontSize: '0.85rem',
               cursor: 'pointer'
@@ -126,7 +126,7 @@ export default function AuthModal({ onLoginSuccess, onClose, defaultRegister = f
               borderRadius: '8px',
               border: 'none',
               background: isRegister ? 'var(--primary)' : 'transparent',
-              color: '#fff',
+              color: isRegister ? '#fff' : 'var(--text-muted)',
               fontWeight: 600,
               fontSize: '0.85rem',
               cursor: 'pointer'

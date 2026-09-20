@@ -50,4 +50,7 @@ urlpatterns = [
     # Notifications
     path('notifications', views.get_notifications),
     path('notifications/<str:notif_id>/read', views.mark_notification_read),
+
+    # 14.8 Student Certificates (read-only, faculty-issued)
+    path('certificates/my', views.get_my_certificates),
 ]

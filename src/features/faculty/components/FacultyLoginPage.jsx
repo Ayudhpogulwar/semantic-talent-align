@@ -49,12 +49,6 @@ export default function FacultyLoginPage() {
     }
   };
 
-  const fillQuickLogin = (demoValue, pass) => {
-    setUsernameOrEmail(demoValue);
-    setPassword(pass);
-    setValidationError("");
-  };
-
   return (
     <div className="d-flex align-items-center justify-content-center vh-100" style={{ background: 'var(--bg-dark, #0b0f19)' }}>
       <div className="glass-panel p-1" style={{ width: 420, borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
@@ -103,16 +97,6 @@ export default function FacultyLoginPage() {
                   placeholder="••••••••"
                   required
                 />
-              </div>
-
-              {/* Quick Fill Buttons */}
-              <div className="mb-3">
-                <div className="text-muted small mb-1" style={{ fontSize: '0.75rem' }}>Quick Demo Fill:</div>
-                <div className="d-flex gap-2 flex-wrap">
-                  <button type="button" onClick={() => fillQuickLogin('omi', 'password123')} className="btn btn-outline-primary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>omi</button>
-                  <button type="button" onClick={() => fillQuickLogin('FAC101', 'password123')} className="btn btn-outline-secondary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>FAC101</button>
-                  <button type="button" onClick={() => fillQuickLogin('demo@raisoni.net', 'password123')} className="btn btn-outline-secondary btn-sm py-1 px-2" style={{ fontSize: '0.75rem' }}>demo@raisoni.net</button>
-                </div>
               </div>
 
               <button type="submit" className="btn btn-primary w-100 mb-3 d-flex align-items-center justify-content-center" disabled={loading} style={{ padding: '10px', fontWeight: 600 }}>
