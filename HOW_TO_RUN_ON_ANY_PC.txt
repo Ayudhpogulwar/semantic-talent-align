@@ -1,0 +1,71 @@
+================================================================
+   SAIOTAF - Semantic-Aware Opportunity Alignment Framework
+   EASY SETUP & RUN GUIDE FOR ANY LAPTOP / PC
+================================================================
+
+PREREQUISITES (Must be installed on the laptop):
+1. Python (Version 3.10, 3.11, 3.12, or 3.13)
+   Download: https://www.python.org/downloads/
+   *IMPORTANT*: During installation, make sure to CHECK the box:
+   "Add python.exe to PATH" (at the bottom of the installer).
+
+2. Node.js (Version 18, 20, or latest LTS)
+   Download: https://nodejs.org/ (Download the "LTS" version)
+   Install with default settings.
+
+----------------------------------------------------------------
+HOW TO RUN (EASY 2-STEP METHOD):
+----------------------------------------------------------------
+
+STEP 1: INSTALL DEPENDENCIES (Run once)
+   - Double-click: "1_INSTALL_DEPENDENCIES.bat"
+   - It will automatically install all Python backend packages and Node.js frontend packages.
+   - Wait until it says "SUCCESS! All dependencies installed successfully!"
+
+STEP 2: START THE APPLICATION (Every time you use it)
+   - Double-click: "2_START_PROJECT.bat"
+   - Two terminal windows will open:
+     1. Django Backend Server (running on http://127.0.0.1:8000)
+     2. React Frontend Portal (running on http://localhost:5173)
+   - Your web browser will automatically open to: http://localhost:5173
+   - Keep both terminal windows open while using the website.
+
+----------------------------------------------------------------
+DEFAULT DEMO LOGIN CREDENTIALS:
+----------------------------------------------------------------
+
+1. STUDENT PORTAL (http://localhost:5173/):
+   - Email: student@raisoni.net
+   - Password: password123
+   - (Or click "Register Account" to create a new student)
+
+2. FACULTY PORTAL (http://localhost:5173/faculty/login):
+   - Username: omi   (or FAC101 or demo@raisoni.net)
+   - Password: password123
+
+3. SUPER ADMIN PORTAL (http://localhost:5173/login/admin):
+   - Email: admin@saiotaf.edu   (or saiotaf.admin@gmail.com)
+   - Password: password123      (or Sai@123456)
+
+----------------------------------------------------------------
+DATABASE NOTES:
+----------------------------------------------------------------
+- ZERO CONFIGURATION REQUIRED!
+- The system automatically detects if MySQL is running on your machine.
+- If you do NOT have MySQL installed, it automatically uses the pre-seeded
+  embedded SQLite database (db.sqlite3). Everything works out-of-the-box!
+
+----------------------------------------------------------------
+MANUAL COMMANDS (Optional, for developers):
+----------------------------------------------------------------
+If you prefer running commands manually in VS Code / Terminal:
+
+Terminal 1 (Backend):
+   cd backend
+   pip install -r requirements.txt
+   python manage.py runserver 8000
+
+Terminal 2 (Frontend):
+   npm install
+   npm run dev
+================================================================
