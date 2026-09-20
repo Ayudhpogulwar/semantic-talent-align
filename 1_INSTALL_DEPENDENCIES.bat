@@ -47,7 +47,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 node --version
-npm --version
+call npm --version
 
 :: 3. Install Python Backend Dependencies
 echo.
