@@ -1175,20 +1175,45 @@ def applications(request):
         now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         app_id_str = f"APP-{int(time.time() * 1000) % 10000000}"
 
-        cursor.execute("""
-            INSERT INTO applications (
-                application_id, student_id, student_name, student_email,
-                opportunity_id, opportunity_title, organization,
-                applied_date, status, last_updated, notes
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Applied', ?, 'Applied via Student Portal')
-        """, (
-            app_id_str, student_id, student_name, student_email,
-            str(opp_id), opp_title, org_name,
-            today_str, now_iso
-        ))
-        conn.commit()
-        conn.close()
+        try:
+            cursor.execute("""
+                INSERT INTO applications (
+                    application_id, student_id, student_name, student_email,
+                    opportunity_id, opportunity_title, organization,
+                    applied_date, status, last_updated, notes
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Applied', ?, 'Applied via Student Portal')
+            """, (
+                app_id_str, student_id, student_name, student_email,
+                str(opp_id), opp_title, org_name,
+                today_str, now_iso
+            ))
+            conn.commit()
+        except Exception as insert_err:
+            for col in ["student_name", "student_email", "student_id"]:
+                try:
+                    cursor.execute(f"ALTER TABLE applications ADD COLUMN {col} TEXT")
+                except Exception:
+                    pass
+            conn.commit()
+            cursor.execute("""
+                INSERT INTO applications (
+                    application_id, student_id, student_name, student_email,
+                    opportunity_id, opportunity_title, organization,
+                    applied_date, status, last_updated, notes
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Applied', ?, 'Applied via Student Portal')
+            """, (
+                app_id_str, student_id, student_name, student_email,
+                str(opp_id), opp_title, org_name,
+                today_str, now_iso
+            ))
+            conn.commit()
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
         # Dynamic notification for student
         new_notif = {

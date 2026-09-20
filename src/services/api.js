@@ -203,8 +203,14 @@ class RealApiService {
       })
     });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to apply");
+      let errorMsg = "Failed to apply";
+      try {
+        const err = await res.json();
+        errorMsg = err.detail || err.message || JSON.stringify(err);
+      } catch (e) {
+        errorMsg = `Server error (${res.status}). Please ensure backend is running on port 8000.`;
+      }
+      throw new Error(errorMsg);
     }
     return await res.json();
   }

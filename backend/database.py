@@ -197,15 +197,27 @@ class DatabaseLayer:
                 student_id TEXT PRIMARY KEY,
                 name TEXT, email TEXT UNIQUE, roll_no TEXT, dept TEXT, year TEXT, cgpa TEXT,
                 contact TEXT, linkedin TEXT, github TEXT, bio TEXT, profile_completion_pct INTEGER,
-                verified_by_faculty INTEGER, consent_resume_sharing INTEGER
+                verified_by_faculty INTEGER, consent_resume_sharing INTEGER,
+                admission_year TEXT, passout_year TEXT, program TEXT
             )
             """)
+            for col in ["admission_year", "passout_year", "program"]:
+                try:
+                    cursor.execute(f"ALTER TABLE profile ADD COLUMN {col} TEXT")
+                except Exception:
+                    pass
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS resume (
                 resume_id TEXT PRIMARY KEY, filename TEXT, file_size TEXT, upload_date TEXT,
-                version INTEGER, status TEXT, parsed_data TEXT
+                version INTEGER, status TEXT, parsed_data TEXT, file_url TEXT
             )
             """)
+            try:
+                cursor.execute("ALTER TABLE resume ADD COLUMN file_url TEXT")
+            except Exception:
+                pass
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS skills (
                 skill_id TEXT PRIMARY KEY, skill_name TEXT, category TEXT, source TEXT
@@ -220,14 +232,16 @@ class DatabaseLayer:
             """)
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS applications (
-                application_id TEXT PRIMARY KEY, student_id TEXT, opportunity_id TEXT, opportunity_title TEXT,
+                application_id TEXT PRIMARY KEY, student_id TEXT, student_name TEXT, student_email TEXT,
+                opportunity_id TEXT, opportunity_title TEXT,
                 organization TEXT, applied_date TEXT, status TEXT, last_updated TEXT, notes TEXT
             )
             """)
-            try:
-                cursor.execute("ALTER TABLE applications ADD COLUMN student_id TEXT")
-            except Exception:
-                pass
+            for col in ["student_id", "student_name", "student_email"]:
+                try:
+                    cursor.execute(f"ALTER TABLE applications ADD COLUMN {col} TEXT")
+                except Exception:
+                    pass
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
